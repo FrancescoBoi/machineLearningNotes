@@ -1000,6 +1000,19 @@ The reduced subspaces can be used both for visualization and classification by l
 
 For $2$ classes one can derive the linear rule using LDA, and then choosing the cut-point to minimize misclassification error.
 
+
+\subsection{Introduction to Bayes' theorem}
+Bayes' theorem is a formula that describes how to update the probabilities of hypotheses when given evidence. It follows simply from the axioms of conditional probability, but can be used to powerfully reason about a wide range of problems involving belief updates.
+
+Given a hypothesis $H$ and evidence $E$, Bayes' theorem states that the relationship between the probability of the hypothesis $Pr(H)$, before getting the evidence, and the probability of the hypothesis after getting the evidence $Pr(H|E)$ is
+\begin{equation}
+Pr(H|E) = \frac{Pr(E|H)Pr(H)}{Pr(E)}
+\end{equation}
+
+This relates the probability of the hypothesis before getting the evidence $Pr(H)$, to the probability of the hypothesis after getting the evidence, $Pr(H|E)$. For this reason, $Pr(H)$ is called the \textbf{prior probability}, while 
+$Pr(H|E)$ is called the \textbf{posterior probability}. The factor that relates the two, $\frac{Pr(E|H)}{Pr(E)}$, is called the \textbf{likelihood ratio}.
+$P(H|E)$ and $Pr(E|H)$ are called conditional probabilities. A conditional probability is an expression of how probable one event is given that some other event occurred (a fixed value) and Bayes' theorem centers on relating different conditional probabilities.
+
 \subsection{Logistic regression}
 The idea behind logistic regression is to still exploit a linear model $x^T\beta$ but having its output representing a probability, i.e., constrained between $0$ and $1$. This part is performed using the sigmoid function
 
