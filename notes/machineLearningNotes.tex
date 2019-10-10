@@ -7,6 +7,7 @@
 \usepackage[]{algorithm2e}
 \usepackage{graphicx}
 \usepackage[upgreek]{mathastext}
+\usepackage{eucal}
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}[section] 
  
@@ -16,6 +17,7 @@
 \newcommand{\Var}{\mathrm{Var}}
 \newcommand{\Cov}{\mathrm{Cov}}
 \newcommand{\X}{\mathrm{\mathbf{X}}}
+\newcommand{\I}{\mathrm{\mathbf{I}}}
 \newcommand{\hS}{\mathrm{\hat{\mathbf{\Sigma}}}}
 \newcommand{\hsi}{\mathrm{\hat{\mathbf{\Sigma}}}^{-1}}
 \newcommand{\si}{\mathbf{\Sigma}^{-1}}
@@ -24,6 +26,9 @@
 \newcommand{\Tr}{\mathbf{Tr}}
 \newcommand{\x}{\mathbf{x}}
 \newcommand{\hmu}{\hat{\mu}}
+\usepackage{mathtools} 
+\DeclarePairedDelimiter\autobracket{(}{)}
+\newcommand{\br}[1]{\autobracket*{#1}}
 \newcommand{\hpi}{\hat{\pi}}
 \newcommand{\hs}{\hat{\sigma}^2}
 \newtheorem{theorem}{Theorem}
@@ -60,8 +65,9 @@ In case of an infinite number of outcomes the summation is replaced with the int
 \begin{equation}
 E\left[ X\right]= \int x \cdot p\left(x \right) dx
 \end{equation}
-
 \end{definition}
+
+
 \subsection{Variance}
 \label{Variance}
 \begin{definition}{\textbf{Variance}}
@@ -85,6 +91,7 @@ Using the linearity property:
 \end{align}
 \end{definition}
 
+\subsection{Median}
 \begin{definition}{\textbf{Median}}
 For any probability distribution on the real line $\R$ with cumulative distribution function $F$, regardless of whether it is any kind of continuous probability distribution, in particular an absolutely continuous distribution (which has a probability density function), or a discrete probability distribution, a median is by definition any real number m that satisfies the inequalities:
 \begin{align}
@@ -164,9 +171,12 @@ When $n$ is even,
 \end{equation}
 If $a$ is a member of all the intervals $[x_1,x_n], [x_2,x_{n-1}], [x_3,x_{n-2}], \ldots, \left[x_{\tfrac{n}{2}},x_{\tfrac{n}{2}+1}\right]$, i.e, $a\in\left[x_{\tfrac{n}{2}},x_{\tfrac{n}{2}+1}\right]$,
 
-\begin{align}
-\sum_{i=1}^n|x_i-a|=(x_n-x_1)+(x_{n-1}-x_2)+(x_{n-2}-x_3)+\cdots + \left(x_{\tfrac{n}{2}+1}-x_{\tfrac{n}{2}}\right)
-\end{align}
+\begin{equation}
+\begin{aligned}
+&\sum_{i=1}^n|x_i-a|=(x_n-x_1)+(x_{n-1}-x_2)+(x_{n-2}-x_3)+\cdots + \\
+&+\left(x_{\tfrac{n}{2}+1}-x_{\tfrac{n}{2}}\right)
+\end{aligned}
+\end{equation}
 
 $\implies$ When $n$ is even, any number in the interval $[x_{\tfrac{n}{2}},x_{\tfrac{n}{2}+1}]$, i.e, including the median, minimizes the sum of absolute values of the deviations. For example consider the series:$2, 4, 5, 10$, median, $M=4.5$.
 
@@ -195,6 +205,67 @@ $$
 \sum_{i=1}^4|x_i-5.2|=3.2+1.2+0.2+4.8=9.4
 $$
 
+\subsection{Gaussian function and gaussian distribution}
+\label{gaussian}
+\begin{definition}{\textbf{Gaussian function}}
+A Gaussian function is a mathematical function in the form:
+\begin{equation}
+f(x) = a e^{-\frac{(x-b)^2}{2c^2}}
+\end{equation}
+The Gaussian function has three parameters $a$,$b$ and $c$. The graph of a Gaussian function is the Bell curve. The parameter $a$ is the height of the curve's peak, $b$ is the position of the peak and $c$ the \textit{standard deviation} controls the width of the bell.
+
+An important property of the Gaussian function is that the product of two Gaussian functions is still a Gaussian function:
+\begin{equation}
+\label{gauss2}
+\begin{aligned}
+&f(x) \cdot g(x) = a e^{-\frac{(x-b)^2}{2c^2}} a_1 e^{-\frac{(x-b_1)^2}{2c_1^2}} = (a\cdot a_1) e^{-\frac{x^2-2bx+b^2 + x^2-2b_1x+b_1^2}{2c^2 2c_1^2}}=\\
+&= (a\cdot a_1) e^{-\frac{2x^2-2x(b+b_1)+ b^2 +b_1^2}{2c^2 2c_1^2}} = (a\cdot a_1) e^{-\frac{x^2-2x\frac{b +b_1}{2}+ \frac{b^2 +b_1^2}{2}}{2c^2 c_1^2}} = \\
+&=(a\cdot a_1) e^{-\frac{x^2-2x\frac{b +b_1}{2}+ \frac{b^2 +b_1^2}{2}}{2c^2 c_1^2}} e^{\frac{\br{\frac{b +b_1}{2}}^2 - \br{\frac{b+b_1}{2}}^2 } {2c^2 c_1^2}}=  \\
+&=(a\cdot a_1) e^{-\frac{x^2-2x\frac{b +b_1}{2}+\br{\frac{b +b_1}{2}}^2}{2c^2 c_1^2}} e^{\frac{\br{\frac{b +b_1}{2}}^2 - \frac{b^2 +b_1^2}{2}} {2c^2 c_1^2}} = \\
+&=(a\cdot a_1) e^{-\frac{\br{x-\frac{b +b_1}{2}}^2}{2c^2 c_1^2}} e^{\frac{\br{\frac{b +b_1}{2}}^2 - \frac{b^2 +b_1^2}{2}} {2c^2 c_1^2}} = \\
+&= a_2 e^{-\frac{\br{x-\frac{b +b_1}{2}}^2}{2c^2 c_1^2}} = a_2 e^{-\frac{\br{x-b_2}^2}{2c_2^2}}
+\end{aligned}
+\end{equation}
+\end{definition}
+
+\begin{definition}{\textbf{Gaussian distribution}}
+A normalized Guassian function or normal distribution is a Gaussian function with an area under the curve equal to $1$. Hence it can be interpreted as a probability distribution.
+
+To find the formula let us force the curve to have area $1$:
+
+\begin{equation}
+\int_{-\infty}^{\infty} a e^{-\frac{(y-b)^2}{2c^2}} dy = a \int_{-\infty}^{\infty} e^{-\frac{(y-b)^2}{2c^2}} dy
+\end{equation}
+and performing a change of integration variable:
+\begin{equation}
+\begin{aligned}
+&\frac{y-b}{\sqrt{2}c} = x \Rightarrow dx = dy \frac{1}{\sqrt{2}c} dx \Rightarrow dy = \sqrt{2}c dx\\
+&a \int_{-\infty}^{\infty} e^{-\frac{(y-b)^2}{2c^2}} dy = \sqrt{2}ac  \int_{-\infty}^{\infty} e^{-x^2} dx 
+\end{aligned}
+\end{equation}
+where  $ \sqrt{2}c$ is a constant so that in can be moved out of the integral. From now on we will focus just on the integral.
+
+Unfortunately the integral has not solutions with elementary functions (Louiville theorem, see Abstract Algebra). However the definite integral exists (demonstration is skipped) and it is:
+\begin{equation}
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+\end{equation}
+
+To have area equal to $1$ we must have:
+\begin{equation}
+ac\sqrt{2\pi} = 1 \Rightarrow a =  \frac{1}{\sqrt{2\pi}c}
+\end{equation}
+So now the function is defined by just 2 parameters. 
+
+Normally $b=\mu$ and is the mean of the function while $c=\sigma$ is the standard deviation.
+
+As opposed to the Gaussian function, multiplying two of these functions we do not get another gaussian distribution, but a scaled guassian distribution. If the Gaussian functions have 0-mean and $\sigma^2=1$ then the product is still Guassian distribution with $0$-mean and $\sigma^2=1$.
+\end{definition}
+
+\begin{definition}{\textbf{Standard Normal Gaussian distribution}}
+A Standard Normal Gaussian distribution is a Gaussian distribution with $0$ mean and standard deviation $1$.
+\end{definition}
+
+
 \section{Statistical Decision Theory}
 \subsection{Expected prediction error}
 Let $X \in \R^p$ denote a real valued random input vector, and $Y \in \R^p$ a real valued random output variable, with joint distribution $Pr(X,Y)$. We seek a function $f(X)$ for predicting $Y$ given values of the input $X$. This theory requires a loss function$ L(Y,f(X))$ for penalizing errors in prediction, and by far the most common and convenient is 
@@ -202,17 +273,21 @@ squared error loss: $L(Y,f(X))=(Y -f(X))^2$.
 
 The estimated prediction error is 
 
-\begin{align}
+\begin{equation}
+\begin{aligned}
 EPE(f) &= \E\left[ \left( Y- f(X) \right)^2 \right] = \int \left( y- f(x) \right)^2 p(x,y) dx dy \\
 &= \int_x\int_y \left( y- f(x) \right)^2 p(x,y) dx dy \\
-\end{align}
+\end{aligned}
+\end{equation}
 Recalling $p(x,y) = p( y|x) p(x)$:
-\begin{align}
+\begin{equation}
+\begin{aligned}
 EPE(f) &= \int_x\int_y \left( y- f(x) \right)^2 p(y|x)  p(x) dx dy \\
  &= \int_x \int_y \left( \left( y - f(x) \right)^2 p(y|x) dy\right)  p(x) dx   \\
  &= \int_x \E_{Y|X} \left[ \left( y - f(X) \right)^2 | X=x \right]  p(x) dx   \\
  &= \E_X \left[ \E_{Y|X} \left[ \left( y - f(X) \right)^2 | X=x \right]    \right]   
-\end{align}
+\end{aligned}
+\end{equation}
 So to minimize the prediction error:
 \begin{align}
 f(x) &= \argmin{c} \E_{Y|X} \left[ \left( y - c(x) \right)^2 | X=x \right] 
@@ -1008,10 +1083,62 @@ Given a hypothesis $H$ and evidence $E$, Bayes' theorem states that the relation
 \begin{equation}
 Pr(H|E) = \frac{Pr(E|H)Pr(H)}{Pr(E)}
 \end{equation}
+Often there are competing hypothesis and the task is to determine which is the most probable.
 
-This relates the probability of the hypothesis before getting the evidence $Pr(H)$, to the probability of the hypothesis after getting the evidence, $Pr(H|E)$. For this reason, $Pr(H)$ is called the \textbf{prior probability}, while 
-$Pr(H|E)$ is called the \textbf{posterior probability}. The factor that relates the two, $\frac{Pr(E|H)}{Pr(E)}$, is called the \textbf{likelihood ratio}.
+This formula relates the probability of the hypothesis before getting the evidence $Pr(H)$, to the probability of the hypothesis after getting the evidence, $Pr(H|E)$: this term is generally what we want to know. For this reason, $Pr(H)$ is called the \textbf{prior probability}, while 
+$Pr(H|E)$ is called the \textbf{posterior probability}. The factor that relates the two, $\frac{Pr(E|H)}{Pr(E)}$, is called the \textbf{likelihood ratio} and $Pr(E|H)$ is called \textbf{likelihood} which indicates the compatibility of the evidence with the given hypothesis.
 $P(H|E)$ and $Pr(E|H)$ are called conditional probabilities. A conditional probability is an expression of how probable one event is given that some other event occurred (a fixed value) and Bayes' theorem centers on relating different conditional probabilities.
+
+$Pr(E)$ is sometimes called \textbf{marginal likelihood} or model evidence this factor is the same for all the hypotheses being considered.
+
+\subsection{Bayes inference}
+Bayesian inference is a method of statistical inference in which Bayes' theorem is used to update the probability for a hypothesis as more evidence or information becomes available. Bayesian inference assumes the data were generated by a model with unknown parameters. From this, it tries to come up with beliefs about the likely  "true values" of the parameters of the model. 
+For this reason when writing down the Bayes theorem in these cases, formally also the conditional on the choice of the model should be written down:
+
+\begin{equation}
+Pr(\theta|\X,M) = \frac{Pr(\X|\theta,M)Pr(\theta|M)}{Pr(\X|M)}
+\end{equation}
+Here the hypothesis described in the previous paragraph is represented by a set of values for the parameters.
+
+Once the model is stipulated, $Pr(X|\theta)$ can be evaluated for any given set of parameters: in this sense the likelihood is fixed once the model is fixed.
+$Pr(\X|M)$ can be rexpressed as $Pr(\X|M) =\int Pr(\X|\theta,M)Pr(\theta|M)d\theta$. In this way it can be re-thought as a normalization factor of the sets of parameters. However note that it \textbf{does depend} on the choice of the model. It can be seen also as asking the question \textit{how much is it probable to see the data we have seen given that the model $M$, without any claim about its parameters, generated those data}?
+
+\subsection{Conjugate distributions}
+\label{conjugacy}
+\begin{definition}{\textbf{Conjugate distributions}}
+In Bayesian probability theory, if the posterior distribution $Pr(\theta|\X,M)$ is in the same probability space as the prior probability distribution $Pr(\theta|M)$, then the prior and posterior are called \textbf{conjugate distributions}, and the prior is called \textbf{conjugate prior for the likelihood function}. 
+\end{definition}
+
+As example consider the Gaussian distribution: \textbf{the Gaussian family is conjugate to itself (or self-conjugate) with respect to a Gaussian likelihood function}. If the likelihood is Gaussian, choosing Gaussian prior will ensure that also the posterior distribution is a Gaussian (see \ref{gaussian}). This means that the Gaussian distribution is a conjugate prior for the likelihood that is also Gaussian.
+
+Consider the general problem of inferring a (continuous) distribution for a parameter $\theta$ given some datum or data $x$. From Bayes' theorem, the posterior distribution is equal to the product of the likelihood function $p(x|\theta, M)$ and the prior $p(\theta|M)$. Let the likelihood function be considered fixed; the likelihood function is usually well-determined from a statement of the data-generating process. It is clear that different choices of the prior distribution $p(\theta|M)$ may make the integral more or less difficult to calculate, and the product $p(x|\theta,M) \times p(\theta|M)$ may take one algebraic form or another. For certain choices of the prior, the posterior has the same algebraic form as the prior (generally with different parameter values). Such a choice is a conjugate prior. A conjugate prior is an algebraic convenience, giving a closed-form expression for the posterior; otherwise numerical integration may be necessary. Further, conjugate priors may give intuition, by more transparently showing how a likelihood function updates a prior distribution.
+All members of the exponential family have conjugate priors.
+
+In case of \textbf{classification} we are given a training set with input and output data. Once we have stipulated a model that could have generated output data, we want to find the best parameters of the model such that when those inputs are fed to the model we get those outputs. So the question becomes \textit{what is the best set of parameters $\theta$ for the model $M$ that could have generated the output $\y$ when the model has been fed with input data $\X$?}
+
+In formula:
+\begin{equation}
+\label{ClassBayes}
+Pr(\theta|\y,\X,M) = \frac{Pr(\y|\theta,\X,M)Pr(\theta|\X, M)}{Pr(\y|\X,M)}
+\end{equation}
+
+\subsubsection{Dataset likelihood}
+\label{dataset likelihood}
+\ref{datalikelihood}
+To be precise the likelihood is the likelihood of an entire dataset, since we are interested in all$\y$ and not in a single value $y$. $Pr(\y|\theta,\X,M)$ is then a joint density over all the responses in our dataset: $Pr(y_1, y_2, \cdots, y_n|\theta,\X,M)$ . Evaluating this density at the observed points gives a single likelihood value for the whole dataset.	 Assuming that the noise at each data point is independent we can factorize as:
+\begin{equation}
+Pr(\y|\theta,\X,M) = \prod_{n=1}^N Pr(y_n|\x_n, \theta)
+\end{equation}
+We have not say that $y_n$'s are completely independent as otherwise it would not be trying to model the data at all. Rather, they are \textbf{conditionally independent} given a value $\theta$, i.e., the deterministic model.
+Basically the model incorporates the dependency. Consider the following example, we have a set of data $(\y,\X)$ from which we want to predict the output $y_n$ given a new $\x_n$. Recalling from conditional probability that $P(A| B) = \frac{Pr(A\cap B)}{Pr(B)}$ we have:
+\begin{equation}
+P(y_n|\y,\x_n, \X) = \frac{Pr(y_n\cap \y|\x_n,\X)}{Pr(\y|\x_n,\X)}
+\end{equation}
+Note that actually $\y$ does not depend on $\x_n$: $Pr(\y|\x_n,\X) = Pr(\y|\X)$. Using independence:
+\begin{equation}
+P(y_n|\y,\x_n, \X) = \frac{Pr(y_n\cap \y|\x_n,\X)}{Pr(\y|\X)} = \frac{Pr(\y|\X) Pr(y_n|\x_n,\X)}{Pr(\y|\X)} = 
+\end{equation}
+[TO BE CONTINUED WAITING ON ANSWER ON CROSS-VALIDATED STACK EXCHANGE]
 
 \subsection{Logistic regression}
 The idea behind logistic regression is to still exploit a linear model $x^T\beta$ but having its output representing a probability, i.e., constrained between $0$ and $1$. This part is performed using the sigmoid function
@@ -1024,7 +1151,7 @@ Inverting the terms we get
 \label{logit}
 q = -\log\frac{1-p}{p} = \log \frac{p}{1-p} 
 \end{equation}
-\ref{logit} is called \textbf{logit function}. As $q$ increases to $\infty$, the output of the sigmoid gets closer to $1$; instead when it diverges to $-\infty$ we get $0$. Suppose we have just 2 classes or equivalently a binary classifier that tells the probability of an event to happen. This is equivalent of having 2 classes: $Y_n=1$ when the event happens and $Y_n=0$ when it does not. We can express the probabilities output by our classifier as:
+\ref{logit} is called \textbf{logit function}. As $q$ increases to $\infty$, the output of the sigmoid gets closer to $1$; instead when it diverges to $-\infty$ we get $0$. Suppose we have just 2 classes or equivalently a binary classifier that tells the probability of an event to happen: $Y_n=1$ when the event happens and $Y_n=0$ when it does not. We can express the probabilities output by our classifier when new input data $x_{new}$ are observed as:
 \begin{equation}
 \begin{aligned}
 &P(G=1|x_n, \beta) =  \frac{1}{1+e^{-\beta^T\x_{new}}}\\
@@ -1032,7 +1159,7 @@ q = -\log\frac{1-p}{p} = \log \frac{p}{1-p}
 \end{aligned}
 \end{equation}
 
-These single equations can be combined in a single equation:
+These equations can be combined in a single equation:
 \begin{equation}
 P(G=g|x_n, \beta) =  P(G=1|x_n, \beta)^{g} P(G=0|x_n, \beta)^{g-1}
 \end{equation}
@@ -1046,50 +1173,80 @@ Taking the log-ratio between the two probabilities we have:
 So we are using lines (or hyperplanes) to separate the two classes.
 
 \subsubsection{Multinomial logistic regression: more than 2 classes}
-Now suppose we have more than two classes and we still want to separate those classes with linear functions, which means we will have a hyperplane separating two classes. We have $K$ possible outcomes. We can think to run $K-1$ independent binary logistic regression in which one class is chosen as \textbf{pivot}, generally the one corresponding to class $K$, and then the other $K-1$ are separately regressed against the pivot:
+Now suppose we have more than two classes and we still want to separate those classes with linear functions, which means we will have a hyperplane separating two classes. We have $K$ possible outcomes. We can think to run $K-1$ independent binary logistic regressions with one class chosen as \textbf{pivot}, generally the one corresponding to class $K$, and with the other $K-1$ classes separately regressed against the pivot:
 %LR models the posterior probabilities of the classes as linear function in $x$, while ensuring they sum up to $1$.
 %The model has the form
 \begin{equation}
 \begin{aligned}
-&\log \frac{Pr\left(G=1|X=x\right)}{Pr\left(G=K|X=x\right)} = \beta_{10} +\beta_1^T x \\
-&\log \frac{Pr\left(G=2|X=x\right)}{Pr\left(G=K|X=x\right)} = \beta_{20} +\beta_2^T x\\
+&\log \frac{Pr\left(G=1|X=x\right)}{Pr\left(G=K|X=x\right)} = \beta_1^T x \\
+&\log \frac{Pr\left(G=2|X=x\right)}{Pr\left(G=K|X=x\right)} = \beta_2^T x\\
 \vdots\\
-&\log \frac{Pr\left(G=K-1|X=x\right)}{Pr\left(G=K|X=x\right)} = \beta_{\left(K-1\right)0} +\beta_{\left(K-1\right)}^T x
+&\log \frac{Pr\left(G=K-1|X=x\right)}{Pr\left(G=K|X=x\right)} = \beta_{\left(K-1\right)}^T x
 \end{aligned}
 \end{equation}
-The model uses the last class as the denominator but this choice is arbitrarily and the estimates are equivalent under this choice.
+The choice of the pivot class used as denominator is arbitrarily and the estimates are equivalent under different choices.
 
 Summing the probability of each class we must get $1$:
 \begin{equation}
 \begin{aligned}
 &\sum_{l=1}^{K} Pr\left(G=l|X=x\right) = 1 \Rightarrow Pr\left(G=K|X=x\right)+ \sum_{l=1}^{K-1} Pr\left(G=l|X=x\right)=1\\
-&\Rightarrow Pr\left(G=K|X=x\right) +\sum_{l=1}^{K-1} Pr\left(G=K|X=x\right)e^{\beta_{l0}+\beta_l^Tx}=1\\
-&\Rightarrow Pr\left(G=K|X=x\right)= \frac{1}{1+\sum_{l=1}^{K-1} e^{\beta_{l0}+\beta_l^Tx}}
+&\Rightarrow Pr\left(G=K|X=x\right) +\sum_{l=1}^{K-1} Pr\left(G=K|X=x\right)e^{\beta_l^Tx}=1\\
+&\Rightarrow Pr\left(G=K|X=x\right)= \frac{1}{1+\sum_{l=1}^{K-1} e^{\beta_l^Tx}}
 \end{aligned}
 \end{equation}
 
 So we can re-express the probabilities as:
 
 \begin{equation}
-Pr\left(G=k|X=x\right) = \frac{e^{\beta_{k0} +\beta_{k}^T x}}{1+\sum_{l=1}^{K-1} e^{\beta_{l0}+\beta_l^Tx}}
+Pr\left(G=k|X=x\right) = \frac{e^{\beta_{k}^T x}}{1+\sum_{l=1}^{K-1} e^{\beta_l^Tx}}
 \end{equation}
 
-\paragraph{\textbf{Softmax function}} We do not have anymore the sigmoid function, instead we have used another function named \textbf{softmax} that as the sigmoid takes any real value as input and outputs a value between $0$ and $1$. The difference mostly relies on the denominator used for normalization factor.
+\paragraph{\textbf{Softmax function}} We do not have anymore the sigmoid function, instead we have used another function named \textbf{softmax} that as the sigmoid takes any real value as input and outputs a value between $0$ and $1$. The difference mostly relies on the denominator used for normalization factor since the sigmoid is a 2D curve while the softmax can have higher dimensionality (for 2D it corresponds to the sigmoid).
 
 \subsubsection{Fitting logistic regression}
-We want to find the best parameters for the chosen model according to some criteria. First let us apply the Bayes theorem:
+From now on we will consider a logistic regression for just two classes. 
+
+As seen in \ref{ClassBayes}, we want to find the best parameters for the chosen model according to some criteria. First let us apply the Bayes theorem:
 \begin{equation}
-Pr\left(\be|\y,\X\right) = \frac{Pr\left(\y|\be,\X\right) Pr(\be)}{Pr(\y|\X)}
+Pr\left(\be|\y,\X,M\right) = \frac{Pr\left(\y|\be,\X,M\right) Pr(\be,M)}{Pr(\y|\X,M)}
 \end{equation}
+\textbf{From now on we will not write the conditional on the model for seek of brevity but we know it exists}.
+
 This formula tells we want to find the coefficients given some input and output data. Let us analyse each term:
 \begin{itemize}
-\item $Pr(\be)$ (\textbf{prior distribution}): this is the prior belief about the parameters without seeing the data.
-\item $Pr\left(\y|\be,\X\right)$ (\textbf{likelihood})
+\item $Pr(\be)$ (\textbf{prior distribution}): this is the prior belief about the parameters without seeing the data. As prior, we will use a Gaussian distribution with $0$ mean:  $\CMcal{N}(0, \sigma^2\I)$. In this way the parameters will depend on $\sigma^2$ two: more formally we should write $Pr(\be|\sigma)$ but we will skip. Although the choice of the Gaussian distribution with $0$ mean is analytically convenient as seen in \ref{conjugacy}, we will not rely on conjugacy.
+\item $Pr\left(\y|\be,\X\right)$ (\textbf{likelihood}): we will assume $y$ are conditionally independent (\ref{dataset likelihood}):
+\begin{equation}
+Pr(\y|\X, \be) = \prod_{n=1}^N Pr(y_n|\x_n, \be)
+\end{equation}
+Since in this case we have a binary variable, instead of a Gaussian random variable, suitable for real values distribution, we will consider a binary random variable $Y_n$ characterised by the probability of the second class:
+\begin{equation}
+Pr(\y|\X, \be) = \prod_{n=1}^N Pr(Y_n=y_n|\x_n, \be)
+\end{equation}
 \item $Pr(\y|\X)$(\textbf{marginal likelihood}): It can be expressed as 
 \begin{equation}
 Pr(\y|\X) = \int Pr\left(\y|\be,\X\right) Pr(\be) d\be
 \end{equation}
 \end{itemize}
+
+So the denominator can be calculated and results in a Gaussian function not in standard form (\ref{gaussian,gaussian2}). The denominator, or marginal likelihood, as we have seen can be expressed as $Pr(\y|\X) = \int Pr\left(\y|\be,\X\right) Pr(\be) d\be$. Mathematically this integral has no close solution since (again see \ref{gaussian, gaussian2}) and the impossibility of the integral of $exp{-x^2})$. [WHAT IF OTHER DISTRIBUTIONS ARE USED?]
+
+When we cannot directly compute the posterior density (due to the denominator), we have three options:
+\begin{enumerate}
+\item find the single value $\be$ that correspond to the highest value of the posterior. This is equivalent to find the value $\be$ that maximize the numerator since the denominator is not a function of $\be$ but a numerical value.
+\item Approximate $Pr(\be|\X, \y)$ with some other density that we can compute analytically.
+\item Sample directly from the posterior $Pr(\be|\X,\y)$ knowing only the numerator.
+\end{enumerate}
+
+The first method is simple and hence popular but it is not very "Bayesian", since we will make predictions of new data based on a single value and not a distribution. The whole Bayesian theory is based on making an hypothesis and getting feedback from the data that can validate or not that hypothesis. Also when using a distribution we get also measures on how confident we are about the estimated model. For example when estimating a Gaussian distribution, we estimate the coefficients $\mu$ and $\sigma^2$: the smallest the latter value the mode confident we are about the model. When using a single value we loose this piece of information.
+
+With the second method we get a density easy to work with but if the chosen density is very different from the posterior our model will not be very reliable.
+
+The third method samples from the posterior and hence to get a good approximation but it can be difficult.
+
+\subsubsection{First method: point estimation, the MAP solution}
+We have seen that in some cases we cannot compute the posterior
+====
 
 Let us express $Pr\left(G=k|X=x\right)=p_k(x,\theta)$ with $\theta = \left\lbrace \beta_{10},\beta_1^T,\cdots, \beta_{\left(K-1\right)0},\beta_{K-1}^T\right\rbrace$
 and let us define the log-likelihood
