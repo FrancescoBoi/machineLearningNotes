@@ -23,6 +23,7 @@
 \newcommand{\si}{\mathbf{\Sigma}^{-1}}
 \newcommand{\y}{\mathbf{y}}
 \newcommand{\be}{\mathbf{\beta}}
+\newcommand{\hbe}{\hat{\mathbf{\beta}}}
 \newcommand{\Tr}{\mathbf{Tr}}
 \newcommand{\x}{\mathbf{x}}
 \newcommand{\hmu}{\hat{\mu}}
@@ -58,12 +59,12 @@ Also $\Tr(\mathbf{AB}) = \Tr(\mathbf{AB})$ and $\Tr(\x^T\x) = \x^T\x$ the latter
 \begin{definition}{\textbf{Expectation}}
 Let $X$ be a random variable with a finite number of outcomes $x_1, x_2, \cdots, x_k$ occurring respectively with probabilities $p_1, p_2, \cdots, p_k$. The expectation value is the summation of each outcome times its probability.
 \begin{equation}
-E\left[ X\right]= \sum_k x_k \cdot p_k
+\E\left[ X\right]= \sum_k x_k \cdot p_k
 \end{equation}
 
 In case of an infinite number of outcomes the summation is replaced with the integral:
 \begin{equation}
-E\left[ X\right]= \int x \cdot p\left(x \right) dx
+\E\left[ X\right]= \int x \cdot p\left(x \right) dx
 \end{equation}
 \end{definition}
 
@@ -77,18 +78,22 @@ Var\left( X\right) = E\left[ \left( X - \mu \right)^2\right]
 \end{equation}
 
 Variance can be expressed in another way recalling $\mu = E\left[ X\right] $:
-\begin{align}
+\begin{equation}
+\begin{aligned}
 	Var\left( X\right) &= E\left[ \left( X - \mu \right)^2\right] = E\left[ \left( X - E\left[ X\right] \right)^2\right] =\\
 	&= E\left[ X^2 - 2\cdot X \cdot E\left[ X\right] + E\left[ X\right] ^2\right]
-\end{align}
+\end{aligned}
+\end{equation}
 Using the linearity property:
 %E\left[ \left( X - E\left[ X\right] \right)^2\right] =\\
-\begin{align}
+\begin{equation}
+\begin{aligned}
 	Var\left( X\right) &= E\left[ \left( X - \mu \right)^2\right] = \\
 	&= E\left[ X^2\right] - 2\cdot E\left[X \cdot \mu \right]+ E\left[\mu^2\right]\\
 	&= E\left[ X^2\right] - 2\cdot \mu \cdot E\left[X\right]+\mu^2 \\
 	&= E\left[ X^2\right] - \mu^2 = E\left[ X^2\right] - E\left[ X\right] ^2 \\
-\end{align}
+\end{aligned}
+\end{equation}
 \end{definition}
 
 \subsection{Median}
@@ -279,6 +284,7 @@ EPE(f) &= \E\left[ \left( Y- f(X) \right)^2 \right] = \int \left( y- f(x) \right
 &= \int_x\int_y \left( y- f(x) \right)^2 p(x,y) dx dy \\
 \end{aligned}
 \end{equation}
+
 Recalling $p(x,y) = p( y|x) p(x)$:
 \begin{equation}
 \begin{aligned}
@@ -318,77 +324,100 @@ f(x) &\approx x^T \beta
 
 Putting this in the $EPE$ equation:
 
-\begin{align}
+\begin{equation}
+\begin{aligned}
 f(x) &= \argmin{c} \E_{Y|X} \left[ \left( y - c(x) \right)^2 | X=x \right]  \\
 &= \argmin{\beta} \E_{Y|X} \left[ \left( y - x^T \beta \right)^2 | X=x \right] \\
 \Rightarrow \beta &= \left[ \E\left[ X\cdot X ^T\right]\right]^{-1} \cdot \E\left[ X\cdot Y \right]
-\end{align}
+\end{aligned}
+\end{equation}
 
 The minimum of a quadratic function is given by deriving and setting its derivative to $0$.
 
 If instead of a $L_2$ loss function we use $L_1$
 
-\begin{align}
+\begin{equation}
+\begin{aligned}
 EPE(f) &= \E\left[ \left| Y- f(X) \right| \right] = \int \left| y- f(x) \right| p(x,y) dx dy \\
 &= \int_x\int_y \left| y- f(x) \right|p(x,y) dx dy \\
-\end{align}
+\end{aligned}
+\end{equation}
 Recalling $p(x,y) = p( y|x) p(x)$:
-\begin{align}
+\begin{equation}
+\begin{aligned}
 EPE(f) &= \int_x\int_y \left| y- f(x) \right|p(y|x)  p(x) dx dy \\
  &= \int_x \int_y \left| \left( y - f(x) \right| p(y|x) dy\right)  p(x) dx   \\
  &= \int_x \E_{Y|X} \left[ \left| y - f(X) \right| | X=x \right]  p(x) dx   \\
  &= \E_X \left[ \E_{Y|X} \left[ \left| y - f(X) \right| | X=x \right]    \right]   
-\end{align}
+\end{aligned}
+\end{equation}
 
-\begin{align}
+\begin{equation}
+\begin{aligned}
 f(x) &= \argmin{c} \E_{Y|X} \left[ \left| y - c(x) \right| | X=x \right]
-\end{align}
+\end{aligned}
+\end{equation}
 and as already seen in \ref{medianMin}, the minimizer for the sum of distances is the median.
 \subsubsection{Loss function for categorical variables}
 For categorical output variables $\mathbb{G}_k$ we have: 
 
-\begin{align}
+\begin{equation}
+\begin{aligned}
 EPE = \E\left[ L\left( G, \hat{G}(X)\right)\right] = \E_x \sum_{k=1}^K L\left[ \mathbb{G}_k, \hat{G}(X)\right]Pr\left( \mathbb{G}_k|X\right)
-\end{align}
+\end{aligned}
+\end{equation}
 where the expectation is again taken with respect to the joint distribution $Pr(G,X)$. Conditioning again we can write:
-\begin{align}
+\begin{equation}
+\begin{aligned}
 EPE = \E_x \sum_{k=1}^K L\left[ \mathbb{G}_k, \hat{G}(X)\right]Pr\left( \mathbb{G}_k|X\right)
-\end{align}
-	where the integral over $y$ has been substituted with the summation due to the categorical nature of the variable.
+\end{aligned}
+\end{equation}
+where the integral over $y$ has been substituted with the summation due to the categorical nature of the variable.
 
 The minimizer is given by:
 
-\begin{align}
+\begin{equation}
+\begin{aligned}
 \hat{G}(x) = \argmin{g \in \mathbb{G}} \sum_{k=1}^{K} L\left( \mathbb{G}_k, g\right)Pr\left( \mathbb{G}_k | X=x \right)
-\end{align}
+\end{aligned}
+\end{equation}
 
 Often the \textit{zero-one loss function} is used for categorical variables and the above simplifies to:
-\begin{align}
+\begin{equation}
+\begin{aligned}
 \hat{G}(x) = \argmin{g \in \mathbb{G}}  \left[1 - Pr\left( g | X=x \right) \right] =\argmax{g \in \mathbb{G}}  \left[Pr\left( g | X=x \right) \right]
-\end{align}
+\end{aligned}
+\end{equation}
 This is known as \textit{Bayes classifier} because \textbf{it classifies to the most probable class, using conditional discrete probability distribution}.
 
 \paragraph{\textbf{Note}: When models or loss functions use additional parameters that penalize complexity (Lasso, Ridge and others) we cannot use the training data to determine these parameters, since we would pick those that gave interpolating fits with zero residuals but it will be unlikely to predict future data.}
 
 \subsection{Bias-Variance trade-off}
-\begin{align}
+\begin{equation}
+\begin{aligned}
 EPE(f) &= \E \left[ \left( Y- f(X) \right)^2 \right] =\\
             &= \E \left[ Y^2\right] - 2 \E \left[ Y\right] \E\left[ f(X)\right] + \E\left[ f(X)^2\right]\\
              &= Y^2 - 2  Y \E\left[ f(X)\right] + \E\left[ f(X)^2\right]
-\end{align}
+\end{aligned}
+\end{equation}
 
 Recalling 
-\begin{align}
+\begin{equation}
+\begin{aligned}
 &BIAS\left(Y,\E\left[f(X)\right]\right) = \left| Y-\E\left[f(X)\right]\right| \\
 &\Rightarrow BIAS\left(Y,f(X)\right)^2 = \left( Y-\E\left[f(X)\right]\right)^2 \\
 &= Y^2 -2 Y \E\left[f(X)\right] + \E\left[f(X)\right]^2 \\
-\end{align}
+\end{aligned}
+\end{equation}
+
 $EPE$ can be expressed using also the Variance definition in \ref{Variance}
-\begin{align}
+\begin{equation}
+\begin{aligned}
 \label{biasVar}
 EPE(f) &=  Y^2 - 2  Y \E\left[ f(X)\right] + \E\left[ f(X)^2\right] +\E\left[f(X)\right]^2-\E\left[f(X)\right]^2\\
 &= BIAS(Y, f(X)^2 + \Var(Y, f(x))
-\end{align}
+\end{aligned}
+\end{equation}
 
 The bias is given by the distance of our predictions from real points. Complex models have more degrees of freedom and are able to fit closer real points hence they to tend to have low bias. However, they present higher variance. On the contrary simple models (i.e., linear) have lower variance but higher bias.
 
@@ -423,7 +452,7 @@ where $H$ is called the \textit{hat} matrix.
 
 
 %%%%%%%%%%%%%
-\subsection{Equivalence of Ordinary least squares and 	maximum likelihood}
+\subsection{Equivalence of Ordinary least squares and maximum likelihood}
 We are using an additive model, assuming a Gaussian white noise:
 \begin{align}
 y = \beta^T \x + \epsilon \\
@@ -453,6 +482,7 @@ If the variables are not independent the more general form is:
 
 %%%%%%%%
 \paragraph{Definition of likelihood}
+\ref{likelihoodMax}
 The quantity $Pr(y|\x, \beta, \sigma^2)$ is called \textbf{likelihood} and tell us how much it is likely the outcome $y_i$ in the dataset given the input $\x$ and the parameters.
 
 A different approach to find a model that fits the data is to maximize the \textit{likelihood} of the whole dataset:
@@ -460,10 +490,11 @@ A different approach to find a model that fits the data is to maximize the \text
 L = Pr(\y|\X, \beta, \sigma^2)  = \frac{1}{(2\pi)^{\frac{p}{2}}|\Sigma|^\frac{1}{2}}e^{-\frac{1}{2}\left(\y-\beta^T\X\right)^T\Sigma^{-1}\left(\y-\beta^T\X\right)}
 \end{equation}
 
-Actually maximizing the likelihood is equivalent to maximizing its logarithmic, the \textit{log-likeilhood}:
+Actually maximizing the likelihood is equivalent to maximizing its logarithmic, the \textit{log-likelihood}:
 \begin{equation}
 \begin{aligned}
-&\log L = \sum_{i=1}^N \log\left[\frac{1}{(2\pi)^{\frac{1}{2}}\sigma}e^{-\frac{\left(\y_i-\beta^t \x_i\right)^2} {2\sigma^2}}\right] =\sum_{i=1}^N -\frac{1}{2}\log2\pi -\log \sigma -\frac{\left(y_i-\beta^T\x_i\right)^2} {2\sigma^2} =\\
+&\log L = \sum_{i=1}^N \log\left[\frac{1}{(2\pi)^{\frac{1}{2}}\sigma}e^{-\frac{\left(\y_i-\beta^t \x_i\right)^2} {2\sigma^2}}\right]\\
+&=\sum_{i=1}^N -\frac{1}{2}\log2\pi -\log \sigma -\frac{\left(y_i-\beta^T\x_i\right)^2} {2\sigma^2} =\\
 &= -\frac{1}{2}\log2\pi -\log \sigma -\frac{1}{2\sigma^2} \sum_{i=1}^N\left(y_i-\beta^T\x_i\right)^2
 \end{aligned}
 \end{equation}
@@ -1103,6 +1134,21 @@ Here the hypothesis described in the previous paragraph is represented by a set 
 Once the model is stipulated, $Pr(X|\theta)$ can be evaluated for any given set of parameters: in this sense the likelihood is fixed once the model is fixed.
 $Pr(\X|M)$ can be rexpressed as $Pr(\X|M) =\int Pr(\X|\theta,M)Pr(\theta|M)d\theta$. In this way it can be re-thought as a normalization factor of the sets of parameters. However note that it \textbf{does depend} on the choice of the model. It can be seen also as asking the question \textit{how much is it probable to see the data we have seen given that the model $M$, without any claim about its parameters, generated those data}?
 
+\subsection{Types of estimation}
+It is the moment to clarify different types of estimation. We have already seen the Ordinary Least Square (OLS) estimation, and other types of estimation based on the definition of an error function.
+
+We have also seen the Maximum Likelihood Estimation approach, which maximizes the likelihood of the Bayes expression and how it is equivalent to OLS estimation in case of linear regression. (To be precise almost always the log-likelihood is maximized, first of all because of analytical convenience since many times we deal with exponentials coming from Gaussian distribution. Secondly for numerical precision: we are dealing with probabilities, numbers between $0$ and $1$ and since the range is quite small, underflow might be a problem. The logarithmic instead extend the range by mapping numbers close to $0$ to $\infty$, resulting in a better precision.
+
+The Maximum A-Priori estimation maximizes the numerator of the Bayes expression, i.e., the likelihood times the prior, i.e., the likelihood is weighted by weights coming from the prior. When using a uniform distribution for the prior, MAP turns into MLE since we are assigning equal weights for each possible value. For example suppose we can assign six possible values to $\be$ and assume $P(\be)=1/6$:
+\begin{equation}
+\begin{aligned}
+&\be_{MAP} = \argmax{\be}{\sum_i Pr(\x_i|\be) + \log P(\be)} =
+\\&= \argmax{\be}{\sum_i Pr(\x_i|\be) +const}=\argmax{\be}{\sum_i Pr(\x_i|\be)} = \be_{MLE}
+\end{aligned}
+\end{equation}
+
+When using a different prior, i.e., the simplification does not hold anymore.
+
 \subsection{Conjugate distributions}
 \label{conjugacy}
 \begin{definition}{\textbf{Conjugate distributions}}
@@ -1124,7 +1170,7 @@ Pr(\theta|\y,\X,M) = \frac{Pr(\y|\theta,\X,M)Pr(\theta|\X, M)}{Pr(\y|\X,M)}
 
 \subsubsection{Dataset likelihood}
 \label{dataset likelihood}
-\ref{datalikelihood}
+\ref{dataset likelihood}
 To be precise the likelihood is the likelihood of an entire dataset, since we are interested in all$\y$ and not in a single value $y$. $Pr(\y|\theta,\X,M)$ is then a joint density over all the responses in our dataset: $Pr(y_1, y_2, \cdots, y_n|\theta,\X,M)$ . Evaluating this density at the observed points gives a single likelihood value for the whole dataset.	 Assuming that the noise at each data point is independent we can factorize as:
 \begin{equation}
 Pr(\y|\theta,\X,M) = \prod_{n=1}^N Pr(y_n|\x_n, \theta)
@@ -1245,9 +1291,111 @@ With the second method we get a density easy to work with but if the chosen dens
 The third method samples from the posterior and hence to get a good approximation but it can be difficult.
 
 \subsubsection{First method: point estimation, the MAP solution}
-We have seen that in some cases we cannot compute the posterior
-====
+We have seen that in some cases we cannot compute the posterior but we can compute the numerator of the expression, i.e., the prior multiplied by the likelihood. The value that maximizes the posterior is also the value that maximizes the numerator. We have already seen a likelihood maximization procedure in \ref{likelihoodMax}; here we are maximizing the likelihood times the prior. This solution is the \textbf{aximum a posteriori (MAP)} estimate.
 
+\paragraph{The Newton-Raphson method}
+The Newton-Raphson method finds the points where $f(x)=0$. Starting from an estimation $x_n$ of such points, the estimation is updated by moving to the point where the tangent to the function at $x_n$ passes throw the x-axis. This point is computed by approximating the gradient as a change in $f(x)$ divided by a change in $x$:
+
+\begin{figure}
+\includegraphics[scale=0.3]{img/NewtonRaphson}
+\caption{Newton-Raphsone example.}
+\end{figure}
+
+\begin{equation}
+\begin{aligned}
+f'(x_n) = -\frac{f(x_n)-0}{x_n -x_{n+1}}\\
+\Rightarrow x_{n+1} = x_n -\frac{f(x_n)}{f'(x_n)}
+\end{aligned}
+\end{equation}
+Instead of finding the point for which $f(x)=0$, we want to find the point where its derivative is $0$. Hence we substitute $f(x)$ with $f'(x)$ and $f'(x)$ with $f''(x)$. In this way the method can be used to find points where the gradient passes through $0$, i.e., minima, maxima and points of inflections:
+\begin{equation}
+\begin{aligned}
+f''(x_n) = -\frac{f'(x_n)-0}{x_n -x_{n+1}}\\
+\Rightarrow x_{n+1} = x_n -\frac{f'(x_n)}{f''(x_n)}
+\end{aligned}
+\end{equation}
+When dealing with vectors, $f'(x)$ is replaced by the vector of partial derivatives evaluated at $x_n$ and $\frac{1}{f''(x_n)}$ is replaced by the inverse of the Hessian matrix $\frac{-\partial^2 f(x)}{\partial \x \partial \x^T}$.
+
+\paragraph{Derivation}
+As already done, instead of maximizing the function itself, we maximize its logarithmic. Apart from the mathematical convenience this is also the advantage of avoid underflow: we are dealing with probabilities, number between $0$ and $1$ and these might be too small to have a sufficient numerical precision. The logarithmic, as the numbers go to $0$, makes the number goes to infinity, guaranteeing a better numerical precision.
+ Since we cannot compute the derivative and set it to $0$, we use the Newton-Raphson procedure. Let us call the numerator $g(\be,\X,\y) = Pr(\y|\be,\X)Pr(\be|\X)$:
+
+\begin{equation}
+\be' = \be - \br{\frac{\partial^2\log g(\be,\X,\y)}{\partial \be \partial \be^T}}^{-1} \frac{\partial \log g(\be,\X,\y)}{\partial \be}
+\end{equation}
+
+The procedure is iterative and stops when it stops when the gradient is $0$. To check the point we have converged to corresponds to a minimum we check the Hessian matrix is negative definite.
+
+Before computing the derives we re-express $g(\be,\X,\y)$.
+
+\begin{equation}
+\begin{aligned}
+&\log g(\be,\X,\y) = \sum_{n=1}^N \log Pr(Y_n=y_n|\x_n, \be) + \log Pr(\be|\sigma^2) = \\
+&=  \sum_{n=1}^N \log \left[\br{\frac{1}{1+e^{-\be^T\x_n}}}^{y_n} \br{\frac{e^{-\be^T\x_n}}{1+e^{-\be^T\x_n}}}^{1-y_n}\right] + \log Pr(\be|\sigma^2) =
+\end{aligned}
+\end{equation}
+We denote $P_n=P(Y_n=1|\be, \x_n) = \frac{1}{1+e^{-\be^T\x_n}}$:
+\begin{equation}
+\begin{aligned}
+&\log g(\be,\X,\y) =  \sum_{n=1}^N P_n^{y_n} +\log(1-P_n)^{1-y_n}+ \log Pr(\be|\sigma^2) =
+\end{aligned}
+\end{equation}
+Racalling
+\begin{equation}
+Pr(\be|\sigma^2)  = \frac{1}{\sqrt{(2\pi)^D|\Sigma|}} e^{-\frac{\br{\be-\cancel{\mu}}^T\br{\be-\cancel{\mu}}}{2\sigma2}}
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+&\log g(\be,\X,\y) =  \sum_{n=1}^N P_n^{y_n} +\log(1-P_n)^{1-y_n} -\frac{D}{2}\log(2\pi) - D\log\sigma - \frac{1}{2\sigma^2} \be^T\be
+\end{aligned}
+\end{equation}
+
+Now we can take the derivative:
+\begin{equation}
+\label{devg}
+\begin{aligned}
+&\frac{\partial \log g(\be,\X,\y)}{\partial \be} = - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\frac{\partial P_n}{\partial \be} + \frac{1-y_n}{1-P_n}\frac{\partial (1-P_n)}{\partial \be} =\\
+&=\frac{\partial \log g(\be,\X,\y)}{\partial \be} = - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\frac{\partial P_n}{\partial \be} - \frac{1-y_n}{1-P_n}\frac{\partial P_n}{\partial \be}
+\end{aligned}
+\end{equation}
+
+Now we must calculate $\frac{P_n}{\partial \be}$:
+\begin{equation}
+\label{devPn}
+\begin{aligned}
+&\frac{\partial P_n}{\partial \be} = \frac{\partial}{\partial \be} \frac{1}{1+e^{-\be^T\x_n}} = \frac{\partial}{\partial \be} \br{1+e^{-\be^T\x_n}}^{-1} =\\
+&= \frac{1}{\br{1+e^{-\be^T\x_n}}^2}  \frac{\partial}{\partial \be} \br{1+e^{-\be^T\x_n}} = \\
+&=  -\x_n \frac{e^{-\be^T\x_n}}{\br{1+e^{-\be^T\x_n}}^2}   = -x_n \frac{1}{\br{1+e^{-\be^T\x_n}}}\frac{e^{-\be^T\x_n}}{\br{1+e^{-\be^T\x_n}}} =\\
+&= -\x_nP_n \br{1-P_n}
+\end{aligned}
+\end{equation}
+Substituting in \ref{devg}:
+\begin{equation}
+\begin{aligned}
+&\frac{\partial \log g(\be,\X,\y)}{\partial \be} =  - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\frac{\partial P_n}{\partial \be} - \frac{1-y_n}{1-P_n}\frac{\partial P_n}{\partial \be} =\\
+&=- \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\left[-\x_nP_n \br{1-P_n}\right] - \frac{1-y_n}{1-P_n}\left[-\x_nP_n \br{1-P_n}\right] =\\
+&= - \frac{1}{\sigma^2} \be + \sum_{n=1}^N -y_n\x_n \br{1-P_n} - (1-y_n)(-\x_nP_n ) = \\
+&= - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \x_n (y_n-P_n)
+\end{aligned}
+\end{equation}
+
+Now we must compute the Hessian matrix:
+\begin{equation}
+\begin{aligned}
+&\frac{\partial^2 \log g(\be,\X,\y)}{\partial \be \partial\be^T}  = \frac{\partial}{\partial \be^T} \br{- \frac{1}{\sigma^2} \be + \sum_{n=1}^N \x_n (y_n-P_n)} =- \frac{1}{\sigma^2} \I -\sum_{n=1}^N \x_n \frac{\partial P_n}{\partial \be^T} =\\
+&= - \frac{1}{\sigma^2} \I - \sum_{n=1}^N \x_n \x_n^TP_n \br{1-P_n}
+\end{aligned}
+\end{equation}
+where we used the result from \ref{devPn}.
+
+Note that the 2 terms are negative definite, hence the Hessian is always negative definite. Therefore there can only be one optimum and it must be the minimum.
+
+The decision boundary is the one for which $Pr(Y_n=1|\x,\hat{\be}=0.5$.
+
+The steps above can be done for any prior and likelihood combination. In some cases the posterior might have several maxima and or some minima and it become difficult to know if the maximum is a global optimum.
+================================
+[HERE ARE the steps performed in the ESLII book: instead of maximizing posterior (or equivalently the numerator), it maximizes the likelihood.]
 Let us express $Pr\left(G=k|X=x\right)=p_k(x,\theta)$ with $\theta = \left\lbrace \beta_{10},\beta_1^T,\cdots, \beta_{\left(K-1\right)0},\beta_{K-1}^T\right\rbrace$
 and let us define the log-likelihood
 \begin{equation}
@@ -1300,6 +1448,97 @@ sometimes known as the adjusted response. This algorithm is known as \textbf{ite
 $\beta=0$ seems a good starting value. Convergence is never guaranteed but typically the algorithm does converge, since the log-likelihood is concave but overshooting can occur. In the rare cases that the log-likelihood decreases, step size halving will guarantee convergence.
 
 For $K>2$ we still use the iteration procedure but we will have a $K-1$ vector response and a non-diagonal weight matrix per observation. In this case it is better to work with the vector $\theta$ directly.
+================================
+\subsubsection{Second method: Laplace approximation}
+There are many approximation methods but the most common is the Laplace approximation. The idea is to approximate the density of interest with a Gaussian.
+
+Choosing a Gaussian means choosing a proper variance and mean value. The Laplace approximation method fixes one of the two parameters, i.e., the mean to the value maximizing the posterior, $\beta$. We approximate $\log g(\be,\X,\y)$ with the Taylor expansion around $\hat{\be}$:
+\begin{equation}
+\label{Taylor}
+\begin{aligned}
+\log g(\be,\X,\y) \approx &\log g(\hbe,\X,\y) + \cancel{\frac{ \partial \log g(\be,\X,\y)}{\partial \be}\bigg\rvert_{\hbe}\br{\be -\hbe}} + \\
+&+ \frac{ \partial^2 \log g(\be,\X,\y)}{\partial \be^2}\bigg\rvert_{\hbe}\br{\be -\hbe}^2 =\\
+&=\log g(\hbe,\X,\y)+ \frac{ \partial^2 \log g(\be,\X,\y)}{\partial \be^2}\bigg\rvert_{\hbe}\frac{\br{\be -\hbe}^2}{2}
+\end{aligned}
+\end{equation}
+
+where the second term is the gradient evaluated at the maximum point that therefore must be $0$.
+
+The Gaussian density and its log are the following:
+\begin{equation}
+\begin{aligned}
+&\frac{1}{2\pi}e^{-\frac{(\be-\hbe)^2}{2\sigma^2}}\\
+\Rightarrow &\log const -\frac{1}{2\sigma^2}\br{\be-\mu}^2
+\end{aligned}
+\end{equation}
+which is similar to \ref{Taylor}. By analogy of the two equations:
+\begin{equation}
+\begin{aligned}
+&\mathbf{\mu} = \hbe\\
+&-\frac{1}{\sigma^2} = -\frac{ \partial^2 \log g(\be,\X,\y)}{\partial \be^2}\bigg\rvert_{\hbe}
+\end{aligned}
+\end{equation}
+
+It can be applied also to multivariate densities  $Pr(\be,\X,\y) \approx \CMcal{N}(\mathbf{\mu, \Sigma})$:
+\begin{equation}
+\begin{aligned}
+&\mathbf{\mu} = \hbe\\
+&\Sigma^{-1} = -\frac{ \partial^2 \log g(\be,\X,\y)}{\partial \be\partial\be^T}\bigg\rvert_{\hbe}
+\end{aligned}
+\end{equation}
+
+Consider a multinomial 2D Gaussian function (dimensionaity of $\be$ is 2) as in \ref{gaussian} and suppose to project on the plane the points of the curve having the same value (the ellipses in the figure). The ellipses will be the combination of coefficients giving the same function value.
+\begin{figure}
+\label{gaussian}
+\includegraphics[scale=0.4]{img/gaussian}
+\caption{Example of multinomial Gaussian.}
+\end{figure}
+
+In figure \ref{posteriorApprox} the Laplace approximation of the posterior (darker lines) is shown while the lighter lines are the true unnormalised posterior. The centre point corresponds to the maximum point $\hbe$. Note how the approximation is good around $\hbe$ and it diverges going further from it.
+\begin{figure}
+\label{posteriorApprox}
+\includegraphics[scale=0.4]{img/posteriorApprox}
+\caption{The axis are the parameters. The Laplace approximation of the posterior (darker lines) is shown while the lighter lines are the true unnormalised posterior. The centre point corresponds to the maximum point $\hbe$.}
+\end{figure}
+
+We use the approximate posterior to compute predictions. But now we have a density and not a single value: the prediction is computed by averaging over this density: it is like averaging over all possible values of $\be$. We should calculate the expected value $Pr(Y_{new} = 1|\x_{new}, \be)$ with respect to the approximate posterior denoted as $\CMcal{N}(\mathbf{\mu, \Sigma}$:
+\begin{equation}
+Pr(Y_{new}=1|\x_{new}, \X, \be) = \E_{\CMcal{N}(\mathbf{\mu, \Sigma}}\left\lbrace Pr(T_{new}=1| \x_{new}, \be)\right\rbrace
+\end{equation}
+However we cannot compute the integral (of the expectation), but we can sample from $\CMcal{N}(\mathbf{\mu, \Sigma}$ and approximate the expectation with a sum:
+\begin{equation}
+Pr(Y_{new}=1|\x_{new}, \X, \be) = \frac{1}{N_s}\sum_{s=1}^{N_s}\frac{1}{1+e^{-\be_s^T \x_{new}}}
+\end{equation}
+
+\paragraph{\textbf{Comparison between the decition boundaries of MAP and Laplace method.}} In case of MAP estimation we get a single separating line as in \ref{MAP1} for the example of two classes. In case of Laplace approximation we don't have a single separating line but a distribution but a density distribution. \ref{laplace1} shows 20 boundaries (i.e., set of coefficients) sampled randomly from the distribution. All or almost all separates the classes quite well but in the area from the graph further from the classes (or from the centroids or clusters) there is a lot of variability. This variability represents the uncertainty of the classifier in those area far from the classes, where no event (in the sense of data entry) was observed.
+
+This is made clearer by looking at the decision boundaries in \ref{MAP2} and \ref{laplace2} . In case of MAP it is quite obvious: the probability increases or decreases just moving close to or far from to the boundary. In case of Laplace approximation the contours are no longer straight lines. The probability are now close to $0.5$ in all the area except those closes to the two classes. It is like the classifier is unable to take a decision in those areas, that are the ones where no event has been noted.
+
+On the contrary the classifier resulting from MAP approximation is always sure about its work: it can only classify either with one or the other class except in on the points on the boundaries. This result from the fact that it is the result of a single point and not a distribution: i.e., the amount of confidence on the result is left out.
+
+\begin{figure}
+\label{MAP1}
+\includegraphics[scale=0.4]{img/MAP1}
+\caption{Decision boundary for MAP estimation.}
+\end{figure}
+
+\begin{figure}
+\label{laplace1}
+\includegraphics[scale=0.4]{img/laplace1}
+\caption{Decision boundary for Laplace approximation estimation.}
+\end{figure}
+
+\begin{figure}
+\label{MAP2}
+\includegraphics[scale=0.4]{img/MAP2}
+\caption{Contours of probability of belonging to class 1 in case of MAP estimation.}
+\end{figure}
+
+\begin{figure}
+\label{laplace2}
+\includegraphics[scale=0.4]{img/laplace2}
+\caption{Contours of probability of belonging to class 1 in case of Laplace approximation estimation computed with a sample based approximation.}
+\end{figure}
 
 \subsubsection{Usage}
 LR is used as data analysis tool where the goal is to  understand the role of the input variables in explaining the outcome. Typically many models are fit in a search for a parsimonious model involving a subset of the variables, possibly with some interactions terms. 
