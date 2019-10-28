@@ -8,6 +8,8 @@
 \usepackage{graphicx}
 \usepackage[upgreek]{mathastext}
 \usepackage{eucal}
+\usepackage{subcaption}
+\usepackage{hyperref}
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}[section] 
  
@@ -32,6 +34,7 @@
 \newcommand{\br}[1]{\autobracket*{#1}}
 \newcommand{\hpi}{\hat{\pi}}
 \newcommand{\hs}{\hat{\sigma}^2}
+\newcommand{\ssq}{\sigma^2}
 \newtheorem{theorem}{Theorem}
 \newcommand{\inv}{\mathrm{\left( \X^T\X\right)^{-1}}} 
 \newcommand{\HM}{\mathrm{\inv\X^T}} 
@@ -68,6 +71,19 @@ In case of an infinite number of outcomes the summation is replaced with the int
 \end{equation}
 \end{definition}
 
+\href{https://stats.stackexchange.com/a/72614/238980}{As explained here}, when many random variables are involved, and there is no subscript in the $E$ symbol, the expected value is taken with respect to their joint distribution:
+
+$$E[h(X,Y)] = \int_{-\infty}^\infty \int_{-\infty}^\infty h(x,y) f_{XY}(x,y) \, dx \, dy$$
+
+
+When a subscript is present, in some cases it tells us on which variable we should condition. So
+
+$$E_X[h(X,Y)] = E[h(X,Y)\mid X] = \int_{-\infty}^\infty h(x,y) f_{h(X,Y)\mid X}(h(x,y)\mid x)\,dh  $$
+
+...But in other cases, it tells us which density to use for the "averaging"
+
+$$E_X[h(X,Y)] = \int_{-\infty}^\infty h(x,y) f_{X}(x) \, dx $$
+
 
 \subsection{Variance}
 \label{Variance}
@@ -77,40 +93,37 @@ The variance of a random variable $X$ is the expected value of the squared devia
 Var\left( X\right) = E\left[ \left( X - \mu \right)^2\right] 
 \end{equation}
 
-Variance can be expressed in another way recalling $\mu = E\left[ X\right] $:
+Variance can be expressed in another way recalling $\mu = E\left[ X\right]$ and using the linearity property:
 \begin{equation}
 \begin{aligned}
 	Var\left( X\right) &= E\left[ \left( X - \mu \right)^2\right] = E\left[ \left( X - E\left[ X\right] \right)^2\right] =\\
-	&= E\left[ X^2 - 2\cdot X \cdot E\left[ X\right] + E\left[ X\right] ^2\right]
-\end{aligned}
-\end{equation}
-Using the linearity property:
-%E\left[ \left( X - E\left[ X\right] \right)^2\right] =\\
-\begin{equation}
-\begin{aligned}
-	Var\left( X\right) &= E\left[ \left( X - \mu \right)^2\right] = \\
+	&= E\left[ X^2 - 2\cdot X \cdot E\left[ X\right] + E\left[ X\right] ^2\right]\\
 	&= E\left[ X^2\right] - 2\cdot E\left[X \cdot \mu \right]+ E\left[\mu^2\right]\\
 	&= E\left[ X^2\right] - 2\cdot \mu \cdot E\left[X\right]+\mu^2 \\
 	&= E\left[ X^2\right] - \mu^2 = E\left[ X^2\right] - E\left[ X\right] ^2 \\
 \end{aligned}
 \end{equation}
+
 \end{definition}
 
 \subsection{Median}
 \begin{definition}{\textbf{Median}}
-For any probability distribution on the real line $\R$ with cumulative distribution function $F$, regardless of whether it is any kind of continuous probability distribution, in particular an absolutely continuous distribution (which has a probability density function), or a discrete probability distribution, a median is by definition any real number m that satisfies the inequalities:
+For any probability distribution on the real line $\R$ with cumulative distribution function $F$, regardless of whether it is any kind of continuous probability distribution, in particular an absolutely continuous distribution (which has a probability density function), or a discrete probability distribution, a median is by definition any real number $m$ that satisfies the inequalities:
 \begin{align}
 P(x\le m) \ge \frac{1}{2} \quad \text{and} \quad P(x\le m) \ge \frac{1}{2}\\
-\int_{- \infty}^{m} F(x) dx \ge  \frac{1}{2} \quad \text{and} \quad \int_{m}^{\infty} F(x) dx \ge  \frac{1}{2} 
 \end{align}
 
+or equivalently the inequalities
+\begin{equation}
+\int_{- \infty}^{m} F(x) dx \ge  \frac{1}{2} \quad \text{and} \quad \int_{m}^{\infty} F(x) dx \ge  \frac{1}{2} 
+\end{equation}
 \end{definition}
 
 \subsection{Median as the minimizer of $L_1$ norm}
 \label{medianMin}
 Assume that $S$ is a finite set, with say $k$ elements. Line them up in order, as $s_1<s_2<\cdots <s_k$.  
 
-If $k$ is even there are (depending on the exact definition of median) many medians. $|x-s_i|$ is the **distance** between $x$ and $s_i$, so we are trying to minimize the sum of the distances. For example, we have $k$ people who live at various points on the $x$-axis. We want to find the point(s) $x$ such that the sum of the travel distances of the $k$ people to $x$ is a minimum.
+If $k$ is even there are (depending on the exact definition of median) many medians. $|x-s_i|$ is the \textit{distance} between $x$ and $s_i$, so we are trying to minimize the sum of the distances. For example, we have $k$ people who live at various points on the $x$-axis. We want to find the point(s) $x$ such that the sum of the travel distances of the $k$ people to $x$ is a minimum.
 
 Imagine that the $s_i$ are points on the $x$-axis. For clarity, take $k=7$. Start from well to the left of all the $s_i$, and take a tiny step, say of length $\epsilon$, to the right. Then you have gotten $\epsilon$ closer to every one of the $s_i$, so the sum of the distances has decreased by $7\epsilon$. 
 
@@ -122,17 +135,19 @@ This continues until you hit $s_3$. The next tiny step gives an increase of $3\e
 
 This continues until you hit $s_4$. The next little step brings a total increase of $4\epsilon$, and a total decrease of $3\epsilon$, for an increase of $\epsilon$. Things get even worse when you travel further to the right. So the minimum sum of distances is reached at $s_4$, the median.
 
-The situation is quite similar if $k$ is even, say $k=6$. As you travel to the right, there is a net decrease at every step, until you hit $s_3$. When you are between $s_3$ and $s_4$, a tiny step of $\epsilon$ increases your distance from each of $s_1$, $s_2$, and $s_3$ by $\epsilon$. But it decreases your distance from each of the three others, for no net gain. Thus any $x$ in the interval from  $s_3$ to $s_4$, including the endpoints, minimizes the sum of the distances. In the even case, Some people prefer to say that any point between the two "middle" points is a median. So the conclusion is that the points that minimize the sum are the medians. Other people prefer to define the median in the even case to be the average of the two "middle" points. Then the median does minimize the sum of the distances, but some other points also do.
+The situation is quite similar if $k$ is even, say $k=6$. As you travel to the right, there is a net decrease at every step, until you hit $s_3$. When you are between $s_3$ and $s_4$, a tiny step of $\epsilon$ increases your distance from each of $s_1$, $s_2$, and $s_3$ by $\epsilon$. But it decreases your distance from each of the three others, for no net gain. Thus any $x$ in the interval from  $s_3$ to $s_4$, including the endpoints, minimizes the sum of the distances. 
 
-\textbf{In formulas} consider two $x_i$'s $x_1$ and $x_2$,
+In the even case, Some people prefer to say that any point between the two "middle" points is a median. So the conclusion is that the points that minimize the sum are the medians. Other people prefer to define the median in the even case to be the average of the two "middle" points. Then the median does minimize the sum of the distances, but some other points also do.
+
+\textbf{In formulas} consider two $x_i$'s $x_1$ and $x_2$, with $x_2>x_1$
 \begin{itemize}
-\item \begin{align}
+\item \begin{equation}\begin{aligned}
 &x_1\leq a\leq x_2
 \\ &\sum_{i=1}^{2}|x_i-a|=|x_1-a|+|x_2-a|=a-x_1+x_2-a=x_2-x_1
-\end{align}
+\end{aligned}\end{equation}
 \item \begin{equation}\begin{aligned}
 &a < x_1
-\\&\sum_{i=1}^{2}|x_i-a|=x_1-a+x_2-a=x_1+x_2-2a\ge x_1+x_2-2x_1\\=x_2-x_1
+\\&\sum_{i=1}^{2}|x_i-a|=x_1-a+x_2-a=x_1+x_2-2a\ge x_1+x_2-2x_1\\=&x_2-x_1
 \end{aligned}\end{equation}
 \item \begin{equation}\begin{aligned}
 &a\ge x_2
@@ -194,7 +209,6 @@ $$
 $$
 
 Taking for example $4$ or $5$ yields the same result:
-
 $$
 \sum_{i=1}^4|x_i-4|=2+0+1+6=9
 $$
@@ -273,7 +287,7 @@ A Standard Normal Gaussian distribution is a Gaussian distribution with $0$ mean
 
 \section{Statistical Decision Theory}
 \subsection{Expected prediction error}
-Let $X \in \R^p$ denote a real valued random input vector, and $Y \in \R^p$ a real valued random output variable, with joint distribution $Pr(X,Y)$. We seek a function $f(X)$ for predicting $Y$ given values of the input $X$. This theory requires a loss function$ L(Y,f(X))$ for penalizing errors in prediction, and by far the most common and convenient is 
+Let $X \in \R^p$ denote a real valued random input vector, and $Y \in \R^p$ a real valued random output variable, with joint distribution $Pr(X,Y)$. We seek a function $f(X)$ for predicting $Y$ given values of the input $X$. This theory requires a loss function $L(Y,f(X))$ for penalizing errors in prediction, and by far the most common and convenient is 
 squared error loss: $L(Y,f(X))=(Y -f(X))^2$.
 
 The estimated prediction error is 
@@ -300,7 +314,7 @@ f(x) &= \argmin{c} \E_{Y|X} \left[ \left( y - c(x) \right)^2 | X=x \right]
 & \Rightarrow f(x) = \E \left[ Y | X=x \right] 
 \end{align}
 
-The \textit{Nearest Neighbour} algorithm, which assigns labels to points by counting and averaging the labels of the points belonging to a given neighbourhood:
+The \textit{Nearest Neighbour} algorithm, assigns labels to points by counting and averaging the labels of the points belonging to a given neighbourhood:
 
 \begin{align}
 \hat{f} (x) &= Ave \left(   y_i|x_i \in N_k(x)   \right)
@@ -315,7 +329,7 @@ With $k$ sufficiently large, the average gets more stable and with large $N$ the
 
 Unfortunately often we do not have so much data and some other times we might want exploit the supposed structure of data (linear, polynomial etc.).
 
-However there is even a bigger problem. When there are too many dimensions (i.e., $p$ is large). Consider a uniformly distributed input in a $p$ dimensional unit hypercube. Consider a hypercube neighbourhood around the target point capturing a fraction $r$ of the total observations distributed among the unit hypercube. The edge of the neighbour hypercube will be $e_p(r) = r^{1/p}$. In 10 dimensions, using a neighborhood capturing $1\%$ of the data we have $r(0.01) = 0.63$ so we must use 63\% of the total data for one target.
+However there is even a bigger problem when there are too many dimensions (i.e., $p$ is large). Consider a uniformly distributed input in a $p$ dimensional unit hypercube. Consider a hypercube neighbourhood around the target point capturing a fraction $r$ of the total observations distributed among the unit hypercube. The edge of the neighbour hypercube will be $e_p(r) = r^{1/p}$. In 10 dimensions, using a neighborhood capturing $1\%$ of the data we have $r(0.01) = 0.63$ so we must use 63\% of the total data for one target.
 
 On the contrary the linear regression is a \textbf{model-based approach}, i.e., one assumes that the function $f(x)$ is approximately linear:
 \begin{align}
@@ -425,8 +439,9 @@ The error due to variance is the amount by which the prediction, over one traini
 
 \section{Linear Regression Models}
 We start from the \textit{univariate linear regression}, i.e., each output consists of a single value while the input is a vector of values.
+
 \subsection{Univariate linear regression}
-	Univariate means single output, i.e, $y$ is a vector. The basic form is 
+Univariate means single output, i.e, $y$ is a number. The basic form is 
 \begin{align}
 f(X) = \beta_0 + \sum_{j-1}^p X_j \beta_j
 \end{align}
@@ -456,33 +471,32 @@ where $H$ is called the \textit{hat} matrix.
 We are using an additive model, assuming a Gaussian white noise:
 \begin{align}
 y = \beta^T \x + \epsilon \\
-\epsilon \sim \mathcal{N}(0,\sigma^2)
+\epsilon \sim \CMcal{N}(0,\sigma^2)
 \end{align}
 Adding a constant to a Gaussian random variable is equivalent to another Gaussian random variable with the mean shifted:
 \begin{equation}
-Pr(y) \sim \mathcal{N}(\beta^T \x ,\sigma^2)
+Pr(y) \sim \CMcal{N}(\beta^T \x ,\sigma^2)
 \end{equation}
 Considering the matrix $\X$ and the output vector $\y$ representing the training set, used to estimate the coefficients, we have:
 \begin{equation}
-Pr(\y|\X, \beta, \sigma^2)  = \prod_{i=1}^N Pr(y_i|\X, \beta, \sigma^2) =  \prod_{i=1}^N \mathcal{N}(\beta^T \x ,\sigma^2)
+Pr(\y|\X, \beta, \sigma^2)  = \prod_{i=1}^N Pr(y_i|\x, \beta, \sigma^2) =  \prod_{i=1}^N \CMcal{N}(\beta^T \x ,\sigma^2)
 \end{equation}
 where we have assumed each observation is independent. A product of univariate Gaussian can be rewritten as a multivariate Gaussian:
 \begin{equation}
 \label{multiGauss}
 \begin{aligned}
- &Pr(\y|\X, \beta, \sigma^2)  = \prod_{i=1}^N \mathcal{N}(\beta^T \x ,\sigma^2) =  \prod_{i=1}^N \frac{1}{(2\pi)^{\frac{1}{2}}\sigma}e^{-\frac{\left(y_i-\beta^T\x_i\right)^2} {2\sigma^2}}= \\
+ &Pr(\y|\X, \beta, \sigma^2)  = \prod_{i=1}^N \CMcal{N}(\beta^T \x ,\sigma^2) =  \prod_{i=1}^N \frac{1}{(2\pi)^{\frac{1}{2}}\sigma}e^{-\frac{\left(y_i-\beta^T\x_i\right)^2} {2\sigma^2}}= \\
  &= \frac{1}{(2\pi)^{\frac{p}{2}}\sigma}\prod_{i=1}^N e^{-\sum_{i=1}^N \frac{\left(y_i-\beta^T\x_i\right)^2} {2\sigma^2}} = \\
- &=  \frac{1}{(2\pi)^{\frac{p}{2}}\sigma|\mathbf{I}|}e^{-\frac{1}{2}\left(\y-\beta^T\X\right)^T\left(\sigma^2 \mathbf{I}\right)^{-1}\left(\y-\beta^T\X\right)} = \mathcal{N}(\beta^T \X ,\sigma^2\mathbf{I}) 
+ &=  \frac{1}{(2\pi)^{\frac{p}{2}}\sigma|\mathbf{I}|}e^{-\frac{1}{2}\left(\y-\beta^T\X\right)^T\left(\sigma^2 \mathbf{I}\right)^{-1}\left(\y-\beta^T\X\right)} = \CMcal{N}(\beta^T \X ,\sigma^2\mathbf{I}) 
 \end{aligned}
 \end{equation}
 If the variables are not independent the more general form is:
 \begin{equation}
-\mathcal{N}(\beta^T \X ,\mathbf{\Sigma}) =\frac{1}{(2\pi)^{\frac{p}{2}}|\Sigma|^\frac{1}{2}}e^{-\frac{1}{2}\left(\y-\beta^T\X\right)^T\Sigma^{-1}\left(\y-\beta^T\X\right)}
+\CMcal{N}(\beta^T \X ,\mathbf{\Sigma}) =\frac{1}{(2\pi)^{\frac{p}{2}}|\Sigma|^\frac{1}{2}}e^{-\frac{1}{2}\left(\y-\beta^T\X\right)^T\Sigma^{-1}\left(\y-\beta^T\X\right)}
 \end{equation}
 
 %%%%%%%%
 \paragraph{Definition of likelihood}
-\ref{likelihoodMax}
 The quantity $Pr(y|\x, \beta, \sigma^2)$ is called \textbf{likelihood} and tell us how much it is likely the outcome $y_i$ in the dataset given the input $\x$ and the parameters.
 
 A different approach to find a model that fits the data is to maximize the \textit{likelihood} of the whole dataset:
@@ -514,7 +528,7 @@ This is the same solution of the OLS: the two models are equivalent.
 Computing the expectation of $\hat{\beta}$:
 \begin{equation}
 \begin{aligned}
-&\E_{Pr(\y|\X,\beta, \sigma^2)}\left[ \hat{w}\right]= \sum \hat{w} Pr(\y|X, \beta, \sigma^2) =\\
+&\E_{Pr(\y|\X,\beta, \sigma^2)}\left[ \hbe\right]= \sum \hbe Pr(\y|X, \beta, \sigma^2) =\\
 &= \HM \sum \y Pr(\y |X, \beta, \sigma^2)  = \\
 &=\HM \E_{Pr(\y | \X,\beta, \sigma^2)} \left[ \y\right] = \\
 &= \HM \X \beta = \beta
@@ -539,7 +553,7 @@ and
 & = \HM\E_{Pr(\y|\X,\beta, \sigma^2)} \left[   \y  \y^T\right] \X \inv
 \end{aligned}
 \end{equation}
-and recalling from \ref{multiGauss} $Pr(\y) \sim \mathcal{N}(\beta^T \X ,\sigma^2 \mathbf{I})$
+and recalling from \ref{multiGauss} $Pr(\y) \sim \CMcal{N}(\beta^T \X ,\sigma^2 \mathbf{I})$
 \begin{equation}
 \begin{aligned}
 &\Cov\left[ \y\right]=\sigma^2 \mathbf{I} =\\
@@ -560,13 +574,12 @@ Substituting:
 
 \begin{equation}
 \begin{aligned}
-&\E_{Pr(\y|\X,\beta, \sigma^2)}\left[ \hb\hb^T\right] = \HM \X\left(\sigma^2 \mathbf{I} +\X\beta \beta^T\X^T\right)X^T \HM   = \\
- &=\sigma^2 \HM 
+&\E_{Pr(\y|\X,\beta, \sigma^2)}\left[ \hb\hb^T\right] = \HM \left(\sigma^2 \mathbf{I} +\X\beta \beta^T\X^T\right)X \inv   = \\
+ &=\sigma^2 \inv 
 \end{aligned}
 \end{equation}
 
 and finally variance-covariance matrix of the least square parameters is 
-
 \begin{equation}
 \begin{aligned}
 &\Cov\left[ \hb\right]=  \inv  \sigma^2
@@ -582,14 +595,14 @@ We can find an estimation of the noise variance from the maximum likelihood mode
 \begin{equation}
 \begin{aligned}
 \label{varErr}
-&\frac{\partial \log L}{\partial \sigma} = \sum_{i=1}^N-\frac{1}{\sigma} +\frac{1}{\sigma^3} \left(y_i - \x_i^T\beta\right) = 0 \Rightarrow \frac{N}{\sigma} +\frac{1}{\sigma^3}  \sum_{i=1}^N\left(y_i - \x^T\beta\right) = 0\\
-&\Rightarrow \hat{\sigma^2} = \frac{1}{N}\sum_{i=1}^N\left(y_i - \x_i^T\beta\right) 
+&\frac{\partial \log L}{\partial \sigma} = \sum_{i=1}^N-\frac{1}{\sigma} +\frac{1}{\sigma^3} \left(y_i - \x_i^T\beta\right)^2 = 0 \Rightarrow \frac{N}{\sigma} +\frac{1}{\sigma^3}  \sum_{i=1}^N\left(y_i - \x^T\beta\right)^2 = 0\\
+&\Rightarrow \hat{\sigma^2} = \frac{1}{N}\sum_{i=1}^N\left(y_i - \x_i^T\beta\right)^2 
 \end{aligned}
 \end{equation}
 This can be re-expressed as
 \begin{equation}
 \begin{aligned}
-&\Rightarrow \hat{\sigma^2} = \frac{1}{N}\sum_{i=1}^N\left(y_i - \x^T\hb\right)  = \frac{1}{N}\sum_{i=1}^N\left(y_i - \x_i^T\HM\y\right) = \\
+&\Rightarrow \hat{\sigma^2} = \frac{1}{N}\sum_{i=1}^N\left(y_i - \x^T\hb\right)^2  = \frac{1}{N}\sum_{i=1}^N\left(y_i - \x_i^T\HM\y\right)^2 = \\
 &= \frac{1}{N}\left(\y - \X\HM\y\right)^T\left(\y - \X\HM\y\right) = \\
 &=\y^T\y  - 2 \y^T  \X\HM\y + \y^T \X \cancel{\inv} \cancel{\X^T \X}\HM\y = \\
 &=\y^T\y  - \y^T  \X\HM\y  = \left(\y^T\y - \y^T\X\hb \right)
@@ -604,7 +617,7 @@ Taking the expectation w.r.t. $Pr(\y|\X,\beta, \sigma^2)$:
 \end{aligned}
 \end{equation}
 
-Suppose $\mathbf{t} \sim  \mathcal{N}\left(\mathbf{\mu}, \mathbf{\Sigma} \right)$, then $\E_{p(\mathbf{t})} \left( \mathbf{t^TAt}\right)= \Tr(\mathbf{A\Sigma})+\mathbf{\mu^TA\mu}$ with $\mu = \X\beta$
+Suppose $\mathbf{t} \sim  \CMcal{N}\left(\mathbf{\mu}, \mathbf{\Sigma} \right)$, then $\E_{p(\mathbf{t})} \left( \mathbf{t^TAt}\right)= \Tr(\mathbf{A\Sigma})+\mathbf{\mu^TA\mu}$ with $\mu = \X\beta$
 
 \begin{equation}
 \begin{aligned}
@@ -624,16 +637,16 @@ where lastly we have used the product property of the trace (see \ref{trace}).
 
 Normally $p<N$ hence the estimate of the variance is smaller than the true variance, so this estimator is \textbf{biased}. The estimate gets closer to the real value when $p/N$ is small, i.e., assuming $p$ is fixed, increasing the samples used. 
 
-This result might be strange. First of all notice from \ref{varErr} that the closer the model gets to the data, the smaller $\hs$. By definition the parameter estimates are the ones that minimise the noise and hence $hs$, hence when using the true parameters we would get equal or higher variance.
+This result might be strange. First of all notice from \ref{varErr} that the closer the model gets to the data, the smaller $\hs$. By definition the parameter estimates are the ones that minimise the noise and hence $\hs$. As a consequence, when using the true parameters we would get equal or higher variance.
 
 To estimate the true variance we can use the following formula:
 \begin{align}
 \hat{\sigma}^2 = \frac{1}{N-p-1}\sum_{i=1}^{N}(y_i-\hat{y}_i)^2
 \end{align}
-$N-p-1$ makes this estimation unbiased i.e., $\E[\hat{\sigma}^2] =\sigma^2$.
+$N-p-1$ makes this estimation unbiased i.e., $\frac{1}{N-p-1}\E[\hat{\sigma}^2] =\sigma^2$.
 
 \subsection{Interpretation of covariance}
-Consider a covariance matrix of size $2\times 2$ and suppose the first diagonal element, corresponding to the variable $\hb_0$ is much bigger than the second one corresponding to $\hb_1$. This means that we can change $\hb_0$ a little without affecting too much the model. On the contrary if the variance is small, small changes will affect significantly the model. Sometimes this happens when one variable has a much higher absolute value.
+Consider a covariance matrix of size $2\times 2$ for a two parameter model (i.e., a line on the plane) and suppose the first diagonal element, corresponding to the variable $\hb_0$ is much bigger than the second one corresponding to $\hb_1$. This means that we can change $\hb_0$ a little without affecting too much the model. On the contrary if the variance is small, small changes will affect significantly the model. Sometimes this happens when one variable has a much higher absolute value.
 
 If the values on the off-diagonals are negative, then when increasing one coefficient i.e., $\hb_0$, the other must be decreased to have the line to pass as close as possible to all points. For example in $2D$, increasing $\hb_0$ reduces the coefficient value: if it is positive, the line will be "more horizontal", if negative it becomes steeper, "more vertical".
 \subsection{Z-score}
@@ -642,12 +655,12 @@ Let us assume data were really generated by a linear model but were corrupted by
 \begin{align}
 Y = \beta_0 +\sum_i^p \beta_i X_i + \epsilon
 \end{align} 
-where $\epsilon \sim N(0,\sigma^2)$.
+where $\epsilon \sim \CMcal{N}(0,\sigma^2)$.
 The estimated parameters will still be a normal distribution:
 
 \begin{align}
 \label{parameterVar}
-\hat{\beta} \sim \mathcal{N}(\beta,  (\X^T\X)^{-1} \sigma^2)
+\hat{\beta} \sim \CMcal{N}(\beta,  (\X^T\X)^{-1} \sigma^2)
 \end{align}
 
 \begin{definition}{\textbf{Z-score}}
@@ -664,7 +677,7 @@ Z-values are computed as the test statistic for the hypothesis test that the tru
 \begin{align}
 z_j =\frac{\hat{\beta}_j}{\hat{\sigma} \sqrt{v_j}}
 \end{align}
-where the denominator is the variance of the parameter (from \ref{parameterVar}) with $v_j$ being the diagonal element of $(X^TX)^{-1}$ 
+where the denominator is the variance of the parameter (from \ref{parameterVar}) with $v_j$ being the diagonal element of $(X^TX)^{-1}$.
 \end{definition}
 
 \begin{theorem}[\textbf{The Gauss-Markov theorem}]
@@ -682,7 +695,7 @@ To be an unbiased estimator $DX = 0$, then
 
 \begin{equation}
 \begin{aligned}
-\Var(\tilde{\beta}) &= \Var(Cy) = C\Var(y) C^T = \sigma^2 CC^T = \\
+\Var(\hat{\beta}) &= \Var(Cy) = C\Var(y) C^T = \sigma^2 CC^T = \\
 &= \sigma^2 \left( \left(X^T X\right)^{-1}X^T +D \right)    \left( \left(X^T X\right)^{-1}X^T+D\right)^T =\\
 &= \sigma^2 \left( \left(X^T X\right)^{-1}X^T +D \right)    \left( X \left(X^TX\right)^{-1} + D^T \right)  =\\
 &= \sigma^2 (  \cancel{\left(X^TX\right)^{-1}}\cancel{X^T X}   \left(X^TX\right)^{-1} +  \left(X^T X\right)^{-1}X^TD^T                          +\\
@@ -704,6 +717,7 @@ For $j=1,\cdots, p$ regress $x_j$ on $z_0,\cdots, z_{p-1}$ to produce the coeffi
 Calculate the residual vectors as $z_j = x_j - \sum_{k=0}^{j-1} \hat{\gamma}_{kj}z_k$\;
 Regress $\mathbf{y}$ on the residual $z_p$ to get the estimate $\hat{\beta}_p = \frac{\langle z_p, y\rangle}{\langle z_p , z_p\rangle}$
 \end{algorithm}
+
 When inputs are correlated, the residual will be close to zero generating instabilities in the coefficients $\hat{\beta}_j$ and the z-score will be small.
 
 The algorithm in matrix form is
@@ -742,7 +756,7 @@ Multiple outputs do not affect one another's least square estimates.
 \subsection{Subset selection}
 Least square estimates sometimes show low bias but high variance resulting in a non-satisfactory prediction accuracy. This can be improved by setting some coefficients to $0$ to sacrifice a little of bias to reduce significantly the variance.
 
-Other times it is useful to reduce the size of inputs for easiness of interpretation or for computation purposes.
+Other times it is useful to reduce the input dimensionality for easiness of interpretation or for computation purposes.
 
 \subsubsection{Best subset selection}
 This algorithm finds for each $k \in {0,1,2,	\cdots p}$, the subset of size $k$ that gives the smallest residual sum of squares. Note that if a variable is in the best subset of size $m$, it might not be in the subsets of larger size (and of course neither in the smallest ones).
@@ -802,7 +816,7 @@ RSS(\lambda, \beta)       &= \left( y - X \beta \right)^T \left( y - X\beta \rig
 Now even if $X$ is not full rank, the problem is non singular (the inverse exists).
 In case of orthonormal inputs, the ridge coefficients are the same of least square but scaled: $\hat{\beta}^{ridge}  = \frac{\hat{\beta}}{1+\lambda}$.
 
-The parameter $\lambda$ can also be derived assuming a prior distribution $y_i  \sim  N\left( \beta_0+x_i^T\beta, \sigma^2\right)$ and the parameters $\beta_j$ are distributed as $N\left( 0, \tau^2\right)$. Then from \ref{bridge} $\lambda = \frac{\sigma^2}{\tau^2}$.
+The parameter $\lambda$ can also be derived assuming a prior distribution $y_i  \sim  \CMcal{N}\left( \beta_0+x_i^T\beta, \sigma^2\right)$ and the parameters $\beta_j$ are distributed as $\CMcal{N}\left( 0, \tau^2\right)$. Then from \ref{bridge} $\lambda = \frac{\sigma^2}{\tau^2}$.
 
 Applying the SVD decomposition of the matrix $\mathbf{X =  UDV^T}$ where $X$ is $N\times p$, $U$ is $N\times p$and $V$ is $p\times p$, the latter two both orthogonal with the columns of $U$ spanning the column space of $X$ and the columns of $V$ spanning the row space of $X$. $D$ is a $p\times p$ diagonal matrix with the elements $d_1\ge d_2 \ge \cdots \ge d_p\ge 0$ called singular value decomposition of $X$. If any $d_j = 0$ then $X$ is singular.
 
@@ -833,21 +847,21 @@ or equivalently
 &\text{subject to} \sum_{j=1}^p |\beta_j| \le t
 \end{aligned}
 \end{equation}
-If $t>t_0= \sum_1^p |\beta_j|$ where $\beta_j$ are the least square coefficients, then the lasso coefficients are the same of the least squares ones. If $t=t_0/2$ then the least square coefficients are shrunk by $50\%$ on average. Making $t$ sufficiently will cause some of the coefficients to be exactly $0$.
+If $t>t_0= \sum_1^p |\beta_j|$ where $\beta_j$ are the least square coefficients, then the lasso coefficients are the same of the least squares ones. If $t=t_0/2$ then the least square coefficients are shrunk by $50\%$ on average. Making $t$ sufficiently big will cause some of the coefficients to be exactly $0$.
 
 In \ref{ridge_lasso}, the blue areas show the constraints for the estimates of ridge and lasso regressions, while the ellipses are contours of the residual sum of squares, centered at $\beta^{ls}$, in case of only two coefficients. For the lasso one of the coefficients is $0$ when it hits one of the corner. In higher dimensions the figure becomes a rhomboid with many corners (and faces) so it becomes easy to hit a corner. 
 \begin{figure}
-\label{ridge_lasso}
 \includegraphics[scale=0.4]{img/ridge_lasso}
 \caption{Constraints of ridge and lasso regression.}
+\label{ridge_lasso}
 \end{figure}
 
 Also other penalization factors can be chosen, \ref{penalization}
 
 \begin{figure}
-\label{penalization}
 \includegraphics[scale=0.4]{img/penalization}
 \caption{Shapes of different penalization factors.}
+\label{penalization}
 \end{figure}
 
 \subsubsection{Least angle regression}
@@ -939,29 +953,109 @@ $\cdots$
 \subsubsection{The Grouped Lasso}
 $\cdots$
 
+\section{Bayesian inference}
+
+\subsection{Introduction to Bayes' theorem}
+Bayes' theorem is a formula that describes how to update the probabilities of hypotheses when given evidence. It follows simply from the axioms of conditional probability, but can be used to powerfully reason about a wide range of problems involving belief updates.
+
+Given a hypothesis $H$ and evidence $E$, Bayes' theorem states that the relationship between the probability of the hypothesis $Pr(H)$, before getting the evidence, and the probability of the hypothesis after getting the evidence $Pr(H|E)$ is
+\begin{equation}
+Pr(H|E) = \frac{Pr(E|H)Pr(H)}{Pr(E)}
+\end{equation}
+Often there are competing hypothesis and the task is to determine which is the most probable.
+
+This formula relates the probability of the hypothesis before getting the evidence $Pr(H)$, to the probability of the hypothesis after getting the evidence, $Pr(H|E)$: this term is generally what we want to know. For this reason, $Pr(H)$ is called the \textbf{prior probability}, while 
+$Pr(H|E)$ is called the \textbf{posterior probability}. The factor that relates the two, $\frac{Pr(E|H)}{Pr(E)}$, is called the \textbf{likelihood ratio} and $Pr(E|H)$ is called \textbf{likelihood} which indicates the compatibility of the evidence with the given hypothesis.
+$P(H|E)$ and $Pr(E|H)$ are called conditional probabilities. A conditional probability is an expression of how probable one event is given that some other event occurred (a fixed value) and Bayes' theorem centers on relating different conditional probabilities.
+
+$Pr(E)$ is sometimes called \textbf{marginal likelihood} or model evidence this factor is the same for all the hypotheses being considered.
+
+\subsection{Bayes inference}
+Bayesian inference is a method of statistical inference in which Bayes' theorem is used to update the probability for a hypothesis as more evidence or information becomes available. Bayesian inference assumes the data were generated by a model with unknown parameters. From this, it tries to come up with beliefs about the likely  "true values" of the parameters of the model. 
+For this reason when writing down the Bayes theorem in these cases, formally also the conditional on the choice of the model should be written down:
+
+\begin{equation}
+Pr(\theta|\X,M) = \frac{Pr(\X|\theta,M)Pr(\theta|M)}{Pr(\X|M)}
+\end{equation}
+Here the hypothesis described in the previous paragraph is represented by a set of values for the parameters.
+
+Once the model is stipulated, $Pr(X|\theta)$ can be evaluated for any given set of parameters: in this sense the likelihood is fixed once the model is fixed.
+$Pr(\X|M)$ can be rexpressed as $Pr(\X|M) =\int Pr(\X|\theta,M)Pr(\theta|M)d\theta$. In this way it can be re-thought as a normalization factor of the sets of parameters since it is a summation over the all parameter space. However note that it \textbf{does depend} on the choice of the model. It can be seen also as asking the question \textit{how much is it probable to see the data we have seen given that the model $M$, without any claim about its parameters, generated those data}?
+
+\subsection{Types of estimation}
+It is the moment to clarify different types of estimation. We have already seen the Ordinary Least Square (OLS) estimation, and other types of estimation based on the definition of an error function.
+
+We have also seen the \textbf{Maximum Likelihood Estimation (MLE)} approach, which maximizes the likelihood of the Bayes expression and how it is equivalent to OLS estimation in case of linear regression. (To be precise almost always the log-likelihood is maximized, first of all because of analytical convenience since many times we deal with exponentials coming from Gaussian distribution. Secondly for numerical precision: we are dealing with probabilities, numbers between $0$ and $1$ and since the range is quite small, underflow might be a problem.) The logarithmic instead extends the range by mapping numbers close to $0$ to $\infty$, resulting in a better precision.
+
+The \textbf{Maximum A-Priori (MAP)} estimation maximizes the numerator of the Bayes expression, i.e., the likelihood times the prior, which means the likelihood is weighted by weights coming from the prior. When using a uniform distribution for the prior, MAP turns into MLE since we are assigning equal weights for each possible value. For example suppose we can assign six possible values to $\be$ and assume $P(\be_i)=1/6$:
+\begin{equation}
+\begin{aligned}
+&\be_{MAP} = \argmax{\be}{\sum_i Pr(\x_i|\be) + \log P(\be)} =
+\\&= \argmax{\be}{\sum_i Pr(\x_i|\be) +const}=\argmax{\be}{\sum_i Pr(\x_i|\be)} = \be_{MLE}
+\end{aligned}
+\end{equation}
+
+When using a different prior, i.e., the simplification does not hold anymore.
+
+\subsection{Conjugate distributions}
+\label{conjugacy}
+\begin{definition}{\textbf{Conjugate distributions}}
+In Bayesian probability theory, if the posterior distribution $Pr(\theta|\X,M)$ is in the same probability space as the prior probability distribution $Pr(\theta|M)$, then the prior and posterior are called \textbf{conjugate distributions}, and the prior is called \textbf{conjugate prior for the likelihood function}. 
+\end{definition}
+
+As example consider the Gaussian distribution: \textbf{the Gaussian family is conjugate to itself (or self-conjugate) with respect to a Gaussian likelihood function}. If the likelihood is Gaussian, choosing Gaussian prior will ensure that also the posterior distribution is a Gaussian (see \ref{gaussian}). This means that the Gaussian distribution is a conjugate prior for the likelihood that is also Gaussian.
+
+Consider the general problem of inferring a (continuous) distribution for a parameter $\theta$ given some datum or data $x$. From Bayes' theorem, the posterior distribution is equal to the product of the likelihood function $p(x|\theta, M)$ and the prior $p(\theta|M)$. Let the likelihood function be considered fixed; the likelihood function is usually well-determined from a statement of the data-generating process. It is clear that different choices of the prior distribution $p(\theta|M)$ may make the integral more or less difficult to calculate, and the product $p(x|\theta,M) \times p(\theta|M)$ may take one algebraic form or another. For certain choices of the prior, the posterior has the same algebraic form as the prior (generally with different parameter values). Such a choice is a conjugate prior. A conjugate prior is an algebraic convenience, giving a closed-form expression for the posterior; otherwise numerical integration may be necessary. Further, conjugate priors may give intuition, by more transparently showing how a likelihood function updates a prior distribution.
+All members of the exponential family have conjugate priors.
+
+In case of \textbf{classification} we are given a training set with input and output data. Once we have stipulated a model that could have generated output data, we want to find the best parameters of the model such that when those inputs are fed to the model we get those outputs. So the question becomes \textit{what is the best set of parameters $\theta$ for the model $M$ that could have generated the output $\y$ when the model has been fed with input data $\X$?}
+
+In formula:
+\begin{equation}
+\label{ClassBayes}
+Pr(\theta|\y,\X,M) = \frac{Pr(\y|\theta,\X,M)Pr(\theta|\X, M)}{Pr(\y|\X,M)}
+\end{equation}
+
+\subsubsection{Dataset likelihood}
+\label{dataset likelihood}
+\ref{dataset likelihood}
+To be precise the likelihood is the likelihood of an entire dataset, since we are interested in all $\y$ and not in a single value $y$. $Pr(\y|\theta,\X,M)$ is then a joint density over all the responses in our dataset: $Pr(y_1, y_2, \cdots, y_n|\theta,\X,M)$. Evaluating this density at the observed points gives a single likelihood value for the whole dataset.	 Assuming that the noise at each data point is independent we can factorize as:
+\begin{equation}
+Pr(\y|\theta,\X,M) = \prod_{n=1}^N Pr(y_n|\x_n, \theta)
+\end{equation}
+We have not say that $y_n$'s are completely independent as otherwise it would not be worth trying to model the data at all. Rather, they are \textbf{conditionally independent} given a value $\theta$, i.e., the deterministic model.
+Basically the model incorporates the dependency. Consider the following example, we have a set of data $(\y,\X)$ from which we want to predict the output $y_n$ given a new $\x_n$. Recalling from conditional probability that $P(A|B) = \frac{Pr(A\cap B)}{Pr(B)}$ we have:
+\begin{equation}
+P(y_n|\y,\x_n, \X) = \frac{Pr(y_n\cap \y|\x_n,\X)}{Pr(\y|\x_n,\X)}
+\end{equation}
+Note that actually $\y$ does not depend on $\x_n$: $Pr(\y|\x_n,\X) = Pr(\y|\X)$. Using independence:
+\begin{equation}
+P(y_n|\y,\x_n, \X) = \frac{Pr(y_n\cap \y|\x_n,\X)}{Pr(\y|\X)} = \frac{Pr(\y|\X) Pr(y_n|\x_n,\X)}{Pr(\y|\X)} = 
+\end{equation}
+[TO BE CONTINUED WAITING ON ANSWER ON CROSS-VALIDATED STACK EXCHANGE]
+
 \section{Linear Classification}
 For classification problem, in this section we assume the classification boundaries are linear, i.e., in the input hyperspace the points belonging to different classes can be separated by hyperplanes. 
 
 \subsection{Linear regression of an Indicator matrix}
-Suppose we have $K$ classes. For a single output we build a vector $\mathbf{Y} = \left( Y_1, \cdots, Y_k\right)$ where $Y_k=1$ if the class it belongs is the $k$ class. As output we will have the matrix $\mathbf{Y}$ of $0$ and $1$ with each row having a single $1$. We fit a linear regression model to each of the columns of $\mathbf{Y}$ simultaneously:
+Suppose we have $K$ classes. For a single output we build a vector $\mathbf{y} = \left( y_1, \cdots, y_k\right)$ where $y_k=1$ if the class it belongs is the $k$ class. As output we will have the matrix $\mathbf{Y}$ of $0$ and $1$ with each row having a single $1$. We fit a linear regression model to each of the columns of $\mathbf{Y}$ simultaneously:
 \begin{align*}
 \hat{\mathbf{Y}} = \mathbf{X}\left( \mathbf{X}^T\mathbf{X}\right)^{-1}\mathbf{X}^T\mathbf{Y}
 \end{align*}
 We get a coefficient vector for each response column $y_k$, and hence a $(p+1) \times K$ matrix $\hat{\mathbf{B}} = \left( \mathbf{X}^T\mathbf{X}\right)^{-1}\mathbf{X}^T\mathbf{Y}$,where $\mathbf{X}$ will have $p+1$ columns with a leading column of 1 for the intercept.
 
 Suppose we are given a new input $x$. Then the classification problem becomes:
-\begin{enumerate}
-\item compute the output $\hat{f}(x)^T = (1, x^T)\mathbf{\hat{B}}$ which is a $k$ vector
-identify the largest component $\hat{G}(x) = \argmax{k \in \mathcal{G}} \hat{f}_k(x)$
-\end{enumerate}
 
-With this approach we are basically estimating a conditional expectation, i.e., given the inputs $x$ what is the probability the output is of class $k$? Mathematically $\E\left( Y_k|X=x\right) =  Pr\left( G=k|X=x\right)$ 
+\textit{compute the output $\hat{f}(x)^T = (1, x^T)\mathbf{\hat{B}}$ which is a $k$ vector
+identify the largest component $\hat{G}(x) = \argmax{k \in \mathcal{G}} \hat{f}_k(x)$}.
 
-Although the linear model guarantees $\sum_{k \in \mathcal{G}}\hat{f}_k=1$, as long as there is an intercept in the model, $\hat{f}_k(x)$ can be negative or bigger than one, especially when making predictions outside the hull of training data. Although this fact, this approach still work in many cases.
+With this approach we are basically estimating a conditional expectation, i.e., given the inputs $\x$ what is the probability the output is of class $k$? Mathematically $\E\left( y_k|X=x\right) =  Pr\left( G=k|X=x\right)$ since $y_k=1$.
+
+Although the linear model guarantees $\sum_{k \in \mathcal{G}}\hat{f}_k=1$, as long as there is an intercept in the model, $\hat{f}_k(x)$ can be negative or bigger than one, especially when making predictions outside the hull of training data. Although this fact, this approach still works in many cases.
 
 \textbf{An important limitation} is when $K\ge 3$. Even if the classes can still be separated by more than one linear boundaries, linear regression cannot find linear boundaries (because they are more than one?).
 
-If quadratic regression might solve the problem, but a general rule is that if $k\ge3$ classes are lined up (their centroids are in the same line), a polynomial term with degree up to $k-1$ is  needed to solve the problem, and since the direction is arbitrary, cross-products terms might be needed too.
+Quadratic regression might solve the problem, but a general rule is that if $k\ge3$ classes are lined up (their centroids are in the same line), a polynomial term with degree up to $k-1$ is  needed to solve the problem, and since the direction is arbitrary, cross-products terms might be needed too.
 
 \subsection{Linear Discriminant analysis}
 For optimal classification we have to know the class posteriors $Pr\left( G|X\right)$. Let $\pi_k$ be the prior probability of class $k$ with $\sum_k^K \pi_k=1$. Suppose $f_k(x)$ is the class conditional density.
@@ -1075,8 +1169,10 @@ More generally the $K$ centroids in $p$-dimensional input, lie in an affine subs
 
 
 \begin{figure}
+\centering
 \label{proj}
 \includegraphics[scale=0.4]{img/proj}
+\caption{...}
 \end{figure}
 
 If $K>3$ we can look for a $L<K-1$ dimensional subspace optimal for LDA. Fisher defined \textit{optimal} such that the projected centroids were spread out as much as possible in terms of variance.
@@ -1089,6 +1185,7 @@ This problem, finding the principal component subspaces of the centroids, involv
 The $lth$ discriminant variable is given by $Z_l =  v_l^TX$ with $v_l=W^{-\frac{1}{2}} v^*_l$.  Although the direction joining the centroids separates the means as much as possible(maximizes the between class covariance), there is an overlap between the projected classes due to the nature of covariances. Taking the covariances into account reduce the overlap and that is what we are doing (\ref{cov}).
 
 \begin{figure}
+\centering
 \label{cov}
 \includegraphics[scale=0.4]{img/cov}
 \end{figure}
@@ -1105,86 +1202,6 @@ This is a generalized eigenvalue problem, with $a$ given by the largest eigenval
 The reduced subspaces can be used both for visualization and classification by limiting the distance between centroids to the chosen subspace. However, when doing this, due to the Gaussian classification, a correction factor of $\log \pi_k$ is needed. The misclassification is given by the overlapping area in \ref{cov} between the two densities. When both classes have the same priors $\pi_k$ as in the figure, the optimal cut-point is the midway between projected means, if not the cut-point is moved towards the smaller class to have a better error rate.
 
 For $2$ classes one can derive the linear rule using LDA, and then choosing the cut-point to minimize misclassification error.
-
-
-\subsection{Introduction to Bayes' theorem}
-Bayes' theorem is a formula that describes how to update the probabilities of hypotheses when given evidence. It follows simply from the axioms of conditional probability, but can be used to powerfully reason about a wide range of problems involving belief updates.
-
-Given a hypothesis $H$ and evidence $E$, Bayes' theorem states that the relationship between the probability of the hypothesis $Pr(H)$, before getting the evidence, and the probability of the hypothesis after getting the evidence $Pr(H|E)$ is
-\begin{equation}
-Pr(H|E) = \frac{Pr(E|H)Pr(H)}{Pr(E)}
-\end{equation}
-Often there are competing hypothesis and the task is to determine which is the most probable.
-
-This formula relates the probability of the hypothesis before getting the evidence $Pr(H)$, to the probability of the hypothesis after getting the evidence, $Pr(H|E)$: this term is generally what we want to know. For this reason, $Pr(H)$ is called the \textbf{prior probability}, while 
-$Pr(H|E)$ is called the \textbf{posterior probability}. The factor that relates the two, $\frac{Pr(E|H)}{Pr(E)}$, is called the \textbf{likelihood ratio} and $Pr(E|H)$ is called \textbf{likelihood} which indicates the compatibility of the evidence with the given hypothesis.
-$P(H|E)$ and $Pr(E|H)$ are called conditional probabilities. A conditional probability is an expression of how probable one event is given that some other event occurred (a fixed value) and Bayes' theorem centers on relating different conditional probabilities.
-
-$Pr(E)$ is sometimes called \textbf{marginal likelihood} or model evidence this factor is the same for all the hypotheses being considered.
-
-\subsection{Bayes inference}
-Bayesian inference is a method of statistical inference in which Bayes' theorem is used to update the probability for a hypothesis as more evidence or information becomes available. Bayesian inference assumes the data were generated by a model with unknown parameters. From this, it tries to come up with beliefs about the likely  "true values" of the parameters of the model. 
-For this reason when writing down the Bayes theorem in these cases, formally also the conditional on the choice of the model should be written down:
-
-\begin{equation}
-Pr(\theta|\X,M) = \frac{Pr(\X|\theta,M)Pr(\theta|M)}{Pr(\X|M)}
-\end{equation}
-Here the hypothesis described in the previous paragraph is represented by a set of values for the parameters.
-
-Once the model is stipulated, $Pr(X|\theta)$ can be evaluated for any given set of parameters: in this sense the likelihood is fixed once the model is fixed.
-$Pr(\X|M)$ can be rexpressed as $Pr(\X|M) =\int Pr(\X|\theta,M)Pr(\theta|M)d\theta$. In this way it can be re-thought as a normalization factor of the sets of parameters. However note that it \textbf{does depend} on the choice of the model. It can be seen also as asking the question \textit{how much is it probable to see the data we have seen given that the model $M$, without any claim about its parameters, generated those data}?
-
-\subsection{Types of estimation}
-It is the moment to clarify different types of estimation. We have already seen the Ordinary Least Square (OLS) estimation, and other types of estimation based on the definition of an error function.
-
-We have also seen the Maximum Likelihood Estimation approach, which maximizes the likelihood of the Bayes expression and how it is equivalent to OLS estimation in case of linear regression. (To be precise almost always the log-likelihood is maximized, first of all because of analytical convenience since many times we deal with exponentials coming from Gaussian distribution. Secondly for numerical precision: we are dealing with probabilities, numbers between $0$ and $1$ and since the range is quite small, underflow might be a problem. The logarithmic instead extend the range by mapping numbers close to $0$ to $\infty$, resulting in a better precision.
-
-The Maximum A-Priori estimation maximizes the numerator of the Bayes expression, i.e., the likelihood times the prior, i.e., the likelihood is weighted by weights coming from the prior. When using a uniform distribution for the prior, MAP turns into MLE since we are assigning equal weights for each possible value. For example suppose we can assign six possible values to $\be$ and assume $P(\be)=1/6$:
-\begin{equation}
-\begin{aligned}
-&\be_{MAP} = \argmax{\be}{\sum_i Pr(\x_i|\be) + \log P(\be)} =
-\\&= \argmax{\be}{\sum_i Pr(\x_i|\be) +const}=\argmax{\be}{\sum_i Pr(\x_i|\be)} = \be_{MLE}
-\end{aligned}
-\end{equation}
-
-When using a different prior, i.e., the simplification does not hold anymore.
-
-\subsection{Conjugate distributions}
-\label{conjugacy}
-\begin{definition}{\textbf{Conjugate distributions}}
-In Bayesian probability theory, if the posterior distribution $Pr(\theta|\X,M)$ is in the same probability space as the prior probability distribution $Pr(\theta|M)$, then the prior and posterior are called \textbf{conjugate distributions}, and the prior is called \textbf{conjugate prior for the likelihood function}. 
-\end{definition}
-
-As example consider the Gaussian distribution: \textbf{the Gaussian family is conjugate to itself (or self-conjugate) with respect to a Gaussian likelihood function}. If the likelihood is Gaussian, choosing Gaussian prior will ensure that also the posterior distribution is a Gaussian (see \ref{gaussian}). This means that the Gaussian distribution is a conjugate prior for the likelihood that is also Gaussian.
-
-Consider the general problem of inferring a (continuous) distribution for a parameter $\theta$ given some datum or data $x$. From Bayes' theorem, the posterior distribution is equal to the product of the likelihood function $p(x|\theta, M)$ and the prior $p(\theta|M)$. Let the likelihood function be considered fixed; the likelihood function is usually well-determined from a statement of the data-generating process. It is clear that different choices of the prior distribution $p(\theta|M)$ may make the integral more or less difficult to calculate, and the product $p(x|\theta,M) \times p(\theta|M)$ may take one algebraic form or another. For certain choices of the prior, the posterior has the same algebraic form as the prior (generally with different parameter values). Such a choice is a conjugate prior. A conjugate prior is an algebraic convenience, giving a closed-form expression for the posterior; otherwise numerical integration may be necessary. Further, conjugate priors may give intuition, by more transparently showing how a likelihood function updates a prior distribution.
-All members of the exponential family have conjugate priors.
-
-In case of \textbf{classification} we are given a training set with input and output data. Once we have stipulated a model that could have generated output data, we want to find the best parameters of the model such that when those inputs are fed to the model we get those outputs. So the question becomes \textit{what is the best set of parameters $\theta$ for the model $M$ that could have generated the output $\y$ when the model has been fed with input data $\X$?}
-
-In formula:
-\begin{equation}
-\label{ClassBayes}
-Pr(\theta|\y,\X,M) = \frac{Pr(\y|\theta,\X,M)Pr(\theta|\X, M)}{Pr(\y|\X,M)}
-\end{equation}
-
-\subsubsection{Dataset likelihood}
-\label{dataset likelihood}
-\ref{dataset likelihood}
-To be precise the likelihood is the likelihood of an entire dataset, since we are interested in all$\y$ and not in a single value $y$. $Pr(\y|\theta,\X,M)$ is then a joint density over all the responses in our dataset: $Pr(y_1, y_2, \cdots, y_n|\theta,\X,M)$ . Evaluating this density at the observed points gives a single likelihood value for the whole dataset.	 Assuming that the noise at each data point is independent we can factorize as:
-\begin{equation}
-Pr(\y|\theta,\X,M) = \prod_{n=1}^N Pr(y_n|\x_n, \theta)
-\end{equation}
-We have not say that $y_n$'s are completely independent as otherwise it would not be trying to model the data at all. Rather, they are \textbf{conditionally independent} given a value $\theta$, i.e., the deterministic model.
-Basically the model incorporates the dependency. Consider the following example, we have a set of data $(\y,\X)$ from which we want to predict the output $y_n$ given a new $\x_n$. Recalling from conditional probability that $P(A| B) = \frac{Pr(A\cap B)}{Pr(B)}$ we have:
-\begin{equation}
-P(y_n|\y,\x_n, \X) = \frac{Pr(y_n\cap \y|\x_n,\X)}{Pr(\y|\x_n,\X)}
-\end{equation}
-Note that actually $\y$ does not depend on $\x_n$: $Pr(\y|\x_n,\X) = Pr(\y|\X)$. Using independence:
-\begin{equation}
-P(y_n|\y,\x_n, \X) = \frac{Pr(y_n\cap \y|\x_n,\X)}{Pr(\y|\X)} = \frac{Pr(\y|\X) Pr(y_n|\x_n,\X)}{Pr(\y|\X)} = 
-\end{equation}
-[TO BE CONTINUED WAITING ON ANSWER ON CROSS-VALIDATED STACK EXCHANGE]
 
 \subsection{Logistic regression}
 The idea behind logistic regression is to still exploit a linear model $x^T\beta$ but having its output representing a probability, i.e., constrained between $0$ and $1$. This part is performed using the sigmoid function
@@ -1260,7 +1277,7 @@ Pr\left(\be|\y,\X,M\right) = \frac{Pr\left(\y|\be,\X,M\right) Pr(\be,M)}{Pr(\y|\
 
 This formula tells we want to find the coefficients given some input and output data. Let us analyse each term:
 \begin{itemize}
-\item $Pr(\be)$ (\textbf{prior distribution}): this is the prior belief about the parameters without seeing the data. As prior, we will use a Gaussian distribution with $0$ mean:  $\CMcal{N}(0, \sigma^2\I)$. In this way the parameters will depend on $\sigma^2$ two: more formally we should write $Pr(\be|\sigma)$ but we will skip. Although the choice of the Gaussian distribution with $0$ mean is analytically convenient as seen in \ref{conjugacy}, we will not rely on conjugacy.
+\item $Pr(\be)$ (\textbf{prior distribution}): this is the prior belief about the parameters without seeing the data. As prior, we will use a Gaussian distribution with $0$ mean:  $\CMcal{N}(0, \sigma^2\I)$. In this way the parameters will depend on $\sigma^2$: more formally we should write $Pr(\be|\sigma)$ but we will skip. Although the choice of the Gaussian distribution with $0$ mean is analytically convenient as seen in \ref{conjugacy}, we will not rely on conjugacy.
 \item $Pr\left(\y|\be,\X\right)$ (\textbf{likelihood}): we will assume $y$ are conditionally independent (\ref{dataset likelihood}):
 \begin{equation}
 Pr(\y|\X, \be) = \prod_{n=1}^N Pr(y_n|\x_n, \be)
@@ -1275,7 +1292,7 @@ Pr(\y|\X) = \int Pr\left(\y|\be,\X\right) Pr(\be) d\be
 \end{equation}
 \end{itemize}
 
-So the denominator can be calculated and results in a Gaussian function not in standard form (\ref{gaussian,gaussian2}). The denominator, or marginal likelihood, as we have seen can be expressed as $Pr(\y|\X) = \int Pr\left(\y|\be,\X\right) Pr(\be) d\be$. Mathematically this integral has no close solution since (again see \ref{gaussian, gaussian2}) and the impossibility of the integral of $exp{-x^2})$. [WHAT IF OTHER DISTRIBUTIONS ARE USED?]
+So the numerator can be calculated and results in a Gaussian function not in standard form (\ref{gaussian}). The denominator, or marginal likelihood, as we have seen can be expressed as $Pr(\y|\X) = \int Pr\left(\y|\be,\X\right) Pr(\be) d\be$. Mathematically this integral has no close solution since (again see \ref{gaussian}) and the impossibility of the integral of $e^{-x^2})$, unless an ad-hoc prior distribution is chosen.
 
 When we cannot directly compute the posterior density (due to the denominator), we have three options:
 \begin{enumerate}
@@ -1284,19 +1301,20 @@ When we cannot directly compute the posterior density (due to the denominator), 
 \item Sample directly from the posterior $Pr(\be|\X,\y)$ knowing only the numerator.
 \end{enumerate}
 
-The first method is simple and hence popular but it is not very "Bayesian", since we will make predictions of new data based on a single value and not a distribution. The whole Bayesian theory is based on making an hypothesis and getting feedback from the data that can validate or not that hypothesis. Also when using a distribution we get also measures on how confident we are about the estimated model. For example when estimating a Gaussian distribution, we estimate the coefficients $\mu$ and $\sigma^2$: the smallest the latter value the mode confident we are about the model. When using a single value we loose this piece of information.
+The first method is simple and hence popular but it is not very "Bayesian", since we will make predictions of new data based on a single value and not a distribution. The whole Bayesian theory is based on making an hypothesis and getting feedback from the data that can validate or not that hypothesis. Also when using a distribution we get also measures on how confident we are about the estimated model. For example when estimating a Gaussian distribution, we estimate the coefficients $\mu$ and $\sigma^2$: the smallest the latter value the more confident we are about the model. When using a single value we loose this piece of information.
 
 With the second method we get a density easy to work with but if the chosen density is very different from the posterior our model will not be very reliable.
 
 The third method samples from the posterior and hence to get a good approximation but it can be difficult.
 
 \subsubsection{First method: point estimation, the MAP solution}
-We have seen that in some cases we cannot compute the posterior but we can compute the numerator of the expression, i.e., the prior multiplied by the likelihood. The value that maximizes the posterior is also the value that maximizes the numerator. We have already seen a likelihood maximization procedure in \ref{likelihoodMax}; here we are maximizing the likelihood times the prior. This solution is the \textbf{aximum a posteriori (MAP)} estimate.
+We have seen that in some cases we cannot compute the posterior but we can compute the numerator of the expression, i.e., the prior multiplied by the likelihood. The value that maximizes the posterior is also the value that maximizes the numerator. We have already seen a likelihood maximization procedure in \ref{likelihoodMax}; here we are maximizing the likelihood times the prior. This solution is the \textbf{maximum a posteriori (MAP)} estimate.
 
 \paragraph{The Newton-Raphson method}
 The Newton-Raphson method finds the points where $f(x)=0$. Starting from an estimation $x_n$ of such points, the estimation is updated by moving to the point where the tangent to the function at $x_n$ passes throw the x-axis. This point is computed by approximating the gradient as a change in $f(x)$ divided by a change in $x$:
 
 \begin{figure}
+\centering
 \includegraphics[scale=0.3]{img/NewtonRaphson}
 \caption{Newton-Raphsone example.}
 \end{figure}
@@ -1317,16 +1335,16 @@ f''(x_n) = -\frac{f'(x_n)-0}{x_n -x_{n+1}}\\
 When dealing with vectors, $f'(x)$ is replaced by the vector of partial derivatives evaluated at $x_n$ and $\frac{1}{f''(x_n)}$ is replaced by the inverse of the Hessian matrix $\frac{-\partial^2 f(x)}{\partial \x \partial \x^T}$.
 
 \paragraph{Derivation}
-As already done, instead of maximizing the function itself, we maximize its logarithmic. Apart from the mathematical convenience this is also the advantage of avoid underflow: we are dealing with probabilities, number between $0$ and $1$ and these might be too small to have a sufficient numerical precision. The logarithmic, as the numbers go to $0$, makes the number goes to infinity, guaranteeing a better numerical precision.
+As already done, instead of maximizing the function itself, we maximize its logarithmic. Apart from the mathematical convenience this is also the advantage of avoiding underflow: we are dealing with probabilities, number between $0$ and $1$ and these might be too small to have a sufficient numerical precision. The logarithmic, as the numbers go to $0$, makes the number goes to infinity, guaranteeing a better numerical precision.
  Since we cannot compute the derivative and set it to $0$, we use the Newton-Raphson procedure. Let us call the numerator $g(\be,\X,\y) = Pr(\y|\be,\X)Pr(\be|\X)$:
 
 \begin{equation}
 \be' = \be - \br{\frac{\partial^2\log g(\be,\X,\y)}{\partial \be \partial \be^T}}^{-1} \frac{\partial \log g(\be,\X,\y)}{\partial \be}
 \end{equation}
 
-The procedure is iterative and stops when it stops when the gradient is $0$. To check the point we have converged to corresponds to a minimum we check the Hessian matrix is negative definite.
+The procedure is iterative and stops when the gradient is $0$. To check the point we have converged to corresponds to a minimum we check the Hessian matrix is negative definite.
 
-Before computing the derives we re-express $g(\be,\X,\y)$.
+Before computing the derivatives we re-express $g(\be,\X,\y)$.
 
 \begin{equation}
 \begin{aligned}
@@ -1337,17 +1355,15 @@ Before computing the derives we re-express $g(\be,\X,\y)$.
 We denote $P_n=P(Y_n=1|\be, \x_n) = \frac{1}{1+e^{-\be^T\x_n}}$:
 \begin{equation}
 \begin{aligned}
-&\log g(\be,\X,\y) =  \sum_{n=1}^N P_n^{y_n} +\log(1-P_n)^{1-y_n}+ \log Pr(\be|\sigma^2) =
+&\log g(\be,\X,\y) =  \sum_{n=1}^N \log P_n^{y_n} +\log(1-P_n)^{1-y_n}+ \log Pr(\be|\sigma^2) =
 \end{aligned}
 \end{equation}
 Racalling
 \begin{equation}
-Pr(\be|\sigma^2)  = \frac{1}{\sqrt{(2\pi)^D|\Sigma|}} e^{-\frac{\br{\be-\cancel{\mu}}^T\br{\be-\cancel{\mu}}}{2\sigma2}}
-\end{equation}
-
-\begin{equation}
 \begin{aligned}
-&\log g(\be,\X,\y) =  \sum_{n=1}^N P_n^{y_n} +\log(1-P_n)^{1-y_n} -\frac{D}{2}\log(2\pi) - D\log\sigma - \frac{1}{2\sigma^2} \be^T\be
+Pr(\be|\sigma^2)  =& \frac{1}{\sqrt{(2\pi)^D|\Sigma|}} e^{-\frac{\br{\be-\cancel{\mu}}^T\br{\be-\cancel{\mu}}}{2\sigma2}}\\
+\Rightarrow\log g(\be,\X,\y) =&  \sum_{n=1}^N \log P_n^{y_n} +\log(1-P_n)^{1-y_n} -\frac{D}{2}\log(2\pi) - D\log\sigma +\\
+&- \frac{1}{2\sigma^2} \be^T\be
 \end{aligned}
 \end{equation}
 
@@ -1360,23 +1376,23 @@ Now we can take the derivative:
 \end{aligned}
 \end{equation}
 
-Now we must calculate $\frac{P_n}{\partial \be}$:
+Now we must calculate $\frac{\partial P_n}{\partial \be}$:
 \begin{equation}
 \label{devPn}
 \begin{aligned}
-&\frac{\partial P_n}{\partial \be} = \frac{\partial}{\partial \be} \frac{1}{1+e^{-\be^T\x_n}} = \frac{\partial}{\partial \be} \br{1+e^{-\be^T\x_n}}^{-1} =\\
-&= \frac{1}{\br{1+e^{-\be^T\x_n}}^2}  \frac{\partial}{\partial \be} \br{1+e^{-\be^T\x_n}} = \\
-&=  -\x_n \frac{e^{-\be^T\x_n}}{\br{1+e^{-\be^T\x_n}}^2}   = -x_n \frac{1}{\br{1+e^{-\be^T\x_n}}}\frac{e^{-\be^T\x_n}}{\br{1+e^{-\be^T\x_n}}} =\\
-&= -\x_nP_n \br{1-P_n}
+\frac{\partial P_n}{\partial \be} =& \frac{\partial}{\partial \be} \frac{1}{1+e^{-\be^T\x_n}} = \frac{\partial}{\partial \be} \br{1+e^{-\be^T\x_n}}^{-1} =\\
+=& \frac{1}{\br{1+e^{-\be^T\x_n}}^2}  \frac{\partial}{\partial \be} \br{1+e^{-\be^T\x_n}} = \\
+=&  -\x_n \frac{e^{-\be^T\x_n}}{\br{1+e^{-\be^T\x_n}}^2}   = -x_n \frac{1}{\br{1+e^{-\be^T\x_n}}}\frac{e^{-\be^T\x_n}}{\br{1+e^{-\be^T\x_n}}} =\\
+=& -\x_nP_n \br{1-P_n}
 \end{aligned}
 \end{equation}
 Substituting in \ref{devg}:
 \begin{equation}
 \begin{aligned}
-&\frac{\partial \log g(\be,\X,\y)}{\partial \be} =  - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\frac{\partial P_n}{\partial \be} - \frac{1-y_n}{1-P_n}\frac{\partial P_n}{\partial \be} =\\
-&=- \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\left[-\x_nP_n \br{1-P_n}\right] - \frac{1-y_n}{1-P_n}\left[-\x_nP_n \br{1-P_n}\right] =\\
-&= - \frac{1}{\sigma^2} \be + \sum_{n=1}^N -y_n\x_n \br{1-P_n} - (1-y_n)(-\x_nP_n ) = \\
-&= - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \x_n (y_n-P_n)
+\frac{\partial \log g(\be,\X,\y)}{\partial \be} =&  - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\frac{\partial P_n}{\partial \be} - \frac{1-y_n}{1-P_n}\frac{\partial P_n}{\partial \be} =\\
+=&- \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\left[-\x_nP_n \br{1-P_n}\right] - \frac{1-y_n}{1-P_n}\left[-\x_nP_n \br{1-P_n}\right] =\\
+=& - \frac{1}{\sigma^2} \be + \sum_{n=1}^N -y_n\x_n \br{1-P_n} - (1-y_n)(-\x_nP_n ) = \\
+=& - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \x_n (y_n-P_n)
 \end{aligned}
 \end{equation}
 
@@ -1391,11 +1407,12 @@ where we used the result from \ref{devPn}.
 
 Note that the 2 terms are negative definite, hence the Hessian is always negative definite. Therefore there can only be one optimum and it must be the minimum.
 
-The decision boundary is the one for which $Pr(Y_n=1|\x,\hat{\be}=0.5$.
+The decision boundary is the one for which $Pr(Y_n=1|\x,\hat{\be}=0.5)$.
 
 The steps above can be done for any prior and likelihood combination. In some cases the posterior might have several maxima and or some minima and it become difficult to know if the maximum is a global optimum.
-================================
-[HERE ARE the steps performed in the ESLII book: instead of maximizing posterior (or equivalently the numerator), it maximizes the likelihood.]
+
+
+The \textit{Elements of Statistical Learning} book instead of maximizing posterior (or equivalently the numerator), it maximizes the likelihood.
 Let us express $Pr\left(G=k|X=x\right)=p_k(x,\theta)$ with $\theta = \left\lbrace \beta_{10},\beta_1^T,\cdots, \beta_{\left(K-1\right)0},\beta_{K-1}^T\right\rbrace$
 and let us define the log-likelihood
 \begin{equation}
@@ -1448,7 +1465,7 @@ sometimes known as the adjusted response. This algorithm is known as \textbf{ite
 $\beta=0$ seems a good starting value. Convergence is never guaranteed but typically the algorithm does converge, since the log-likelihood is concave but overshooting can occur. In the rare cases that the log-likelihood decreases, step size halving will guarantee convergence.
 
 For $K>2$ we still use the iteration procedure but we will have a $K-1$ vector response and a non-diagonal weight matrix per observation. In this case it is better to work with the vector $\theta$ directly.
-================================
+
 \subsubsection{Second method: Laplace approximation}
 There are many approximation methods but the most common is the Laplace approximation. The idea is to approximate the density of interest with a Gaussian.
 
@@ -1487,57 +1504,183 @@ It can be applied also to multivariate densities  $Pr(\be,\X,\y) \approx \CMcal{
 \end{aligned}
 \end{equation}
 
-Consider a multinomial 2D Gaussian function (dimensionaity of $\be$ is 2) as in \ref{gaussian} and suppose to project on the plane the points of the curve having the same value (the ellipses in the figure). The ellipses will be the combination of coefficients giving the same function value.
+Consider a multinomial 2D Gaussian function (dimensionaity of $\be$ is 2) as in \ref{gaussianfig} and suppose to project on the plane the points of the curve having the same value (the ellipses in the figure). The ellipses will be the combination of coefficients giving the same function value.
 \begin{figure}
-\label{gaussian}
+\centering
 \includegraphics[scale=0.4]{img/gaussian}
 \caption{Example of multinomial Gaussian.}
+\label{gaussianfig}
 \end{figure}
 
 In figure \ref{posteriorApprox} the Laplace approximation of the posterior (darker lines) is shown while the lighter lines are the true unnormalised posterior. The centre point corresponds to the maximum point $\hbe$. Note how the approximation is good around $\hbe$ and it diverges going further from it.
 \begin{figure}
-\label{posteriorApprox}
+\centering
 \includegraphics[scale=0.4]{img/posteriorApprox}
 \caption{The axis are the parameters. The Laplace approximation of the posterior (darker lines) is shown while the lighter lines are the true unnormalised posterior. The centre point corresponds to the maximum point $\hbe$.}
+\label{posteriorApprox}
 \end{figure}
 
-We use the approximate posterior to compute predictions. But now we have a density and not a single value: the prediction is computed by averaging over this density: it is like averaging over all possible values of $\be$. We should calculate the expected value $Pr(Y_{new} = 1|\x_{new}, \be)$ with respect to the approximate posterior denoted as $\CMcal{N}(\mathbf{\mu, \Sigma}$:
+We use the approximate posterior to compute predictions. But now we have a density and not a single value: the prediction is computed by averaging over this density: it is like averaging over all possible values of $\be$. We should calculate the expected value $Pr(Y_{new} = 1|\x_{new}, \be)$ with respect to the approximate posterior denoted as $\CMcal{N}(\mathbf{\mu, \Sigma})$:
 \begin{equation}
-Pr(Y_{new}=1|\x_{new}, \X, \be) = \E_{\CMcal{N}(\mathbf{\mu, \Sigma}}\left\lbrace Pr(T_{new}=1| \x_{new}, \be)\right\rbrace
+Pr(Y_{new}=1|\x_{new}, \X, \be) = \E_{\CMcal{N}(\mathbf{\mu, \Sigma})}\left\lbrace Pr(T_{new}=1| \x_{new}, \be)\right\rbrace
 \end{equation}
-However we cannot compute the integral (of the expectation), but we can sample from $\CMcal{N}(\mathbf{\mu, \Sigma}$ and approximate the expectation with a sum:
+However, we cannot compute the integral (of the expectation), but we can sample from $\CMcal{N}(\mathbf{\mu, \Sigma})$ and approximate the expectation with a sum:
 \begin{equation}
+\label{approxDen}
 Pr(Y_{new}=1|\x_{new}, \X, \be) = \frac{1}{N_s}\sum_{s=1}^{N_s}\frac{1}{1+e^{-\be_s^T \x_{new}}}
 \end{equation}
 
-\paragraph{\textbf{Comparison between the decition boundaries of MAP and Laplace method.}} In case of MAP estimation we get a single separating line as in \ref{MAP1} for the example of two classes. In case of Laplace approximation we don't have a single separating line but a distribution but a density distribution. \ref{laplace1} shows 20 boundaries (i.e., set of coefficients) sampled randomly from the distribution. All or almost all separates the classes quite well but in the area from the graph further from the classes (or from the centroids or clusters) there is a lot of variability. This variability represents the uncertainty of the classifier in those area far from the classes, where no event (in the sense of data entry) was observed.
+\paragraph{\textbf{Comparison between the decision boundaries of MAP and Laplace method.}} In case of MAP estimation we get a single separating line as in \ref{MAP1} for the example of two classes. In case of Laplace approximation we don't have a single separating line but a density distribution. \ref{laplace1} shows 20 boundaries (i.e., set of coefficients) sampled randomly from the distribution. All or almost all separates the classes quite well but in the area from the graph further from the classes (or from the centroids or clusters) there is a lot of variability. This variability represents the uncertainty of the classifier in those area far from the classes, where no event (in the sense of data entry) was observed.
 
-This is made clearer by looking at the decision boundaries in \ref{MAP2} and \ref{laplace2} . In case of MAP it is quite obvious: the probability increases or decreases just moving close to or far from to the boundary. In case of Laplace approximation the contours are no longer straight lines. The probability are now close to $0.5$ in all the area except those closes to the two classes. It is like the classifier is unable to take a decision in those areas, that are the ones where no event has been noted.
+This is made clearer by looking at the decision boundaries in \ref{MAP2} and \ref{laplace2}. In case of MAP it is quite obvious: the probability increases or decreases just moving close to or far from to the boundary. In case of Laplace approximation the contours are no longer straight lines. The probability are now close to $0.5$ in all the area except those closes to the two classes. It is like the classifier is unable to take a decision in those areas, that are the ones where no event has been noted.
 
 On the contrary the classifier resulting from MAP approximation is always sure about its work: it can only classify either with one or the other class except in on the points on the boundaries. This result from the fact that it is the result of a single point and not a distribution: i.e., the amount of confidence on the result is left out.
 
 \begin{figure}
-\label{MAP1}
-\includegraphics[scale=0.4]{img/MAP1}
+\begin{subfigure}{0.5\textwidth}
+\centering
+\includegraphics[width=0.85\linewidth]{img/MAP1}
 \caption{Decision boundary for MAP estimation.}
-\end{figure}
-
-\begin{figure}
-\label{laplace1}
-\includegraphics[scale=0.4]{img/laplace1}
+\label{MAP1}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.5\textwidth}
+\centering
+\includegraphics[width=0.8\linewidth]{img/laplace1}
 \caption{Decision boundary for Laplace approximation estimation.}
-\end{figure}
-
-\begin{figure}
-\label{MAP2}
-\includegraphics[scale=0.4]{img/MAP2}
+\label{laplace1}
+\end{subfigure}
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=0.8\linewidth]{img/MAP2}
 \caption{Contours of probability of belonging to class 1 in case of MAP estimation.}
+\label{MAP2}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.5\textwidth}
+\includegraphics[width=0.8\linewidth]{img/laplace2}
+\caption{Contours of probability of belonging to class 1 in case of Laplace approximation estimation computed with a sample based approximation.}
+\label{laplace2}
+\end{subfigure}
 \end{figure}
 
+\subsubsection{Third method: sampling technique	}
+The reason of estimating the posterior density with Laplace approximation or any other method is to take into account uncertainties in $\be$ when making predictions. Using the Gaussian approximation we were able to sample as in equation \ref{approxDen} directly from data. When deciding we take the conditional probability by averaging all over the potential values $\be$ by taking the expectation:
+\begin{equation}
+Pr(T_{new}=1| x_{new}, \X, \y, \sigma^2) = \E_{Pr(\be|\X, \y, \sigma^2)}\br{Pr(T_{new}=1|x_{new},\be}
+\end{equation}
+
+In these types of approximations we cut off the approximation step and sample directly from the posterior. A set of samples from the true posterior could be substituted directly into equation \ref{approxDen} to compute the desired predictive probability $Pr(y_i|\x_i, \X, \be)$. A popular sampling technique is the \textbf{Metropolis-Hastings} algorithm.
+
+Drawing from the posterior does not mean we can write it down but that we sample directly the system (physical or whatever) generating the data.
+
+\paragraph{The metropolis-Hastings algorithms}
+The objective is to sample from $Pr(\be|\X,\y,\sigma^2)$ to approximate the following expectation:
+\begin{equation}
+\begin{aligned}
+Pr(Y_{new}&=1|x_{new},\X,\y,\sigma^2) = \E_{Pr(\be|\X,\y,\sigma^2)}\left[Pr(T_{new}=1|x_{new},\be) \right] \\
+&=\int Pr(Y_{new}=1|x_{new},\be)Pr(\be|\X,\y,\sigma^2) d\be
+\end{aligned}
+\end{equation}
+with 
+
+\begin{equation}
+\begin{aligned}
+Pr(Y_{new}&=1|x_{new},\X,\y,\sigma^2) \approx \frac{1}{N_s}\sum_{s=1}^{N_s} Pr(Y_{new}=1|x_{new}, \be_s)
+\end{aligned}
+\end{equation}
+The algorithm generates a sequence of samples $\be_1, \be_2, \cdots$. First all the algorithm is independent from the starting point, as long as we sample long enough: it is guaranteed the sequence converges.
+\paragraph{\textbf{The generation of new samples}} happens in this way. Suppose we have the sample $s-1$, we will propose a new sample $\tilde{\be_s}$ and define the density $Pr(\tilde{\be}_s|\be_{s-1})$. This density is unrelated with the posterior $Pr(\be|\X,\y,\sigma^2)$ and we can define it as we please but it will affect the convergence time. A common choice is to use a Gaussian centred on the current sample, $\be_{s-1}$:
+\begin{equation}
+Pr(\tilde{\be}_s|\be_{s-1}, \Sigma) =\CMcal{N}(\be_{s-1}, \Sigma)
+\end{equation}
+Generally $\sigma$ is taken diagonal with same values. The smaller the elements on the diagonal, the smaller the distance at each step.
+
+Such a sequence creates a \textbf{random walk}. The choice of the Gaussian is justified bye the easy of sampling from the Gaussian and by its symmetry: moving from $\tilde{\be}_{s-1}$ to $\tilde{\be}_s$ is just as likely to move from $\tilde{\be}_s$ to $\tilde{\be}_{s-1}$:
+\begin{equation}
+Pr(\tilde{\be}_s|\be_{s-1}, \Sigma)  = Pr(\tilde{\be}_{s-1}|\be_{s}, \Sigma) 
+\end{equation}
+\textbf{Accepting or rejecting the candidate $\tilde{\be}_s$} is performed by calculating the following quantity:
+\begin{equation}
+r = \frac{Pr(\tilde{\be}_s|\X, \y, \ssq)}{Pr(\be_{s-1}|\X, \y, \ssq)}\frac{Pr(\be_{s-1}|\tilde{\be}_s, \Sigma)}{Pr(\hat{\be}_{s}|\be_{s-1}, \Sigma)}
+\end{equation}
+The expression is the product of the ratio of the posterior density at the proposed sample to that at the old sample times the ratio of the proposed densities. For the Gaussian symmetry discussed above, this term is $1$ when using Gaussian densities. Note that we cannot compute exactly the densities, but being a ratio the normalisation constant (the denominator in Bayes expression) simplifies and only the likelihoods times the priors are left:
+\begin{equation}
+r = \frac{Pr(\tilde{\be}_s|\ssq)}{Pr(\be_{s-1}| \ssq)} \frac{Pr(\y|\X, \tilde{\be}_s, \ssq)}{Pr(\y|\X, \be_{s-1}, \ssq)}
+\end{equation}
+If $r>1$, i.e, we get a higher posterior density, we accept the candidate otherwise we accept the candidate with probability equal to $r$. The complete algorithm is depicted in \ref{MHAlgo} where a uniform distribution in $[0,1]$ is used as decision rule in case $r<1$. Being a uniform distribution, the probability that $u \le r$ is $r$.
+
 \begin{figure}
-\label{laplace2}
-\includegraphics[scale=0.4]{img/laplace2}
-\caption{Contours of probability of belonging to class 1 in case of Laplace approximation estimation computed with a sample based approximation.}
+\centering
+\includegraphics[scale=0.6]{img/MHAlgo}
+\caption{The steps of the Metropolis-Hastings algorithm. $U$ is a uniform distribution in $[0,1]$}
+\label{MHAlgo}
+\end{figure}
+
+\ref{randomWalk} shows a 10-iteration process of the algorithms where solid lines are accepted coefficients, dashed lines are the rejected ones. Note that even the third sample causes a decrease in the posterior $r<1$, nevertheless in this specific case the decision rule accepted it. On the contrary the 4-th sample causes a huge decrease hence it is very unlikely it is accepted and in fact it is not, so $\be_4 = \be_3$. After $N$ samples we compute the sample based approximations to the mean and covariance
+\begin{equation}
+\begin{aligned}
+\mu' &= \frac{1}{N_s} \sum_{s=1}^{N_s} \be_s\\
+S' &= \frac{1}{N_s} \sum_{s=1}^{N_s} (\be_s-\mu')(\be_s-\mu')^T
+\end{aligned}
+\end{equation}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.4]{img/randomWalk}
+\caption{Example of Metropolis-Hastings iterations: solid lines are accepted coefficients, dashed lines are the rejected ones.}
+\label{randomWalk}
+\end{figure}
+
+\begin{definition}{\textbf{Burn-in}} It is the time interval between the starting of the algorithm and the convergence. 
+\end{definition}
+It cannot be determined: to overcome this problem, a method for determining convergence (to a distribution, not to a value) should be established. For example, in the algorithm above, we do not know if the starting point belongs to an area from which we are supposed to sample: it might be very far from the posterior. Including these samples in the approximation might result in a not good value. That is why the first samples (ranging from few samples to thousands) should be discarded.
+
+A popular method is to start several samplers simultaneously from different starting points. When all the samplers are generating samples with similar mean and variance, it suggests they converged all to the same distributions.
+
+\begin{definition}{\textbf{convergence} In this case we are talking about the convergence to a given distribution, not a single point. The convergence to a distribution is characterized to the convergence of its parameters: in case of the Gaussian the mean and variance.}
+\end{definition}
+
+We can even look at each coefficient independently:
+\begin{equation}
+Pr(\be_1|\X,\y,\sigma^2) = \int Pr(\be_1,\be_2|\X,\y,\sigma^2) d\be_2
+\end{equation}
+
+\paragraph{\textbf{To calculate the predictive probability}} using the obtained set of samples, we can do what already done with the Laplace approximation:
+\begin{equation}
+Pr(Y_{new}=1|\x_{new}, \X,\y,\sigma^2) = \frac{1}{N_s} \sum_{s=1}^{N_s} \frac{1}{1+e^{-\be^T_s \x_{new}}}
+\end{equation}
+
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+\centering
+\includegraphics[width=.8\linewidth]{img/MH1}
+\caption{Predictive probability contours showing the probability of classifying objects at any location as square.}
+\label{MH1}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+\includegraphics[width=.8\linewidth]{img/MH2}
+\caption{Decision boundaries created from randomly selected MH samples.}
+\label{MH2}
+\end{subfigure}
+\caption{Example of Metropolis-Hastings algorithm results.}
+\end{figure}
+\ref{MH1} and \ref{MH2} show an example of possible shapes of contours: it does not look too different from the Laplace ones. The only difference is that these contours are not so tight as the Laplace's ones. This suggests the probability decreases more slowly.
+
+\paragraph{\textbf{Limitations}} The difficult mostly lies in the unknown shape of the density. When a density has two or more modes, MH moves towards the modes as these moves increase the posterior density and hence are always accepted. When close to a mode, many steps are required to move from one mode to another and this is very unlikely. We might end up exploring a mode without even knowing the other exists (see \ref{mode1}). Another problem arises when the variables are strongly correlated (see \ref{mode2}). Let us pick any position and propose a movement from a Gaussian with diagonal covariance (i.e., having circular contours). The shapes are very different and many samples will be rejected: the majority of moves that we sample from our proposal will involve moving steeply down the probability gradient. There are even other problems.
+
+\begin{figure}
+\begin{subfigure}{.5\textwidth}
+\centering
+\includegraphics[width=.8\linewidth]{img/mode1}
+\caption{A bi-modal density.}
+\label{mode1}
+\end{subfigure}
+\begin{subfigure}{.5\textwidth}
+\includegraphics[width=.8\linewidth]{img/mode2}
+\caption{A density with high parameter correlation.}
+\label{mode2}
+\end{subfigure}
+\caption{Example of Metropolis-Hastings algorithm results.}
 \end{figure}
 
 \subsubsection{Usage}
@@ -1559,13 +1702,13 @@ LDA is not robust to outliers since observations far from the decision boundary 
 \subsection{Perceptron learning algorithm}
 It tries to find a separate hyperplane by minimizing the distance of misclassified points to the decision boundary. If a response $y_i = 1$ is misclassified, then $x^T_i \beta + \beta_0 < 0$, and the opposite for a misclassified response with $y_i = -1$. The goal is to minimize
 \begin{equation}
-D(\beta, \beta_0) = - \sum_{i\in\mathcal{M}} y_i\left(x_i^T\beta + \beta_0\right)
+D(\beta, \beta_0) = - \sum_{i\in\CMcal{M}} y_i\left(x_i^T\beta + \beta_0\right)
 \end{equation}
-where $\mathcal{M}$ is the set of misclassified points.
+where $\CMcal{M}$ is the set of misclassified points.
 The gradient is
 \begin{align}
-\frac{\partial D(\beta,\beta_0}{\partial \beta} = -\sum_{i\in\mathcal{M}}y_ix_i \\
-\frac{\partial D(\beta,\beta_0}{\partial \beta_0} = -\sum_{i\in\mathcal{M}} y_i
+\frac{\partial D(\beta,\beta_0}{\partial \beta} = -\sum_{i\in\CMcal{M}}y_ix_i \\
+\frac{\partial D(\beta,\beta_0}{\partial \beta_0} = -\sum_{i\in\CMcal{M}} y_i
 \end{align}
 where the algorithm uses the stochastic gradient descent where the coefficients are updated by the gradient value weighted by a step $\rho$. There are many problems though:
 \begin{itemize}
@@ -1573,13 +1716,66 @@ where the algorithm uses the stochastic gradient descent where the coefficients 
 \item many steps might be required;
 \item when data are not separable, the algorithm will not converge;
 \end{itemize}
-\subsection{Best separating hyperplanes}
+\subsection{Optimal separating hyperplanes}
 The optimal separating hyperplane separates the two classes and maximizes the distance to the closest point from either class (Vapnik, 1996). Not only does this provide a unique solution to the separating hyperplane problem, but by maximizing the margin between the two classes on the training data, this leads to better classification performance on test data.
 
 Suppose $M$ is the distance. Then
-\begin{align}
+\begin{equation}
+\begin{aligned}
 &\max\limits_{\beta,\beta_0, ||\beta||=1} M \\
 & y_i(x_i^T\beta + \beta_0) \ge M
-\end{align}
+\end{aligned}
+\end{equation}
+We  can move the constrain on the module $\||\be||=1$ to the condition $\frac{1}{||\be||}y_i(x_i^T\beta + \beta_0) \ge M$, which redefines $\be_0$. 
 
-\end{document}
+For a pair of coefficients satisfying this inequalities, any positively scaled multiple satisfies them too, so we can set arbitrarily set $||\be||=\frac{1}{M}$:
+\begin{equation}
+\begin{aligned}
+&\min_{\be, \be_0}{\frac{1}{2}||\be||^2}\\
+\textit{subject to } &y_i(x_i^T\be+\be_0)\ge1
+\end{aligned}
+\end{equation}
+
+With this constraint, a margin around the decision boundary with thick $\frac{1}{||\be||}$ is present. We choose $\be$ to maximize the thickness of margin margin.  This is a convex optimization problem. The Lagrange primal function to be minimized is:
+\begin{equation}
+\label{eq}
+L_p = \frac{1}{2} ||\be||^2 = \sum_{i=1}^N \alpha_i\left[ y_i \br{x_i^T\be+\be_0}\right]
+\end{equation}
+and setting the derivatives to $0$:
+\begin{equation}
+\begin{aligned}
+\be &= \sum_{i=1}^N \alpha_i y_i x_i
+0  &= \sum_{i=1}^N \alpha_i y_i
+\end{aligned}
+\end{equation}
+and substituting in \ref{eq}:
+\begin{equation}
+\begin{aligned}
+L_D = \sum_{i=1}^N \alpha_i -\frac{1}{2}\sum_{i=1}^N\sum_{k=1}^N \alpha_i \alpha_ky_iy_kx_i^Tx_k\\
+\textit{subject to } \alpha_i\ge0 \textit{ and } \sum_{i=1}^N \alpha_iy_i=0
+\end{aligned}
+\end{equation}
+The optimal hyperplane focuses more on points that counts, i.e., close to the border. For this reason it is more robust. LDA depends on all the data, even points faraway. If classes are really Gaussian LDA is optimal and separating hyperplane will pay a price for focusing on noisier data.
+For logistic regression, if a separate hyperplane exists, since the log-likelihood can be driven to $0$.
+
+When data are not separable there wil be no feasible solution and an alternative formulation is needed.
+
+\section{Basis expansion and regularization}
+To extend the flexibility of linear model, a transformation of $\X$ can be performed and then use a linear model to the derived input features. Denoting the transformation $h_m(\X) : \mathcal{R}^p\rightarrow \matchal{R}$ for a single input $m$, we have the model:
+\begin{equation}
+f(\X) = \sum_{m=1}^M \beta_mh_m(\X)
+\end{equation}
+$h()$ are called \textbf{basis function}
+Any kind of transformation can be applied: square-roots, squared (on single inputs i.e, $x_i^$ or among different inputs $x_ix_j$), logarithmic, power functions etc. 
+
+Polynomials are more widely used but they have a limitation due to its global nature: when tweaking the  parameters to achieve a desired behaviour in a specific region, problems might arise in another region.
+
+A solution is to consider \textbf{piecewise-polynomials} and \textbf{splines}.
+
+\subsection{Piecewise Polynomials and splines}
+For the moment $X$ is assumed one-dimensional. A piecewise polynomial function is obtained by  dividing the domain of $X$ into contiguous intervals and use a different $f$ in each interval.
+
+If we use a pure linear fit we get discontinuities at the boundaries. More often we would like to have continuity at the boundaries or knots: $f(\epsilon^+)=f(\epsilon^-)$ which implies the condition:$\beta_1 +\epsilon_1\beta_2 = \beta_3 +\epsilon_1\beta_4$ which remove one degree of freedom.
+
+Generally, smoother functions are preferred and these are achieved by increasing the order of the local polynomials and increasing the order of continuity (continuity first derivative, second derivative.
+\end{document} 
