@@ -1170,9 +1170,9 @@ More generally the $K$ centroids in $p$-dimensional input, lie in an affine subs
 
 \begin{figure}
 \centering
-\label{proj}
 \includegraphics[scale=0.4]{img/proj}
 \caption{...}
+\label{proj}
 \end{figure}
 
 If $K>3$ we can look for a $L<K-1$ dimensional subspace optimal for LDA. Fisher defined \textit{optimal} such that the projected centroids were spread out as much as possible in terms of variance.
@@ -1186,8 +1186,9 @@ The $lth$ discriminant variable is given by $Z_l =  v_l^TX$ with $v_l=W^{-\frac{
 
 \begin{figure}
 \centering
-\label{cov}
 \includegraphics[scale=0.4]{img/cov}
+\caption{Covariance.}
+\label{cov}
 \end{figure}
 
 The between-class variance $Z$ is $a^TBa$ and the within class variance is $a^TWa$, with $B+W=T$, the total covariance matrix of $X$.
@@ -1390,7 +1391,8 @@ Substituting in \ref{devg}:
 \begin{equation}
 \begin{aligned}
 \frac{\partial \log g(\be,\X,\y)}{\partial \be} =&  - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\frac{\partial P_n}{\partial \be} - \frac{1-y_n}{1-P_n}\frac{\partial P_n}{\partial \be} =\\
-=&- \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\left[-\x_nP_n \br{1-P_n}\right] - \frac{1-y_n}{1-P_n}\left[-\x_nP_n \br{1-P_n}\right] =\\
+=&- \frac{1}{\sigma^2} \be + \sum_{n=1}^N \frac{y_n}{P_n}\left[-\x_nP_n \br{1-P_n}\right]+ \\
+&\quad  - \frac{1-y_n}{1-P_n}\left[-\x_nP_n \br{1-P_n}\right] =\\
 =& - \frac{1}{\sigma^2} \be + \sum_{n=1}^N -y_n\x_n \br{1-P_n} - (1-y_n)(-\x_nP_n ) = \\
 =& - \frac{1}{\sigma^2} \be + \sum_{n=1}^N \x_n (y_n-P_n)
 \end{aligned}
@@ -1399,8 +1401,8 @@ Substituting in \ref{devg}:
 Now we must compute the Hessian matrix:
 \begin{equation}
 \begin{aligned}
-&\frac{\partial^2 \log g(\be,\X,\y)}{\partial \be \partial\be^T}  = \frac{\partial}{\partial \be^T} \br{- \frac{1}{\sigma^2} \be + \sum_{n=1}^N \x_n (y_n-P_n)} =- \frac{1}{\sigma^2} \I -\sum_{n=1}^N \x_n \frac{\partial P_n}{\partial \be^T} =\\
-&= - \frac{1}{\sigma^2} \I - \sum_{n=1}^N \x_n \x_n^TP_n \br{1-P_n}
+&\frac{\partial^2 \log g(\be,\X,\y)}{\partial \be \partial\be^T}  = \frac{\partial}{\partial \be^T} \br{- \frac{1}{\sigma^2} \be + \sum_{n=1}^N \x_n (y_n-P_n)} =
+\\ &=- \frac{1}{\sigma^2} \I -\sum_{n=1}^N \x_n \frac{\partial P_n}{\partial \be^T} = - \frac{1}{\sigma^2} \I - \sum_{n=1}^N \x_n \x_n^TP_n \br{1-P_n}
 \end{aligned}
 \end{equation}
 where we used the result from \ref{devPn}.
@@ -1423,11 +1425,15 @@ Consider just two classes with responses $0$, $1$ and let $p_1(x,\theta) =p(x,\t
 \begin{equation}
 \begin{aligned}
 &l(\beta) = \sum_{i=1}^N \left\lbrace y_i \log p\left(x_i,\beta\right) + \left(1-y_i\right) \log \left(1-p\left(x_i,\beta\right)\right)\right\rbrace =\\
-&=\sum_{i=1}^N \left\lbrace y_i \log \frac{e^{\beta_{10} +\beta_{1}^T x_i}}{1+\sum_{l=1}^{K-1} e^{\beta_{l0}+\beta_l^Tx_i}} + \left(1-y_i\right) \log \left(1-\frac{e^{\beta_{10} +\beta_{1}^T x_i}}{1+\sum_{l=1}^{K-1} e^{\beta_{l0}+\beta_l^Tx_i}}\right)\right\rbrace = \\
-&= \sum_{i=1}^N \left\lbrace y_i \log \frac{e^{\beta_{10} +\beta_{1}^T x_i}}{1+e^{\beta_{10}+\beta_1^Tx_i}} + \left(1-y_i\right) \log \left(1-\frac{e^{\beta_{10} +\beta_{1}^T x_i}}{1+e^{\beta_{10}+\beta_1^Tx_i}}\right)\right\rbrace = \\
-&=\sum_{i=1}^N y_i \left(\log e^{\beta_{10} +\beta_{1}^T x_i} -\log \left(1+ e^{\beta_{10}+\beta_1^Tx_i}\right) \right) + \left(1-y_i\right) \log \frac{1}{1+ e^{\beta_{10}+\beta_1^Tx_i}} = \\
-&=\sum_{i=1}^N y_i \left(\log e^{\beta_{10} +\beta_{1}^T x_i} -\log \left(1+ e^{\beta_{10}+\beta_1^Tx_i}\right) \right) - \left(1-y_i\right) \log \left(1+ e^{\beta_{10}+\beta_1^Tx_i}\right) = \\
-&=\sum_{i=1}^N y_i \left(\beta_{10} +\beta_{1}^T x_i \right) -log \left(1+ e^{\beta_{10}+\beta_1^Tx_i}\right) 
+&=\sum_{i=1}^N y_i \log \frac{e^{\beta_{10} +\beta_{1}^T x_i}}{1+\sum_{l=1}^{K-1} e^{\beta_{l0}+\beta_l^Tx_i}}  +\\
+& \quad\quad + \sum_{i=1}^N \left(1-y_i\right) \log \left(1-\frac{e^{\beta_{10} +\beta_{1}^T x_i}}{1+\sum_{l=1}^{K-1} e^{\beta_{l0}+\beta_l^Tx_i}}\right)= \\
+&= \sum_{i=1}^N  y_i \log \frac{e^{\beta_{10} +\beta_{1}^T x_i}}{1+e^{\beta_{10}+\beta_1^Tx_i}} + \\
+&\quad\quad +\sum_{i=1}^N  \left(1-y_i\right) \log \left(1-\frac{e^{\beta_{10} +\beta_{1}^T x_i}}{1+e^{\beta_{10}+\beta_1^Tx_i}}\right) = \\
+&=\sum_{i=1}^N y_i \left(\log e^{\beta_{10} +\beta_{1}^T x_i} -\log \left(1+ e^{\beta_{10}+\beta_1^Tx_i}\right) \right) + \\
+& \quad\quad + \sum_{i=1}^N  \left(1-y_i\right) \log \frac{1}{1+ e^{\beta_{10}+\beta_1^Tx_i}} = \\
+&=\sum_{i=1}^N y_i \left(\log e^{\beta_{10} +\beta_{1}^T x_i} -\log \left(1+ e^{\beta_{10}+\beta_1^Tx_i}\right) \right) + \\
+& \quad\quad - \sum_{i=1}^N\left(1-y_i\right) \log \left(1+ e^{\beta_{10}+\beta_1^Tx_i}\right) = \\
+&=\sum_{i=1}^N \left\lbrace y_i \left(\beta_{10} +\beta_{1}^T x_i \right) -log \left(1+ e^{\beta_{10}+\beta_1^Tx_i}\right) \right\rbrace
 \end{aligned}
 \end{equation}
 Here $\beta = \left[ \beta_{10}, \beta_1\right]$. To maximize the log-likelihood we set the derivative to $0$:
@@ -1537,30 +1543,33 @@ This is made clearer by looking at the decision boundaries in \ref{MAP2} and \re
 On the contrary the classifier resulting from MAP approximation is always sure about its work: it can only classify either with one or the other class except in on the points on the boundaries. This result from the fact that it is the result of a single point and not a distribution: i.e., the amount of confidence on the result is left out.
 
 \begin{figure}
-\begin{subfigure}{0.5\textwidth}
+\begin{subfigure}[t]{0.5\textwidth}
 \centering
 \includegraphics[width=0.85\linewidth]{img/MAP1}
 \caption{Decision boundary for MAP estimation.}
 \label{MAP1}
 \end{subfigure}
 \hfill
-\begin{subfigure}{0.5\textwidth}
+\begin{subfigure}[t]{0.505\textwidth}
 \centering
 \includegraphics[width=0.8\linewidth]{img/laplace1}
 \caption{Decision boundary for Laplace approximation estimation.}
 \label{laplace1}
 \end{subfigure}
-\begin{subfigure}{0.5\textwidth}
+\begin{subfigure}[t]{0.5\textwidth}
+\centering
 \includegraphics[width=0.8\linewidth]{img/MAP2}
 \caption{Contours of probability of belonging to class 1 in case of MAP estimation.}
 \label{MAP2}
 \end{subfigure}
 \hfill
-\begin{subfigure}{0.5\textwidth}
+\begin{subfigure}[t]{0.5\textwidth}
+\centering
 \includegraphics[width=0.8\linewidth]{img/laplace2}
 \caption{Contours of probability of belonging to class 1 in case of Laplace approximation estimation computed with a sample based approximation.}
 \label{laplace2}
 \end{subfigure}
+\caption{Comparison between MAP and Laplace approximation contours and probability densities.}
 \end{figure}
 
 \subsubsection{Third method: sampling technique	}
@@ -1611,7 +1620,7 @@ If $r>1$, i.e, we get a higher posterior density, we accept the candidate otherw
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.6]{img/MHAlgo}
+\includegraphics[scale=0.45]{img/MHAlgo}
 \caption{The steps of the Metropolis-Hastings algorithm. $U$ is a uniform distribution in $[0,1]$}
 \label{MHAlgo}
 \end{figure}
@@ -1651,13 +1660,14 @@ Pr(Y_{new}=1|\x_{new}, \X,\y,\sigma^2) = \frac{1}{N_s} \sum_{s=1}^{N_s} \frac{1}
 \end{equation}
 
 \begin{figure}
-\begin{subfigure}{.5\textwidth}
+\begin{subfigure}{.47\textwidth}
 \centering
 \includegraphics[width=.8\linewidth]{img/MH1}
-\caption{Predictive probability contours showing the probability of classifying objects at any location as square.}
+\caption{Predictive probability contours of classifying objects as square.}
 \label{MH1}
 \end{subfigure}
-\begin{subfigure}{.5\textwidth}
+\begin{subfigure}{.47\textwidth}
+\centering
 \includegraphics[width=.8\linewidth]{img/MH2}
 \caption{Decision boundaries created from randomly selected MH samples.}
 \label{MH2}
@@ -1676,8 +1686,9 @@ Pr(Y_{new}=1|\x_{new}, \X,\y,\sigma^2) = \frac{1}{N_s} \sum_{s=1}^{N_s} \frac{1}
 \label{mode1}
 \end{subfigure}
 \begin{subfigure}{.5\textwidth}
+\centering
 \includegraphics[width=.8\linewidth]{img/mode2}
-\caption{A density with high parameter correlation.}
+\caption{Highly correlated parameter density.}
 \label{mode2}
 \end{subfigure}
 \caption{Example of Metropolis-Hastings algorithm results.}
@@ -1758,15 +1769,15 @@ L_D = \sum_{i=1}^N \alpha_i -\frac{1}{2}\sum_{i=1}^N\sum_{k=1}^N \alpha_i \alpha
 The optimal hyperplane focuses more on points that counts, i.e., close to the border. For this reason it is more robust. LDA depends on all the data, even points faraway. If classes are really Gaussian LDA is optimal and separating hyperplane will pay a price for focusing on noisier data.
 For logistic regression, if a separate hyperplane exists, since the log-likelihood can be driven to $0$.
 
-When data are not separable there wil be no feasible solution and an alternative formulation is needed.
+When data are not separable there will be no feasible solution and an alternative formulation is needed.
 
 \section{Basis expansion and regularization}
-To extend the flexibility of linear model, a transformation of $\X$ can be performed and then use a linear model to the derived input features. Denoting the transformation $h_m(\X) : \mathcal{R}^p\rightarrow \matchal{R}$ for a single input $m$, we have the model:
+To extend the flexibility of linear model, a transformation of $\X$ can be performed and then use a linear model to the derived input features. Denoting the transformation $h_m(\X) : \CMcal{R}^p\rightarrow \CMcal	{R}$ for a single input $m$, we have the model:
 \begin{equation}
 f(\X) = \sum_{m=1}^M \beta_mh_m(\X)
 \end{equation}
 $h()$ are called \textbf{basis function}
-Any kind of transformation can be applied: square-roots, squared (on single inputs i.e, $x_i^$ or among different inputs $x_ix_j$), logarithmic, power functions etc. 
+Any kind of transformation can be applied: square-roots, squared (on single inputs i.e, $x_i^2$ or among different inputs $x_ix_j$), logarithmic, power functions, trigonometric, etc. 
 
 Polynomials are more widely used but they have a limitation due to its global nature: when tweaking the  parameters to achieve a desired behaviour in a specific region, problems might arise in another region.
 
@@ -1775,7 +1786,190 @@ A solution is to consider \textbf{piecewise-polynomials} and \textbf{splines}.
 \subsection{Piecewise Polynomials and splines}
 For the moment $X$ is assumed one-dimensional. A piecewise polynomial function is obtained by  dividing the domain of $X$ into contiguous intervals and use a different $f$ in each interval.
 
-If we use a pure linear fit we get discontinuities at the boundaries. More often we would like to have continuity at the boundaries or knots: $f(\epsilon^+)=f(\epsilon^-)$ which implies the condition:$\beta_1 +\epsilon_1\beta_2 = \beta_3 +\epsilon_1\beta_4$ which remove one degree of freedom.
+Given a sequence $a=t_0<t_1<\cdots<t_{m+1}=b$, the piecewise polynomials are delimited by an adjacent pair in the sequence. So we have the following sequence of intervals:
 
-Generally, smoother functions are preferred and these are achieved by increasing the order of the local polynomials and increasing the order of continuity (continuity first derivative, second derivative.
+\begin{equation}
+I_l = \left[ t_{l-1}, t_l\right) \textit{ for } 1\le l\le m \textit{ and } \left[t_m, t_{m+1}\right]
+\end{equation}
+So the piecewise polynomials, having basis functions: $h_0(X) = 1, h_1(X) = X, h_2(X) = X^2$ and so on, is:
+
+\begin{equation}
+f(x) = \left\{ \begin{array}{ll} g_0(x) = \beta_{0,0} + \beta_{0,1} X + \cdots + \beta_{0,k-1} X^{k-1}\quad X \in I_1 \\ 
+\vdots\\
+ g_{m-1}(x) = \beta_{m-1,0} + \beta_{m-1,1} X + \cdots + \beta_{m-1,k-1} X^{k-1}\quad X \in I_{k+1} \\  \quad 
+\end{array}
+ \right.
+\end{equation}
+
+In this way we get discontinuities at the boundaries. Note that discontinuity means we get completely different values for almost the same input. More often we would like to have continuity at the boundaries or knots: $f(\xi^+)=f(\xi^-)$ which implies the condition:$\beta_1 +\xi\beta_2 = \beta_3 +\xi_1\beta_4$ which removes one degree of freedom.
+
+These constrains, one for each knot, can be embedded in additional basis functions of the type $h(X) = \br{X - \xi}_+$ where $\br{\cdot}_+ = \max(\cdot, 0)$ i.e., the basis function is $0$ for $X - \xi<\xi$, $X - \xi$ otherwise
+\begin{equation}
+h(X) = \br{X - \xi}_+ = \max(X - \xi, 0) = \left\{ \begin{array}{ll}  0 &\quad X-\xi<0\\
+X-\xi &\quad X-\xi\ge0
+\end{array}
+ \right.
+\end{equation}
+
+Using the previous and these basis functions we can reexpress the global function as:
+\begin{equation}
+\begin{aligned}
+f(x) =& \beta_{0,0} + \beta_{0,1}X +\cdots+\beta_{0,k-1}  X^{k-1} + \\
+&+\beta_{1,0}(X -\xi_0)_+^0     + \beta_{1,1}(X -\xi_0)_+^1       +\cdots +\beta_{1,k-1} (X -\xi_0)_+^{k-1}+  \\
+&+\vdots \\ 
+&+\beta_{m-1,0}(X -\xi_{m-1})_+^0 +\cdots +\beta_{m-1,k-1} (X -\xi_{m-2})_+^{k-1}
+\end{aligned}
+\end{equation}
+\textbf{To force continuity between two regions} we set the terms $\beta_{1,0}(X -\xi_j)_+^0$ to $0$:
+
+For example forcing continuity at the first knot:
+\begin{equation}
+\begin{aligned}
+&\beta_{1,0}(X -\xi_0)_+^0 = \beta_{0,0} + \beta_{0,1} \xi_0\\
+&\Rightarrow \beta_{1,0} = \beta_{0,0} + \beta_{0,1} \xi_0
+\end{aligned}
+\end{equation}
+
+ In this way we don't have a jump at the boundaries:
+
+\begin{equation}
+\begin{aligned}
+f(x) =& \beta_{0,0} + \beta_{0,1}X +\cdots+\beta_{0,k-1}  X^{k-1} + \\
+&+ \beta_{1,1}(X -\xi_0)_+^1       +\cdots +\beta_{1,k-1} (X -\xi_0)_+^{k-1}+  \\
+&+\vdots \\ 
+&+ \beta_{m-1,1}(X -\xi_{m-1})_+^1 +\cdots +\beta_{m-1,k-1} (X -\xi_{m-1})_+^{k-1}
+\end{aligned}
+\end{equation}
+In this way we have removed $m-1$ parameters.
+
+There is a difference in this representation: before we have to select a polynomial function for a specific region where the fit to the global function was given by the fit of the parameters specific to that region, now we have a global function that works a little differently. In the first region, the only non-null terms are $\beta_{0,j}$ as before. When reaching the second region, the terms $\beta_{1,j}$ becomes non-null. Now the coefficients of the polynomial are the sum of the coefficients of these two region: i.e., in the second region we have:
+\begin{equation}
+\begin{aligned}
+f(x) =& \beta_{0,0} -(\beta_{1,1}+\cdots+\beta_{1,k-1})\xi_0+ (\beta_{0,1}+\beta_{1,1})X+\\
+&+\cdots+(\beta_{0,k-1}  +\beta_{1,k-1})X^{k-1}
+\end{aligned}
+\end{equation}
+
+\ref{spline_linear} shows the global function, solid line, given by the sum of basis functions, dashed lines, when traversing the graph from left to right. At each knot, a new basis function is activated and summed to the global function.
+
+The basis functions can be seen as a correction to the global polynomial for that  specifc region and the knots are those points where the correction starts. At the knot $X=\xi_j$ so the correction starts very gently and the continuity is preserved.
+
+\begin{figure}
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=0.9\linewidth]{img/spline_linear/10}
+\caption{First region.}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=0.9\linewidth]{img/spline_linear/33}
+\caption{Second region.}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=0.9\linewidth]{img/spline_linear/68}
+\caption{Third region.}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=1\linewidth]{img/spline_linear/81}
+\caption{Fourth region.}
+\end{subfigure}
+\end{figure}
+\begin{figure}\ContinuedFloat
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=1\linewidth]{img/spline_linear/100}
+\caption{Fifth region.}
+\end{subfigure}
+\caption{Linear splines. The solid line is the global function while the dashed lines are the basis functions.}
+\label{spline_linear}
+\end{figure}
+
+Generally, smoother functions are preferred and these are achieved by increasing the order of the local polynomials and increasing the order of continuity (continuity first derivative, second derivative). It is claimed that cubic splines are the lowest-order spline for which the discontinuity is not visible to the human eye and seldom higher degrees are needed, unless smooth derivatives are required.
+
+The spline order, number of knots and their positions must be selected. Generally the position of the knots is chosen according the observation, while the order is chosen a-priori.
+
+\begin{figure}
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=1\linewidth]{img/spline_cubic/15}
+\caption{First region.}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=1\linewidth]{img/spline_cubic/41}
+\caption{Second region.}
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=1\linewidth]{img/spline_cubic/77}
+\caption{Third region.}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=1\linewidth]{img/spline_cubic/88}
+\caption{Fourth region.}
+\end{subfigure}
+\end{figure}
+\begin{figure}\ContinuedFloat
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=1\linewidth]{img/spline_cubic/100}
+\caption{Fifth region.}
+\end{subfigure}
+\label{spline_cubic}
+\caption{Cubic splines. The solid line is the global function while the dashed lines are the basis functions.}
+\end{figure}
+
+\subsection{Natural cubic splines}
+Polynomial fits to data tends to be erratic at the boundaries and additionally splines behave even more widely than the global polynomial beyond the boundaries. This is shown by the point-wise variance (the variance of the estimator at one point: $\Var[\hat{f}(x_0)]$ in \ref{pointwise_var}. Note the variance explosion close to the boundaries, especially for cubic splines.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.4]{img/pointwise_var}
+\caption{$X$ consists of 50 points drawn randomly from $U[0,1]$ and an assumed error model of with constant variance. Both cubic splines have 6 degrees of freedom. The cubic spline has two knots at $0.33$ and at $0.66$ while the natural cubic spline has boundary knots at $0.1$ and $0.9$, and four interior knots uniformly spaced between them.}
+\label{pointwise_var}
+\end{figure}
+
+A  \textbf{natural cubic spline} adds additional constraints by forcing linearity beyond the boundary knots. These frees up four degrees of freedom (2 in both boundary regions), that can be used more profitably by sprinkling more knots in the interior region. There will be a price to pay in terms of bias near the boundaries, but in these regions we have less information anyway so assuming the function is linear here is reasonable.
+
+A natural cubic spline with $K$ knots is represented by $K$ basis functions. One can start from the basis of a cubic spline and then derive the reduce basis by imposing the boundary constraints.
+
+Starting from the general continuous basis for five regions (four knots):
+\begin{equation}
+\begin{aligned}
+&h_1(X) =1, \quad\quad\quad h_2(X) =X,\quad h_3(X) =X^2,\quad  h_4(X) = X^3,\\
+&h_5(X) = X-\xi_0,\quad h_6(X) = (X-\xi_0)^2,\quad, h_7(X) = (X-\xi_0)^3\\
+&h_8(X) = X-\xi_1,\quad h_9(X) = (X-\xi_1)^2,\quad h_{10}(X) = (X-\xi_1)^3\\
+&h_9(X) = X-\xi_2,\quad h_10(X) = (X-\xi_1)^2,\quad h_{11}(X) = (X-\xi_2)^3\\
+&h_{12}(X) = X-\xi_3,\quad h_{13}(X) = (X-\xi_3)^2,\quad h_{14}(X) = (X-\xi_3)^3
+\end{aligned}
+\end{equation}
+Enforcing also continuity of the first and second derivatives at the knots we reduce the basis to:
+\begin{equation}
+\begin{aligned}
+h_1(X) = 1, \quad &h_2(X) =X,\quad h_3(X) =X^2,\quad  h_4(X) = X^3,\\
+&h_5(X) = (X-\xi_0)^3, \quad h_6(X) = (X-\xi_1)^3,
+\\&h_7(X) = (X-\xi_2)^3, \quad h_8(X) = (X-\xi_3)^3.
+\end{aligned}
+\end{equation}
+
+Enforcing linearity beyond the boundaries, we eliminates $ h_3(X)$ and $ h_4(X)$. We must also keep the cubic expression in the intermediate regions but somehow make the cubic part cancel out when reaching the third region since here it must be linear. We can add for each region in the interval $[1, K-2]$ the following basis function:
+\begin{equation}
+\begin{aligned}
+&h_k(X) = d_k(X) - d_{K-1}(X)\\
+\textit{where} \quad &d_k(X) = \frac{\br{X-\xi_k}_+^3 - \br{X-\xi_K}_+^3 }{\xi_K - \xi_k}
+\end{aligned}
+\end{equation}
+Considering just the 3rd region for example:
+\begin{equation}
+\begin{aligned}
+h_k(X) &= \frac{\br{X-\xi_0}_+^3 - \br{X-\xi_1}_+^3}{\xi_1 - \xi_0} =\\ &=\frac{-3\xi_0X^2+3\xi_0^2X-\xi_0^3+3\xi_1X^2-3\xi_1^2X-\xi_1^3}{\xi_1 - \xi_0}
+\end{aligned}
+\end{equation}
 \end{document} 
