@@ -1940,36 +1940,76 @@ A  \textbf{natural cubic spline} adds additional constraints by forcing linearit
 
 A natural cubic spline with $K$ knots is represented by $K$ basis functions. One can start from the basis of a cubic spline and then derive the reduce basis by imposing the boundary constraints.
 
-Starting from the general continuous basis for five regions (four knots):
+Starting from the general continuous basis for four regions (four knots):
 \begin{equation}
 \begin{aligned}
 &h_1(X) =1, \quad\quad\quad h_2(X) =X,\quad h_3(X) =X^2,\quad  h_4(X) = X^3,\\
 &h_5(X) = X-\xi_0,\quad h_6(X) = (X-\xi_0)^2,\quad, h_7(X) = (X-\xi_0)^3\\
 &h_8(X) = X-\xi_1,\quad h_9(X) = (X-\xi_1)^2,\quad h_{10}(X) = (X-\xi_1)^3\\
-&h_9(X) = X-\xi_2,\quad h_10(X) = (X-\xi_1)^2,\quad h_{11}(X) = (X-\xi_2)^3\\
-&h_{12}(X) = X-\xi_3,\quad h_{13}(X) = (X-\xi_3)^2,\quad h_{14}(X) = (X-\xi_3)^3
+&h_9(X) = X-\xi_2,\quad h_10(X) = (X-\xi_1)^2,\quad h_{11}(X) = (X-\xi_2)^3
 \end{aligned}
 \end{equation}
 Enforcing also continuity of the first and second derivatives at the knots we reduce the basis to:
 \begin{equation}
 \begin{aligned}
-h_1(X) = 1, \quad &h_2(X) =X,\quad h_3(X) =X^2,\quad  h_4(X) = X^3,\\
-&h_5(X) = (X-\xi_0)^3, \quad h_6(X) = (X-\xi_1)^3,
-\\&h_7(X) = (X-\xi_2)^3, \quad h_8(X) = (X-\xi_3)^3.
+&h_1(X) = 1, \quad h_2(X) =X,\quad h_3(X) =X^2,\quad  h_4(X) = X^3,\\
+&h_5(X) = (X-\xi_0)^3, \quad h_6(X) = (X-\xi_1)^3, \quad h_7(X) = (X-\xi_2)^3.
 \end{aligned}
 \end{equation}
 
-Enforcing linearity beyond the boundaries, we eliminates $ h_3(X)$ and $ h_4(X)$. We must also keep the cubic expression in the intermediate regions but somehow make the cubic part cancel out when reaching the third region since here it must be linear. We can add for each region in the interval $[1, K-2]$ the following basis function:
+Enforcing linearity beyond the boundaries, we eliminate $ h_3(X)$ and $ h_4(X)$. We must also keep the cubic expression in the intermediate regions but somehow make the cubic part cancel out when reaching the fifth region since here it must be linear. We can add for each region in the interval $[1, K-2]$ the following basis function:
 \begin{equation}
 \begin{aligned}
 &h_k(X) = d_k(X) - d_{K-1}(X)\\
 \textit{where} \quad &d_k(X) = \frac{\br{X-\xi_k}_+^3 - \br{X-\xi_K}_+^3 }{\xi_K - \xi_k}
 \end{aligned}
 \end{equation}
-Considering just the 3rd region for example:
+
+In the first region we have:
+\begin{equation}
+\hat{f}_1(X) = \beta_0 + \beta_1 X
+\end{equation}
+In the second region we have:
 \begin{equation}
 \begin{aligned}
-h_k(X) &= \frac{\br{X-\xi_0}_+^3 - \br{X-\xi_1}_+^3}{\xi_1 - \xi_0} =\\ &=\frac{-3\xi_0X^2+3\xi_0^2X-\xi_0^3+3\xi_1X^2-3\xi_1^2X-\xi_1^3}{\xi_1 - \xi_0}
+&\hat{f}_2(X) = \beta_0 + \beta_1 X +\beta_2 \frac{(X-\xi_0)^3}{\xi_2 - \xi_0} =\\
+&= \beta_0 + \beta_1 X +\beta_2 \frac{X^3 -3 \xi_0 X^2 + 3\xi_0^2 X-\xi_0^3}{\xi_2 - \xi_0} =\\
+&= \frac{\beta_2}{\xi_2 - \xi_0} X^3 -3 \beta_2\frac{\xi_0}{\xi_2 - \xi_0} X^2 + (\beta_1+3\beta_2\frac{\xi_0^2}{\xi_2 - \xi_0})X + \beta_0 - \beta_2\frac{\xi_0^3}{\xi_2 - \xi_0}
 \end{aligned}
 \end{equation}
+In the third region we have:
+\begin{equation}
+\begin{aligned}
+&\hat{f}_3(X) = \beta_0 + \beta_1 X  +\beta_2 h_2(X) = \beta_0 + \beta_1 X  +\beta_2\left[ \frac{(X-\xi_0)^3}{\xi_2 - \xi_0} - \frac{(X-\xi_1)^3}{\xi_2 - \xi_1}\right]  \\
+&= \beta_0 + \beta_1 X +\beta_2 \left[ \frac{X^3 -3 \xi_0 X^2 + 3\xi_0^2 X-\xi_0^3}{\xi_2 - \xi_0} -  \frac{X^3 -3 \xi_1 X^2 + 3\xi_1^2 X-\xi_1^3}{\xi_2 - \xi_1}\right] =\\
+&= \beta_0 + \beta_1 X +\beta_2 \frac{(\xi_2-\xi_1-\xi_2+\xi_0)X^3-3\left[ \xi_0(\xi_2-\xi_1) - \xi_1(\xi_2-\xi_0)\right]X^2}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)}+\\
+&\quad +  \frac{3\left[\xi_0^2(\xi_2-\xi_1) - \xi_1^2(\xi_2-\xi_0) \right]X-\left[(\xi_0^3(\xi_2-\xi_1) -\xi_1^3(\xi_2-\xi_0)\right]}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)}=\\
+&=  \beta_0 + \beta_1 X +\beta_2 \frac{(-\xi_1+\xi_0)X^3-3\xi_2(\xi_0-\xi_1)X^2}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)}+\\
+&\quad +  \frac{3\left[\xi_2(\xi_0-\xi_1)(\xi_0+\xi_1)-\xi_0\xi_1(\xi_0-\xi1)\right]X}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)}+\\
+&\quad\quad-\frac{\left[\xi_2(\xi_0-\xi_1)(\xi_0^2-\xi_0\xi_1+\xi_1^2)-\xi_0\xi_1(\xi_0-\xi1)(\xi_0+\xi_1)\right]}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)} = \\
+&=\beta_0 + \beta_1 X -\beta_2 (\xi_1-\xi_0)\frac{X^3-3\xi_2X^2}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)}+\\
+&\quad\quad +  \frac{3\left[\xi_2(\xi_0+\xi_1)-\xi_0\xi_1\right]X-\left[\xi_2(\xi_0^2-\xi_0\xi_1+\xi_1^2)-\xi_0\xi_1(\xi_0+\xi_1)\right]}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)}=\\
+&= -\beta_2\frac{(\xi_1-\xi_0)}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)} X^3 +3 \beta_2\frac{\xi_2(\xi_1-\xi_0)}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)} X^2 + \\
+&\quad\quad +(\beta_1-3\beta_2(\xi_1-\xi_0)\frac{\xi_2(\xi_0+\xi_1)-\xi_0\xi_1}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)})X +\\
+&\quad\quad+ \beta_0 + \beta_2(\xi_1-\xi_0)\frac{\xi_2(\xi_0^2-\xi_0\xi_1+\xi_1^2)-\xi_0\xi_1(\xi_0+\xi_1)}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)}
+\end{aligned}
+\end{equation}
+In the fourth region:
+\begin{equation}
+\begin{aligned}
+&\hat{f}_3(X) = \beta_0 + \beta_1 X  +\beta_2 h_2(X) =\\
+&= \beta_0 + \beta_1 X  +\beta_2\left[ \frac{(X-\xi_0)^3-(X-\xi_2)^3}{\xi_2 - \xi_0} - \frac{(X-\xi_1)^3-(X-\xi_2)^3}{\xi_2 - \xi_1}\right]  \\
+&= \beta_0 + \beta_1 X +\beta_2 \frac{X^3 -3 \xi_0 X^2 + 3\xi_0^2 X-\xi_0^3-X^3 +3 \xi_2 X^2 - 3\xi_2^2 X+\xi_2^3}{\xi_2 - \xi_0} +\\
+&\quad\quad\quad -\beta_2  \frac{X^3 -3 \xi_1 X^2 + 3\xi_1^2 X-\xi_1^3-X^3 +3 \xi_2 X^2 - 3\xi_2^2 X+\xi_2^3}{\xi_2 - \xi_1} =\\
+&= \beta_0 + \beta_1 X +\beta_2 \frac{ 3 (\xi_2-\xi_0) X^2 - 3(\xi_2^2- \xi_0^2) X+\xi_2^3-\xi_0^3}{\xi_2 - \xi_0} +\\
+&\quad\quad\quad -\beta_2         \frac{3 (\xi_2-\xi_1 ) X^2 - 3(\xi_2^2 - \xi_1^2) X+\xi_2^3-\xi_1^3  }{\xi_2 - \xi_1} =\\
+&= \beta_0 + \beta_1 X +\beta_2 \frac{ \cancel{3(\xi_2 - \xi_1) (\xi_2-\xi_0) X^2} - 3(\xi_2 - \xi_1)(\xi_2^2- \xi_0^2) X+(\xi_2 - \xi_1)(\xi_2^3-\xi_0^3)}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)} +\\
+&\quad\quad\quad -\beta_2         \frac{\cancel{3 (\xi_2 - \xi_0)(\xi_2-\xi_1 ) X^2} - 3(\xi_2 - \xi_0)(\xi_2^2 - \xi_1^2) X+(\xi_2 - \xi_0)(\xi_2^3-\xi_1^3  )}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)} =\\
+&= \beta_0 + \beta_1 X +\beta_2 \frac{- 3(\xi_2 - \xi_1)(\xi_2^2- \xi_0^2) X+(\xi_2 - \xi_1)(\xi_2^3-\xi_0^3)}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)} +\\
+&\quad\quad\quad -\beta_2         \frac{- 3(\xi_2 - \xi_0)(\xi_2^2 - \xi_1^2) X+(\xi_2 - \xi_0)(\xi_2^3-\xi_1^3  )}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)} =\\
+&= \beta_0 + \beta_1 X +\beta_2 \frac{3\left[-\xi_2(\xi_1^2-\xi_0^2)+\xi_2^2(\xi_1-\xi_0)+\xi_0\xi_1(\xi_1-\xi_0)\right]X+}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)}\\
+&\quad\quad \frac{-\xi_2(\xi_1^3-\xi_0^3)-\xi_2^3(\xi_1-\xi_0)-\xi_0\xi_1(\xi_1-\xi_0)}{(\xi_2 - \xi_0)(\xi_2 - \xi_1)}
+\end{aligned}
+\end{equation}
+Note that the fourth region is linear.
 \end{document} 
