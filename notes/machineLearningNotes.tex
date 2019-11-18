@@ -4,7 +4,7 @@
 \usepackage{amsmath}
 \usepackage{bm}
 \usepackage{cancel}
-\usepackage[]{algorithm2e}
+\usepackage[ruled, vlined]{algorithm2e}
 \usepackage{graphicx}
 \usepackage[upgreek]{mathastext}
 \usepackage{eucal}
@@ -25,6 +25,8 @@
 \newcommand{\si}{\mathbf{\Sigma}^{-1}}
 \newcommand{\y}{\mathbf{y}}
 \newcommand{\be}{\mathbf{\beta}}
+\newcommand{\e}{\mathbf{\epsilon}}
+\newcommand{\al}{\mathbf{\alpha}}
 \newcommand{\hbe}{\hat{\mathbf{\beta}}}
 \newcommand{\Tr}{\mathbf{Tr}}
 \newcommand{\x}{\mathbf{x}}
@@ -39,6 +41,7 @@
 \newcommand{\inv}{\mathrm{\left( \X^T\X\right)^{-1}}} 
 \newcommand{\HM}{\mathrm{\inv\X^T}} 
 \newcommand{\hb}{\mathrm{\hat{\mathbf{\beta}}}} 
+\newcommand{\mb}{\mathrm{\mathbf}}
 
 \newcommand{\argmax}[1]{\underset{#1}{\operatorname{arg}\,\operatorname{max}}\;}
 \newcommand{\argmin}[1]{\underset{#1}{\operatorname{arg}\,\operatorname{min}}\;}
@@ -1063,6 +1066,7 @@ Although the linear model guarantees $\sum_{k \in \mathcal{G}}\hat{f}_k=1$, as l
 Quadratic regression might solve the problem, but a general rule is that if $k\ge3$ classes are lined up (their centroids are in the same line), a polynomial term with degree up to $k-1$ is  needed to solve the problem, and since the direction is arbitrary, cross-products terms might be needed too.
 
 \subsection{Linear Discriminant analysis}
+\label{LDA}
 For optimal classification we have to know the class posteriors $Pr\left( G|X\right)$. Let $\pi_k$ be the prior probability of class $k$ with $\sum_k^K \pi_k=1$. Suppose $f_k(x)$ is the class conditional density.
 From the Bayes theorem (?) we get 
 \begin{equation}
@@ -1733,6 +1737,7 @@ where the algorithm uses the stochastic gradient descent where the coefficients 
 \item when data are not separable, the algorithm will not converge;
 \end{itemize}
 \subsection{Optimal separating hyperplanes}
+\label{OSH}
 The optimal separating hyperplane separates the two classes and maximizes the distance to the closest point from either class (Vapnik, 1996). Not only does this provide a unique solution to the separating hyperplane problem, but by maximizing the margin between the two classes on the training data, this leads to better classification performance on test data.
 
 Suppose $M$ is the distance. Then
@@ -2662,7 +2667,7 @@ An advantage of this representation is its interpretability. When more than 2 in
 \begin{figure}
 \includegraphics[scale=0.39]{img/tree2}
 \caption{Another representation of the binary tree on the left. On the right the 3D resulting shape of the function.}
-\label{tree1}
+\label{tree2}
 \end{figure}
 \subsubsection{Regression Trees}
 The algorithm needs to decide automatically the splitting variables and points. We can start defining the values of the constant of each region:
@@ -2760,7 +2765,7 @@ Remove the data in the box $B_1$ from the dataset and repeat steps 2-5 to obtain
 \end{figure}
 PRIM is designed for binary regression. There is no simple way to deal with $k>2$ classes simultaneously: it is possible to run PRIM separately for each class versus a baseline class.In any case, the ability of PRIM to be more patient should help the top-down greedy algorithm find a better solution.
 
-\subsection{Multivariate Adaptive Regression Splines}
+\subsection{Multivariate Adaptive Regression Splines (MARS)}
 It is a procedure well-suited for high-dimensional problems. MARS uses expansions in piecewise linear basis functions of the form $(x-t)_+$ and $(t-x)_+$.
 
 Each function is piecewise linear, with a knot at the value $t_1$. We call the two functions a \textbf{reflected pair}. The idea is to form reflected pairs for each input $X_j$ with knots at each observed value $x_{ij}$ of that input. If all of the input values are distinct, there are $2Np$ basis functions altogether.
@@ -2793,4 +2798,968 @@ At the end of this process we have a large model. This model typically overfits 
 GCV(\lambda) = \frac{\sum_{i=1}^N (y_i - \hat{f}_\lambda(x_i))^2}{(1-\frac{M(\lambda)}{N})^2}
 \end{equation}
 The value $M(\lambda)$ is the effective number of parameters in the model: this accounts both for the number of terms in the models, plus the number of parameters used in selecting the optimal positions of the knots.
-\end{document} 
+
+Some mathematical and simulation results suggest that one should pay a price of three parameters for selecting a knot in a piecewise linear regression.
+Thus if there are r linearly independent basis functions in the model, and $K$ knots were selected in the forward process, the formula is $M(\lambda) = r+cK$, where $c = 3$.
+
+The MARS method and algorithm can be extended to handle classification problems. Several strategies have been suggested. For two classes, one can code the output as 0/1 and treat the problem as a regression; we did this for the spam example. For more than two classes, one can use the indicator response approach. One codes the $K$ response classes via 0/1 indicator variables, and then performs a multi-response MARS regression. There are, however, potential masking problems with this approach.
+
+\subsection{Hierarchical Mixture of Experts}
+This can be viewed as a variant of tree-based methods. The main difference is that the tree splits are not hard decisions but rather soft probabilistic ones. At each node an observation goes left or right with probabilities depending on its input values. In an HME, a linear (or logistic regression) model is fit in each terminal node, instead of a constant as in CART (the split can be multiway, not only binary).
+
+The terminal nodes are called \textbf{experts}, and the non-terminal nodes are called \textbf{gating networks}. The idea is that each expert provides an opinion (prediction) about the response, and these are combined together by the gating networks. The model is formally a mixture model, and the two-level model in the figure can be extend to multiple levels, hence the name hierarchical mixtures of experts.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{img/HME}
+\caption{A two-level HME model.}
+\end{figure}
+\subsubsection{How HME works}
+Consider the data $(x_i, y_i), \quad i=1,\cdots, N$ either for regression or classification problem. The \textbf{top-gating} network has the output:
+\begin{equation}
+g_j(\x, \gamma_j) = \frac{e^{\gamma_j^T\x}}{\sum_{k=1}^Ke^{\gamma_k^T\x}}, \quad\quad j=1,\cdots, K
+\end{equation}
+where $\gamma_j$ is a vector of unknown parameters. Each $g_j$ is the probability of assigning an observation with feature vector $\x$ to the $j-th$ branch (soft $K$-way split). At second level the \textbf{gating networks} have similar form:
+\begin{equation}
+g_{\ell|j}(\x, \gamma_{j|\ell}) = \frac{e^{\gamma_{j|\ell}^T\x}}{\sum_{k=1}^Ke^{\gamma_{j|k}^T\x}}, \quad\quad \ell=1,
+\end{equation}
+This is the probability of assignment to the $l-th$ branch, given assignment to the $j-th$ branch at the level above. At each expert (terminal node), we have a model for the response variable of the form:
+\begin{equation}
+Y \sim Pr(y|\x, \theta_{j\ell}
+\end{equation}
+which is different according to the type of problem. For \textbf{regression} the Gaussian linear model is used with $\theta_{j\ell} = (\beta_{j\ell},\sigma^2_{jl}$:
+\begin{equation}
+Y = \beta_{j\ell}^Tx + epsilon, \quad\quad \CMcal{N} \sim(0,\sigma^2_{jl}). 
+\end{equation}
+
+For \textbf{classification} the linear logistic regression is used:
+\begin{equation}
+Pr(Y=1|\x, \theta_{j\ell} = \frac{1}{1+e^{-\theta_{j\ell}^T\x}}
+\end{equation}
+Denoting with $\Phi = \{\gamma_j,\gamma_{j\ell}, \theta_{j\ell}\}$ the collections of all parameters, the total probability that $Y=y$ is:
+\begin{equation}
+Pr(y|\x, \Phi) = \sum_{k=1}^K g_j(x, \gamma_j)\sum_{\ell=1}^K g_{\ell|j}(\x, \gamma_{j\ell})Pr(y|\x,\theta_{j\ell})
+\end{equation}
+To estimate the parameters we maximize the log-likelihood of the data over $\Phi$. The most convenient method is the EM algorithm.
+
+\subsection{Missing data}
+The usual approach is to fill-in missing values. Roughly speaking, data are missing at random if the mechanism resulting in its omission is independent of its (unobserved) value. A more precise definition is given in Little and Rubin (2002). Suppose $y$ is the response vector and $X$ is the $N \times p$ matrix of inputs (some of which are missing). Denote by $X_{obs}$ the observed entries in $X$ and let $\mathbf{Z} = (y, X)$, $\mathbf{Z}_{obs} = (\y, \X_{obs})$. Finally, if $\mathbf{R}$ is an indicator matrix with $ij-th$entry 1 if $x_{ij}$ is missing and zero otherwise, then the data is said to be missing at random (MAR) if the distribution of $\mathbf{R}$ depends on the data $\mathbf{Z}$ only through $Z_{obs}$:
+\begin{equation}
+Pr(\mathbf{R}|\mathbf{Z},\theta) = Pr (\mathbf{R}|\mathbf{Z}_{obs},\theta)
+\end{equation}
+Data are said to be \textbf{missing completely at random (MCAR)} if the distribution$\mathbf{R}$ does not depend on the observed or missing data:
+\begin{equation}
+Pr(\mathbf{R}|\mathbf{Z},\theta) = Pr (\mathbf{R}|\theta)
+\end{equation}
+For example, if a patient’s measurement was not taken because the doctor felt he was too sick, that observation would not be MAR or MCAR.
+
+Assuming the features are missing completely at random, there are a number of ways of proceeding:
+
+\begin{enumerate}
+\item \label{Missingi}Discard observations with any missing values.
+\item \label{Missingii}Rely on the learning algorithm to deal with missing values in its training phase.
+\item \label{Missingiii}Impute all missing values before training.
+\end{enumerate}
+
+Approach \ref{Missingi} can be used if the relative amount of missing data is small, but otherwise should be avoided. Regarding \ref{Missingii}, CART is one learning algorithm that deals effectively with missing values, through surrogate splits. MARS and PRIM use similar approaches. In generalized additive modeling, all observations missing for a given input feature are omitted when the partial residuals are smoothed against that feature in the backfitting algorithm, and their fitted values are set to zero. Since the fitted curves have mean zero (when the model includes an intercept), this amounts to assigning the average fitted value to the missing observations.
+For most learning methods, the imputation approach \ref{Missingiii} is necessary. The simplest tactic is to impute the missing value with the mean or median of the non-missing values for that feature.
+
+If the features have at least some moderate degree of dependence, one can do better by estimating a predictive model for each feature given the other features and then imputing each missing value by its prediction from the model, distinctly from the method used to predict $y$ from $\x$.
+
+\section{Boosting and Additive Trees}
+\subsection{Boosting methods}
+ It was originally designed for classification problems but it can profitably be extended to regression as well. The motivation for boosting was a procedure that combines the outputs of many "weak" classifiers to produce a powerful "committee".
+
+A weak classifier is one whose error rate is only slightly better than random guessing. The purpose of boosting is to sequentially apply the weak classification algorithm to repeatedly modified versions of the data, thereby producing a sequence of weak classifiers $G_(x), \quad m=1,\cdots, M$. 
+Consider a two-class problem with the output variable coded as $Y\in\{-1,1\}$. Given a vector of predictors $\X$, a classifier $G(X)$ produces a prediction taking one of the two values $\{-1,1\}$.
+The predictions from all of them are then combined to through a weighted majority of vote to produce the final prediction:
+\begin{equation}
+G(x) = sign\br{\sum_{i=1}^M \alpha_mG_m(x)}
+\end{equation}
+This is the \textbf{AdaBoost} procedure. Here $\alpha_1, \cdots, \alpha_m$ are computed by the boosting algorithm and weight the single contribution. The data modifications at each boosting step consist of applying weights $w_1, \cdots, w_N$ to each of the training observations. Initially all the weights are $1/N$. For successive iterations,  the observation weights are individually modified and the classification algorithm is reapplied to the weighted observations. At step $m$ the observations that were misclassified by the classifier $G_{m-1}(x)$ have their weights increased, whereas the weights are decreased for those that were classified correctly. Thus as iterations proceed, observations that are difficult to classify correctly receive ever-increasing influence. Each successive classifier is thereby forced to concentrate on those training observations that are missed by previous ones in the sequence.
+ 
+ The \textbf{AdaBoost.M1} algorithm, aka \textbf{Discrete Adaboost}, is shown in \ref{AdaBoost.M1}. If the base classifier instead returns a real-valued prediction (e.g., a probability mapped to the interval $[-1,1]$), AdaBoost can be modified appropriately and becomes \textbf{Real Adaboost}.
+ \begin{algorithm}[!ht]
+    $w_i=1/N, \quad i=1,\cdots,N$
+    
+	\For{($m =1:M$)}{
+			Fit a classifier $G_m(x)$ to training data using $w_i$;\\
+			Compute the training error \begin{equation}
+			err_m = \frac{\sum_{i=1}^N w_i I(y_i\ne G_m(x_i))}{\sum_{i=1}^N w_i};
+			\end{equation}\\
+			Compute $\alpha_m = \log\frac{1-err_m}{err_m}$;\\
+			$w_i\leftarrow w_i e^{\alpha_m I(y_i\ne G_m(x_i))}, \quad i=1,\cdots, N$;\\
+		}
+		return $G(x) = sign\br{\sum_{i=1}^M \alpha_mG_m(x)}$
+\caption{AdaBoost.M1 algorithm.}
+\label{AdaBoost.M1}
+\end{algorithm}
+The power of AdaBoost to dramatically increase the performance of even a very weak classifier.
+
+\subsection{Boosting fits an additive model}
+Boosting is a way of fitting an additive expansion in a set of basis-functions where the basis functions are the individual classifiers. The basis function expansion takes the form:
+\begin{equation}
+f(x) = \sum_{m=1}^M \beta_m b(x, \gamma_m)
+\end{equation}
+Typically these models are fit by minimizing a loss function averaged over the training data, such as the squared error or a likelihood-based loss function:
+
+\begin{equation}
+\min_{\{\beta_m, \gamma_m\}_1^M} \sum_{i=1}^N L\br{y_i, \sum_{m=1}^M \beta_m b(x_i, \gamma_m)}
+\label{additivCostEq}
+\end{equation}
+This is sometimes computationally infeasible and it is approximated by:
+\begin{equation}
+\min_{\{\beta_m, \gamma_m\}_1^M} \sum_{i=1}^N L\br{y_i, \beta b(x_i, \gamma)}
+\end{equation}
+\subsection{Forward Stagewise Additive Modeling}
+Forward stagewise modelling approximates the solution of \ref{additivCostEq} by sequentially adding new basis functions to the expansion without adjusting the parameters and coefficients of those that have already been added. At each iteration $m$ one solves for the optimal basis function $b(x, \gamma_m)$ and corresponding coefficient $\beta_m$ to add the current expansion $f_{m-1}(x)$. This produces $f_m(x)$ and the process is repeated. For squared error loss one has:
+\begin{equation}
+\begin{aligned}
+L(y_i, f_{m-1}(x_i)+\beta b(x_i, \gamma)) &= (y_i-f_{m-1}(x_i)-f_{m-1}(x_i)-\beta b(x_i, \gamma))^2 =\\
+ &=(r_i-\beta b(x_i, \gamma))^2
+\end{aligned}
+\end{equation}
+The term that best fits the residual is added to the expansion at each step.
+
+Stagewise additive modelling is equivalent to AdaBoost.M1 using the exponential loss-function:
+\begin{equation}
+L(y, f(x))  = exp(-yf(x))
+\end{equation}
+The principal attraction of exponential loss in the context of additive modeling is computational; it leads to the simple modular reweighting AdaBoost algorithm.
+\section{Procedure for datamining}
+In data mining applications, usually only a small fraction of the large number of predictor variables that have been included in the analysis are actually relevant to prediction. Also, unlike many applications such as pat- tern recognition, there is seldom reliable domain knowledge to help create especially relevant features and/or filter out the irrelevant ones, the inclu- sion of which dramatically degrades the performance of many methods.
+In addition, data mining applications generally require interpretable mod- els. It is not enough to simply produce predictions. It is also desirable to have information providing qualitative understanding of the relationship between joint values of the input variables and the resulting predicted re- sponse value. Thus, black box methods such as neural networks, which can be quite useful in purely predictive settings such as pattern recognition, are far less useful for data mining.
+
+An "off-the-shelf" method is one that can be directly applied to the data without requiring a great deal of time- consuming data preprocessing or careful tuning of the learning procedure. Decision trees come closest to meeting the requirements for serving as an off-the-shelf procedure for data mining. They are relatively fast to construct and they produce interpretable models (if the trees are small). They naturally incorporate mixtures of numeric and categorical predictor variables and missing values. They are invariant under (strictly monotone) transformations of the individual predictors. As a result, scaling and/or more general transformations are not an issue, and they are immune to the effects of predictor outliers. They perform internal feature selection as an integral part of the procedure. They are thereby resistant, if not completely immune, to the inclusion of many irrelevant predictor variables. These properties of decision trees are largely the reason that they have emerged as the most popular learning method for data mining. Trees have one aspect that prevents them from being the ideal tool for predictive learning, namely inaccuracy. They seldom provide predictive accuracy comparable to the best that can be achieved with the data at hand.
+
+\subsection{Boosting trees}
+The boosted tree model is a sum of tress induced in a forward stagewise manner:
+\begin{equation}
+\begin{aligned}
+f_M(x) &= \sum_{m=1}^M T(x, \Theta_m)\\
+T(x, \Theta_m) = \sum_{j=1}^J\gamma_j I(x \in R_j)
+\end{aligned}
+\end{equation}
+where $\Theta_m$ is the vector of parameters. Considering a single tree, the parameters are found by minimizing the empirical risk:
+\begin{equation}
+\hat{\Theta} = \argmin{\Theta}{\sum_{j=1}^J\sum_{x_i \in R_j}L(y_i, \gamma_j)}
+\end{equation}
+Due to the combinatorial problem, we usually settle for suboptimal solutions, dividing the problem into two parts:
+\begin{itemize}
+\item \textbf{Finding $\gamma_j$ given $R_j$}: this is typically trivial and often $\hat{\gamma_j} = \bar{y}_j$, the mean of $y_i$ falling in region $R_j$.
+\item \textbf{Finding $R_j$}: this is the difficult part. A typical strategy is to use a greedy top-down recursive partitioning  algorithm to find $R_j$.
+\end{itemize}
+
+The boosted tree is induced in a forward stagewise manner. At each step one must solve:
+\begin{equation}
+\hat{\Theta}_m = \argmin{\Theta_m}{\sum_{i=1}^N L\br{y_i, f_{m-1}(x_i)+T\br{x_i, \Theta_m}}}
+\end{equation}
+for the region set and constants $\Theta_m = \{R_{jm},\gamma_{jm}\}_1^{J_m}$ for the next tree, given the current model $f_{m-1}(x)$. Given $R_{jm}$, finding the optimal constants $\gamma_{jm}$ in each region is typically straightforward:
+\begin{equation}
+\hat{\gamma}_{jm} = \argmin{\gamma_{jm}}{\sum_{x_i \in R_{jm}}} L(y_i, f_{m-1}(x_i)+\gamma_{jm})
+\end{equation}
+Finding the regions is more difficult, and even more difficult than for a single tree.
+
+Defining the loss function as
+\begin{equation}
+L(f) = \sum_{i=1}^N L(y_i, f(x_i))
+\end{equation}
+where $f$ is a sum of trees. So, $\hat{\mathbf{f}} =\argmin{\mathbf{f}}{L(\mathbf{f})}$, $\mathbf{f}=\{f(x_i1), f(x_2), \cdots, f(x_N)\}$. Numerical procedures exist to find $\hat{\mathbf{f}}$ as a sum of component vectors:
+\begin{equation}
+\mathbf{f}_M = \sum_{m=0}^M \mathbf{h}_m, \quad \mathbf{h}_m \in CMcal{R}^N
+\end{equation}
+with $\mathbf{f}_0=\mathbf{h}_0$ is an initial guess.
+
+One optimization is the \textbf{Steepest descent}: $\mathbf{h}_m = -\rho_m \mathbf{g}_m$, $\mathbf{g}$ being the gradient of $L(f)$ evaluated at $\mathbf{f}_{m-1}$.
+
+Another way is the \textbf{Gradient Boosting}. The gradient is trivial to calculate for any differentiable loss function but it is defined only at the training data points $x_i$ whereas the ultimate goal is to generalize it to new data not in the training set.
+
+A possible resolution to this dilemma is to induce a tree $T(x, \Theta_m)$ at the m-th iteration whose predictions $t_m$  are as close as possible to the negative gradient. Using squared error loss to measure closeness:
+\begin{equation}
+\widetilde{\Theta}_m = \argmin{\Theta}{\sum_{i=1}^N \br{-g_{im}-T(x_i, \Theta)}^2}
+\end{equation}
+ \begin{algorithm}[!ht]
+    $f_0\leftarrow \argmin{\gamma}{\sum_{i=1}^N L(y_i, \gamma)}$;\\
+	\For{($m =1:M$)}{
+		\For{($i =1:N$)}{
+			$r_{im} = \left[ \frac{\partial L(y_i,f(x_i))}{\partial f(x_i)}\right]_{f-f_{m-1}}$;\\			
+		}
+		Fit a regression tree to the targets $r_{im}$ giving terminal regions $R_{jm}, \quad j=1,\quad, J_m$;\\
+		\For{($i =1:J_m$)}{
+			$\gamma_{jm} = \argmin{\gamma}{\sum_{x_j \in R_{jm}} L(y_i, f_{m-1}(x_i)+\gamma)}$;\\			
+		}
+		$f_m(x) \leftarrow f_{m-1}+\sum_{j=1}^{J_m} L(y_i, f_{m-1}(x_i)+\gamma)$;\\
+		}
+		return $\hat{f} = f_M(x)$
+\caption{Gradient Tree Boosting algorirthm.}
+\end{algorithm}
+The algorithm for classification is similar. Two basic tuning parameters are the number of iterations $M$ and the sizes of each of the constituent trees $J_m, m=1,2,...,M$.
+
+\subsection{Right-sized Trees for boosting}
+[skipped, at least for now]
+
+\subsection{Regularization}
+Besides the size of the constituent trees, $J$, the other meta-parameter of gradient boosting is the number of boosting iterations $M$. Each iteration usually reduces the training risk $L(f_M )$, so that for $M$ large enough this risk can be made arbitrarily small. However, fitting the training data too well can lead to overfitting, which degrades the risk on future predictions. Thus, there is an optimal number $M*$ minimizing future risk that is application dependent. A convenient way to estimate $M*$ is to monitor prediction risk as a function of M on a validation sample. The value of M that minimizes this risk is taken to be an estimate of $M*$.
+\subsubsection{Shrinkage}
+Controlling the value of $M$ is not the only possible regularization strategy. Shrinkage techniques can be employed as well. The simplest implementation of shrinkage in this case is to scale the contribution of each tree by a factor $0<\nu<1$ when it is added to the current approximation:
+\begin{equation}
+f_m(X) = f_{m-1}(x) + \nu \sum_{i=1}^J \gamma_{jm}I(x \in R_{jm}).
+\end{equation}
+Smaller values of $\nu$ (more shrinkage) result in larger training risk for the same number of iterations $M$. Empirically it has been found (Friedman, 2001) that smaller values of $\nu$ favor better test error, and require correspondingly larger values of $M$. The best strategy appears to be to set $\nu$ to be very small ($\nu < 0.1$) and then choose $M$ by early stopping, however more iterations are needed so the computational cost is higher. 
+
+\section{Support Vector Machines and Flexible Discriminants}
+We have seen \textbf{Optimal separating hyperplabes} in \ref{OSH}. Here we will see the case for non-separable classes, where the classes overlap.
+\subsection{Support Vector Classifier}
+With $N$ pairs $(x_i, y_i) \in \CMcal{R}^p$ and $y_i \in \{-1, 1\}$, define a hyperplane:
+\begin{equation}
+\{x: f(c) = x^T\beta+ \beta_0=0\}
+\end{equation}
+where $\left|\beta\right|=1$ is a unit vector. A classification rule induced by $f(x)$ is:
+\begin{equation}
+G(x) = sign\left[x^T\beta+\beta_0\right]
+\end{equation}
+When the classes are separable, we can find a function $f(x)=x^T\beta+\beta_0$ with $y_if(x_i)>0, \quad \forall i$. Hence, we are able to find the hyperplane creating the biggest margin between training points belonging to the two different classes:
+\begin{equation}
+\begin{aligned}
+&\max_{\beta, \beta_0,\left|\beta\right|=1} M\\
+&\textit{subject to } y_i(x_i^T\beta+\beta_0)\ge M,\quad i=1,\cdots,N
+\end{aligned}
+\end{equation}
+or equivalently:
+\begin{equation}
+\begin{aligned}
+&\min_{\beta, \beta_0} \left|\beta\right|\\
+\textit{subject to } \quad&y_i(x_i^T\beta+\beta_0)\ge 1,\quad i=1,\cdots,N
+\end{aligned}
+\end{equation}
+$M$ is the distance from the hyperplane to the wither side and it is called \textbf{margin}. This is a convex optimization problem.
+
+\textbf{Suppose now that the classes overlap in the feature space}. We can still maximize $M$ allowing some points to be on the wrong side. We define a slack variable $\xi=\br{\xi_1, \xi_2, \cdots, \xi_N}$. There are two ways to modify the constraint:
+\begin{equation}
+\begin{aligned}
+&y_i (x_i^T\beta+\beta_0)\ge M -\xi_i\\
+\textit{or} \quad&y_i (x_i^T\beta+\beta_0)\ge M (1-\xi_i)\\
+&\forall i, \xi_i\ge  0, \sum_{i=1}^N \xi_i \le constant.
+\end{aligned}
+\end{equation}
+The two choices lead to different solutions. The first choice is more natural since it measures overlap in actual distance from the margin. The second choice measures the overlap in relative distance, which changes the width of the margin $M$. However, the first choice leads to a nonconvex optimization, while the second results to the standard support vector classifier. 
+
+The value $\xi_i$ is the proportional amount by which the prediction $f(x_i) = x_i^T\beta+\beta_0$ is on the wrong side of the margin. Hence by up-bounding the sum $\sum \xi_i$ we limit the total proportional amount by which predictions fall on the wrong side. Misclassifications occur when $\xi_i> 1$. So using  a constant $K$ one bounds the total number of misclassifications to $K$. Again, we can drop the norm constraint on $\beta$:
+\begin{equation}
+\begin{aligned}
+&M = \frac{1}{\left| \beta\right|}\\
+\textit{subject to} \quad &y_i(x_i^T\beta +\be_0) \ge 1-\xi_i \quad \forall i\\
+\textit{and subject to} \quad & \xi_i \ge 0, \sum_i \xi_i \le constant
+\end{aligned}
+\label{SVMOpt}
+\end{equation}
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{img/SVM}
+\caption{Separable and non separable support vector classifiers.}
+\end{figure}
+The misclassified points are on the wrong side for an amount $\xi* = M \xi$ while the correctly classified points have $\xi*=0$. One sees that points inside their class boundary do not play a big role in shaping the boundary. This seems like an attractive property, and one that differentiates it from linear discriminant analysis (\ref{LDA}). In LDA, the decision boundary is determined by the covariance of the class distributions and the positions of the class centroids. Logistic regression is more similar to the support vector classifier in this regard.
+\subsubsection{Computing the support vector classifier}
+
+The problem \ref{SVMOpt} is quadratic with linear inequality constraints, hence it is a convex optimization problem. We describe a quadratic programming solution using Lagrange multipliers. Computationally it is convenient to re-express \ref{SVMOpt} in the equivalent form:
+\begin{equation}
+\begin{aligned}
+&\min_{\beta, \beta_0} \frac{1}{2}\left|\beta\right|^2 + C\sum_{i=1}^N \xi_i\\
+\textit{subject to} &\xi \ge 0, y_i(x_i^T\beta+\beta_0)\ge 1-\xi_i, \forall i
+\end{aligned}
+\end{equation}
+where $C$ replaces the constant. The separable case corresponds to $C = \infty$.
+
+The Lagrange primal function is 
+\begin{equation}
+L_P = \frac{1}{2}\left| \beta\right|^2 + C \sum_{i=1}^N \xi_i - \sum_{i=1}^N \alpha_i \left[y_i\br{x_i^T\beta+\beta_0}-\br{1-\xi_i}\right] - \sum_{i=1}^N \mu_i \xi_i 
+\label{Lp}
+\end{equation}
+which we minimize w.r.t. $\beta, \be_0, \xi$. Setting the respective derivatives to $0$:
+\begin{equation}
+\begin{aligned}
+\be &= \sum_{i=1}^N  \alpha_i y_i x_i,\\
+0 &= \sum_{i=1}^N \alpha_i y_i\\
+\alpha_i &= C - \mu_i \quad \forall i\\
+\textit{constrained to } \quad  &\alpha_i,\mu_i, \xi_i \ge 0 \quad \forall i
+\end{aligned}
+\end{equation}
+Substituting in \ref{Lp}, we obtain the Lagrangian (Wolfe) dual objective function:
+\begin{equation}
+\begin{aligned}
+L_D &= \frac{1}{2}\be^T\be + \sum_{i=1}^N \left[\br{C-\mu_i} \xi_i \right]- \sum_{i=1}^N \alpha_i y_i \x_i^T\beta- \sum_{i=1}^N \alpha_i y_i\beta_0+\\
+&+ \sum_{i=1}^N \alpha_i-\sum_{i=1}^N \alpha_i\xi_i = \\
+&=\frac{1}{2}\sum_{i=1}^N  \alpha_i y_i \x_i^T\cdot \sum_{j=1}^N  \alpha_j y_j \x_j \cancel{+ \sum_{i=1}^N \alpha_i \xi_i}- \sum_{i=1}^N \alpha_i y_i \x_i^T\beta- \sum_{i=1}^N \alpha_i y_i\beta_0+\\
+&+ \sum_{i=1}^N \alpha_i\cancel{-\sum_{i=1}^N \alpha_i\xi_i} =\\
+&=\frac{1}{2}\sum_{i=1}^N  \alpha_i y_i \x_i^T\cdot \sum_{j=1}^N  \alpha_j y_j \x_j- \sum_{i=1}^N \alpha_i y_i \x_i^T\beta \cancel{- \beta_0\sum_{i=1}^N \alpha_i y_i}+ \sum_{i=1}^N \alpha_i =\\
+&=\frac{1}{2}\sum_{i=1}^N  \alpha_i y_i \x_i^T\cdot \sum_{j=1}^N  \alpha_j y_j \x_j- \sum_{i=1}^N \alpha_i y_i \x_i^T\sum_{j=1}^N \alpha_j y_j \x_j+ \sum_{i=1}^N \alpha_i =\\
+&= \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N \alpha_i y_i \x_i^T\sum_{j=1}^N \alpha_j y_j \x_j = \\
+&= \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i y_i \alpha_j y_j\x_i^T  \x_j
+\end{aligned}
+\label{LagrangeDueal}
+\end{equation}
+where we used the properties that $\alpha_i, \y_i$ are scalar and that $\be, \be_0$ can be taken out. Notice that $\be^T\be  = \sum_{i=1}^N \alpha_i y_i \x_i^T\sum_{j=1}^N\alpha_j y_j \x_j =\sum_{i=1}^N \sum_{j=1}^N \alpha_i y_i \alpha_j y_j  \x_i^T\x_j \ne \sum_{i=1}^N  (\alpha_i y_i)^2 \x_i^T\x_i$. In fact consider for example: $\be = c_1\x_1 + c_2\x_2$ with $\x_i = \left[x_{1i}, x_{2i}\right]^T$. $\be = \left[ c_1x_{11}+c_2x_{12}, c_1x_{21}+c_2x_{22} \right]^T$ and $\be^T\be = (c_1x_{11}+c_2x_{12})^2+(c_1x_{21}+c_2x_{22})^2$, so we are missing some cross-products. The Lagrangian (Wolfe) dual objective function gives a lower bound on the objective function for any feasible point. We maximize $L_D$ subject to $0\le \alpha_i\le C$ and $\sum_{i=1}^N\alpha_iy_i$. In addition to the derivatives, the \textbf{Karush-kuhn-Tucker} conditions include constraints:
+\begin{equation}
+\begin{aligned}
+\alpha_i \left[ y_i\br{x_i^T\be+\be_0}-\br{1-xi_i}\right] &=0\\
+\mu_i \xi_i &= 0\\
+y_i(x_i^T\be+\be_0) - (1 - \xi_i) &\ge 0
+\end{aligned}
+\label{KKT}
+\end{equation}
+for $i=1,\cdots, N$. These constraints and the ones originating from the derivatives uniquely characterize the primal and dual problem.
+
+From $\be = \sum_{i=1}^N  \alpha_i y_i x_i$, we can see:
+\begin{equation}
+\hat{\be} = \sum_{i=1}^N \hat{\alpha}_i y_i x_i
+\end{equation}
+with $\hat{\alpha}_i \ne 0$ only for those observations $i$ for which the constraints in the last equation of \ref{KKT} are exactly met. These observations are called \textbf{support vectors}, since $\hat{\be}$ is represented in terms of them alone. Among these support points, some will lie on the edge of the margin ($\hat{\xi}_i=0$) and hence will be characterized by $0 < \hat{\alpha_i} <C$: the remainder ($\hat{\xi}_i>0$) have $\hat{\alpha}_i=C$. We can see that any of these margin points ($0<\hat{\alpha}_i$, $\hat{\xi}_i = 0$), can be used to solve for $\be_0$, and we typically use an average of all the solutions for numerical stability. Maximizing the dual is a simpler convex quadratic programming problem than the primal and can be solved with standard techniques such (Murray et. al, 1981).
+
+Points on the wrong side of the boundary are support vectors. In addition, points on the correct side of the boundary but close to it (in the margin), are also support vectors. 
+
+Given the solutions $\hat{\be}, \hat{\be}_0$, the decision function can be written as:
+\begin{equation}
+\hat{G} (x) = sign \br{\hat{f}(x)}= sign\br{x^T\hat{\be}+\be_0}
+\end{equation}
+The tuning parameter of this procedure is the cost parameter $C$. The optimal value for C can be estimated by cross-validation.
+\subsection{Support vector machines and Kernels}
+We can make the procedure more flexible by enlarging the feature space using basis expansions such as polynomials or splines. Generally linear boundaries in the enlarged space achieve better training-class separation, and translate to nonlinear boundaries in the original space. 
+
+\subsubsection{Computing SVM for classification}
+The Lagrange dual function has the form:
+\begin{equation}
+L_D = \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i y_i \alpha_j y_j\left\langle  h(x_i), h(x_j)  \right\rangle 
+\end{equation}
+So $f(x)$ can be written as 
+\begin{equation}
+f(x) = h(x)^T\be + \be_0 = \sum_{i=1}^N \alpha_iy_i \left\langle  h(x), h(x_i)  \right\rangle +\be_0
+\end{equation}
+
+As before, given $\alpha_i$, $\be_0$ can be determined by solving $y_i f(x_i) = 1$ for any(or all) $x_i$ for which $0<\alpha_i <C$.
+So $h(x0)$ is involved only in terms of its inner product: \textbf{we do not need to specify the transformation but only the knowledge of the kernel function is required}:
+\begin{equation}
+K(x, x') = \left\langle  h(x), h(x')  \right\rangle
+\end{equation}
+$K$ should be symmetric positive (semi-) definite.   Possible popular choices are:
+
+\begin{equation}
+\begin{aligned}
+\textbf{dth-Degree polynomial:} \quad K(x, x') = \br{1+\left\langle  x,x'  \right\rangle}^d\\
+\textbf{Radial basis:} \quad K(x, x') =e^{-\gamma\left| x-x' \right|^2}\\
+\textbf{Neural Network:} \quad K(x, x') = tanh\br{k_1\left\langle  x,x'  \right\rangle+k_2}\\
+\end{aligned}
+\end{equation}
+\subsection{SVM for Regression}
+SVM can be adapted for regression. The linear regression model is in the form
+\begin{equation}
+f(x) = x^T\be+\be_0
+\end{equation}
+and then handle non-linear generalizations. To estimate $\be$ we consider minimization of:
+\begin{equation}
+\begin{aligned}
+H(\be, \be_0) &= \sum_{i=1}^NV\br{y_i - f(x_i)}+\frac{\lambda}{2}\left|\be\right|^2\\
+V_\epsilon &=\left\{\begin{array}{ll}0 \quad \quad \textit{if}\quad |r|<1 \\ 
+ |r|-\epsilon  \quad \quad \textit{otherwise}
+\end{array} 
+\right.
+\end{aligned}
+\end{equation}
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{img/RegSVMV}
+\caption{The left panel shows the $\epsilon$-insensitive error function used by the support vector regression machine. The right panel shows the error function used in Huber’s robust regression (blue curve) used in statistics. Beyond $|c|$, the function changes from quadratic to linear reducing the contribution of outliers.}
+\label{RegSVMV}
+\end{figure}
+This is an "$\epsilon$-insensitive" error measure, ignoring errors of size less than $\epsilon$ (left panel of \ref{RegSVMV}). There is a rough analogy with the support vector classification setup, where points on the correct side of the decision boundary and far away from it, are ignored in the optimization. In regression, these "low error" points are the ones with small residuals.
+
+The support vector error measure has linear tails (beyond $\epsilon$), but in addition it flattens the contributions of those cases with small residuals.
+
+If $\be, \be_0$ are the minimizers of $H$, the solution function can be shown to have the form:
+\begin{equation}
+\begin{aligned}
+\hat{\be} &= \sum_{i=1}^N(\hat{\alpha}_i^* - \hat{\alpha}_i)x_i\\
+\hat{f}(x) &= \sum_{i=1}^N(\hat{\alpha}_i^* - \hat{\alpha}_i)\left\langle x,x_i\right\rangle+\be_0
+\end{aligned}
+\end{equation}
+where $\hat{\alpha}_i^*, \hat{\alpha}_i$ are positive and solve the quadratic problem:
+\begin{equation}
+\begin{aligned}
+&min_{\alpha_i, \alpha_i^*}\epsilon \sum_{i=1}^N(\alpha_i^* + \alpha_i)-\sum_{i=1}^Ny_i(\alpha_i^* - \alpha_i)+\frac{1}{2}\sum_{i,j=1}^N(\alpha_i^* - \alpha_i)(\alpha_j^* - \alpha_j)\left\langle x_i,x_j\right\rangle\\
+&\textit{subject to} \left\{ \begin{array}{lll}
+		0 \le \alpha_i, \alpha_i^* \le \frac{1}{\lambda}\\
+		\sum_{i=1}^N  (\alpha_i^* - \alpha_i) =0\\
+		\alpha_i, \alpha_i^* = 0
+		\end{array}
+		\right.
+\end{aligned}
+\end{equation}
+Due to the nature of these constraints, typically only a subset of the solution values $(\hat{\alpha}_i^* - \hat{\alpha}_i^*)$ are nonzero, and the associated data values are called the support vectors.
+There are two parameters: $\epsilon$ is a parameter of the loss function. $\lambda$ is a regularization parameter and can be estimated by cross validation.
+
+\textbf{The SVM can be extended to multiclass problems} by solving many two-class problems. A classifier is built for each pair of classes and the final classifier is the one that dominates the most.
+
+\subsection{Generalized  LDA}
+LDA is a simple prototype classifier which classifies points closest to the centroid. LDA is the estimated Bayes classifier if the observations are multivariate Gaussian in each class, with common covariance matrix, which is very unlikely. LDA has linear boundaries and provides natural low-dimensional views of data. Despite these properties, it fails in a number of situations. One is when more flexibility at for the boundaries is required; in this case QDA works. It does not work well neither with too many correlated predictors, for example in case of digitalized analogue signals and images, since in this case it uses too many parameters. Finally, LDA assumes a single centroid (prototype) per class (and a common covariance matrix) to describe the spread of the data in each class. Sometimes  several centroids are more appropriate.
+
+Three alternatives exist to these three situations:
+\begin{itemize}
+\item \textbf{recast the LDA problem as a linear regression problem}, which in turn can be converted to a non-parametric form of regression, achieving more flexibility. These are called \textbf{FDA}. The regression procedures can be seen to identify an enlarged set of predictors via basis expansions. FDA amounts to LDA in this enlarged space.
+\item When there are too many predictors, we do not want to expand the set. The second idea is to fit LDA but penalize its coefficients to be smooth or otherwise coherent in the spatial domain, such as an image. This is called \textbf{Penalized Discriminant Analysis (PDA)}.
+\item \textbf{Model each class by a mixture of two or more Gaussians with different centroids sharing the same covariance matrix}. This allows for more complex decision boundaries and allows for subspace reduction. This is called \textbf{Mixture Discriminant Analysis (MDA)}.
+\end{itemize}
+
+\subsubsection{Flexible Discriminant Analysis (FDA)}
+This technique performs LDA using linear-regression on derived responses.
+Assume we have observations with a quantitative response $G$ falling into one of $K$ classes. Suppose $\theta:\CMcal{G} \rightarrow \CMcal{R}^1$ is a function that assigns scores to the classes such that the transformed class labels are optimally predicted by linear regression, producing the derived responses. Then, having as training examples $(g_i, x_i)$, we solve:
+\begin{equation}
+\min_{\theta, \be} \sum_{i=1}^N \br{\theta(g_i)-x_i^T\be}^2
+\end{equation}
+with restrictions on $\theta$ to avoid trivial solutions(mean zero and unit variance over the training data).
+
+More generally, we can find up to $L \le K-1 $ sets of independent scorings for the class labels, $\theta_1, \theta_2, \cdots , \theta_L$, and $L$ corresponding linear maps $\eta_l(X) = X^T \be_l, l = 1,\cdots, L$, chosen to be optimal for multiple regression in $\CMcal{R}^p$. So the mapping function for one class does not to be the same for the others.
+
+The scores $\theta_l(g)$ and maps $\be_l$ are chosen to minimize the average squared residual:
+\begin{equation}
+ASR = \frac{1}{N}\sum_{l=1}^N\left[ \br{\theta_l(g_i) - x_i^T\be_k}^2\right]
+\end{equation}
+The set of scores are assumed to be mutually orthogonal and normalized with respect to an appropriate inner product to prevent trivial zero solutions.
+
+The Mahalanobis distance of a test point $x$ to the $k-th$ class centroid $\hat{\mu}_k$ is given by:
+\begin{equation}
+\delta_j (x, \hat{\mu}_k) = \sum_{\ell=1}^{K-1} w_\ell \br{\hat{\eta}_\ell(x) - \eta_\ell^{-k}(x) }+D(x)
+\end{equation}
+where $\eta_\ell^{-k}(x) $s is the mean of $\hat{\eta}_\ell(x)$ in the $k-th$ class, and $D(x)$ does not depend on $k$ and $w_l$ are defined in terms of the mean squared residual $r_\ell^2$ f the $\ell$th optimally scored fit:
+\begin{equation}
+w_\ell = \frac{1}{r_\ell^2(1-r_\ell^2}
+\end{equation}
+To summarize, LDA can be performed by a sequence of linear regressions, fol- lowed by classification to the closest class centroid in the space of fits.
+
+The power is that we can replace the linear regression with more flexible non-parametric fits, achieving a more flexible classifier. We can use generalized additive fits, spline functions, MARS and others. In this more general form the regression problems are defined by the criterion:
+\begin{equation}
+ASR \br{\{\theta_\ell, \eta_\ell \}_{\ell=1}^L} = \frac{1}{N}\sum_{\ell=1}^L\left[\sum_{i=1}^N \br{\theta_\ell(g_i) - \eta_\ell(x_i)}^2 + \lambda J(\eta_\ell)\right]
+\end{equation}
+where $J$ is a regularizer appropriate for some forms of nonparametric regression.
+
+The computations of FDA coordinates can be simplified in cases when the nonparametric procedure can be represented as a linear operator $\mathbf{S}_\lambda$, that is $\hat{\y} =\mathbf{S}_\lambda \y$. Additive splines have this property if the smoothing parameters are fixed, as well as MARS when the basis functions are selected. The subscript $\lambda$ denotes the entire set of smoothing parameters. If $\mathbf{S}_\lambda = \mathbf{H}_X$, the linear regression projection operator, then we are back to LDA.
+
+We create $N \times K$ \textit{indicator response matrix} \textbf{Y} from the response $g_i$, such that $y_{ik} = 1$ if $g_i =k$, $0$ otherwise. Each row in $\mathbb{Y}$ has only one $1$.
+The steps are the following:
+\begin{enumerate}
+\item \textbf{Multivariate nonparametric regression}: fit a multiresponse, adaptive nonparametric regression of $\mathbf{Y}$ on $\mathbf{X}$, giving the fitted values $\mathbf{\hat{Y}}$. Let $\mathbf{S}_\lambda$ be the linear operator that fits the final chosen model and $\eta^*(x)$ be the vector of fitted regression functions \label{MNR}.
+\item \textbf{Optimal scores}: compute the eigen-decomposition of $\mathbf{Y}^T\mathbf{\hat{Y}}=\mathbf{Y}^T\mathbf{S}_\lambda \mathbf{Y}$ where the eigenvectors $\mathbf{\Phi}$ are normalized: $\mathbf{\Phi}^T\mathbf{D}_\pi\mathbf{\Phi}^T$. here $\mathbf{D}_\pi = \mathbf{Y}^T\mathbf{Y}/N$ is a diagonal matrix of the estimated class prior probabilities.
+\item \textbf{Update} the model from step \ref{MNR} using the optimal scores $\eta(x) = \Phi^T\eta^*(x)$.
+\end{enumerate}  
+\subsubsection{Penalized discriminant analysis}
+Although FDA is motivated by generalizing optimal scoring, it can also be viewed directly as a form of regularized discriminant analysis. Suppose the regression procedure used in FDA amounts to a linear regression onto a basis expansion $h(X)$, with a quadratic penalty on the coefficients:
+\begin{equation}
+ASR\br{\{ \theta_\ell, \be_\ell\}_{\ell=1}^L} = \frac{1}{N}\sum_{\ell=1}^L\left[\sum_{i=1}^N \br{\theta_\ell(g_i) - h^T(x_i)\be_\ell}^2 + \lambda \be_\ell^T\Omega \be_\ell\right]
+\end{equation}
+The choice of $\Omega$ depends on the problem. if $\eta_\ell(x) = h(x)\be_\ell$ is an expansion on spline basis functions, $\Omega$ might constrain $\eta_\ell$ to be smooth over $\CMcal{R}^p$. In the case of additive splines, there are $N$ spline basis functions for each coordinate, resulting in a total of $N_p$ basis functions in $h(x)$; $\Omega$ in this case is $N_p \times N_p$ and block diagonal.
+
+The steps in FDA can then be viewed as a generalized form of LDA, which we call penalized discriminant analysis, or PDA:
+\begin{itemize}
+\item Enlarge the set of predictors $X$ via a basis expansion $h(X)$.
+\item Use (penalized) LDA in the enlarged space where the Mahalanobis distance is given by:
+\begin{equation}
+D(x, \mu) = \br{h(x) - h(\mu)}^T\br{\Sigma_W+\lambda\Sigma}^{-1} \br{h(x) - h(\mu)}
+\end{equation}
+where $\Sigma_W$ is the within-class covariance matrix of the derived varaibles $h(x_i)$.
+\item Decompose the classification subspace using a penalized metric:
+\begin{equation}
+\max u^t\Sigma_{Bet}u \quad\quad \textit{subject to} \quad u^T\br{\Sigma_W+\lambda\Sigma}u =1
+\end{equation}
+\end{itemize}
+For some classes of problems, the first step, involving the basis expansion, is not needed; we already have far too many (correlated) predictors. An example is when the objects are digitalized analogue signals. Neighboring pixel values will tend to be correlated, being often almost the same. This implies that the pair of corresponding LDA coefficients for these pixels can be wildly different and opposite in sign, and thus cancel when applied to similar pixel values. Positively correlated predictors lead to noisy, negatively correlated coeffi- cient estimates, and this noise results in unwanted sampling variance. A reasonable strategy is to regularize the coefficients to be smooth over the spatial domain, as with images. This is what PDA does. The computations proceed just as for FDA, except that an appropriate penalized regression method is used.
+
+\subsubsection{Mixture Discriminant Analysis}
+Linear discriminant analysis can be viewed as a prototype classifier. Each class is represented by its centroid, and we classify to the closest using an appropriate metric. In many situations a single prototype is not sufficient to represent inhomogeneous classes and mixture models are more appropriate.
+
+A Gaussian mixture model for the $k-th$ class has density:
+\begin{equation}
+P(X|G=k) = \sum_{r=1}^{R_k} \pi_{kr}\phi(X, \mu_{kr},\Sigma)
+\end{equation}
+where the \textbf{mixing proportions}$\pi_{kr}$ sum to one. The class posterior probabilities are given by
+\begin{equation}
+P(G=k|X=x) = \frac{\sum_{r=1}^{R_k} \pi_{kr}\phi(X, \mu_{kr},\Sigma)\Pi_k}{\sum_{\ell=1}^K\sum_{r=1}^{R_\ell} \pi_{\ell r}\phi(X, \mu_{\ell r},\Sigma)\Pi_\ell}
+\end{equation}
+where $Pi_k$ are the class priors.
+
+As in LDA we estimate the parameters by MLE, using the joint log-likelihood based on $P(G,X)$:
+\begin{equation}
+\sum_{k=1}^K\sum_{g_i=k} \log \left[ \sum_{r=1}^{R_k} \pi_{k r} \phi (x_i,\mu_{k r}, \Sigma)\Pi_k\right]
+\end{equation}
+The sum within the log makes this a rather messy optimization problem if tackled directly. The classical and natural method for computing the maximum-likelihood estimates (MLEs) for mixture distributions is the EM algorithm. EM alternates between the two steps:
+\begin{itemize}
+\item \textbf{E-step} Given the current parameters, compute the \textbf{responsability} of subclass $c_{kr}$ within class $k$ for each of the class-$k$ observations ($g_i=k$):
+\begin{equation}
+W(c_{kr}|x_i, g_i) = \frac{ \pi_{kr}\phi(x_i, \mu_{kr},\Sigma)}{\sum_{\ell=1}^{R_k} \pi_{k \ell}\phi(x_i, \mu_{k \ell},\Sigma)}
+\end{equation}
+\item \textbf{M-step}: compute the weighted MLEs for the parameters of each of the component Gaussians within each of the classes, using the weights from the E-step.
+\end{itemize}
+
+In the E-step, the algorithm apportions the unit weight of an observation in class k to the various subclasses assigned to that class. If it is close to the centroid of a particular subclass, and far from the others, it will receive a mass close to one for that subclass. On the other hand, observations halfway between two subclasses will get approximately equal weight for both.
+
+In the M-step, an observation in class k is used $R_k$ times, to estimate the parameters in each of the $R_k$ component densities, with a different weight for each. 
+
+\section{Prototype methods and Nearest-Neighbours}
+There exist model-free methods for classification and pattern recognition. Because they are highly unstructured, they typically are not useful for understanding the nature of the relationship between the features and class outcome but they work more in a black-box manner.
+
+\textbf{Prototype methods} represent points in a feature space. Each prototype has an associated class label and classification of a point is made to the class of the closest prototype, generally in terms of Euclidean distance in a feature space, after each feature has been standardized (0-mean, unit variance).
+
+\subsection{K-means clustering}
+It is a method to find clusters and cluster centres in a set of unlabeled data. Once chooses the desired number of cluster centres, $R$, and the $K$-means procedure iteratively moves the centres to minimize the total within cluster variance ($K$ is the number of classes, $R$ of clusters).
+
+Given an initial set of centres, the algorithm alternates two steps:
+\begin{itemize}
+\item for each centre we identify the subset of training points (its cluster) that is closer to it than any other center;
+\item the means of each feature for the data points in each cluster are computed and this mean vector becomes the new centre for that cluster.
+\end{itemize}
+These steps are iterated until convergence. Typically the initial $R$ centres are randomly chosen from the training set.
+
+To use $K$-means clustering for classification of labeled data, the steps are:
+\begin{itemize}
+\item apply $K$-means clustering to the training data in each class separately, using $R$ prototypes;
+\item assign a class label to each of the $K \times R$ prototypes;
+\item classify a new feature $x$ to the class of the closest prototype.
+\end{itemize}
+Prototypes near the class boundaries might lead to misclassification errors for points near these boundaries. This results from the fact that for each class, the other classes do not have a say in the positioning of the prototypes for that class.
+
+\subsection{Learning Vector Quantization}
+LVQ places prototypes in strategical position w.r.t. decision boundaries. It is an online algorithm: observations are processed one at a time.
+
+The idea is that the training points attract prototypes of the correct class, and repel other prototypes. When the iterations settle down, prototypes should be close to the training points in their class. The learning rate o$\epsilon$ is decreased to zero with each iteration. The prototypes tend to move away from the decision boundaries, and away from prototypes of competing classes.
+A drawback is that they are defined by algorithms, rather than optimization of some fixed
+criteria; this makes it difficult to understand their properties.
+\begin{algorithm}[H]
+\SetAlgoLined
+Chose $R$ initial prototypes for each class: $m_1(k),\cdots, m_R(k)$, $\quad k=1,\cdots, K$, for example by sampling $R$ training points at random from each class\;
+Sample a training point $(x_i, g_i)$ randomly and let $(j,k)$ index the closest prototype $m_j(k)$ to $x_i$\;
+\eIf {$g_i=k$}
+{
+	$m_j (k) \leftarrow m_j(k) + \epsilon(x_i-m_j(k))$: move the prototype towards the the training point\;
+}
+{
+	$m_j (k) \leftarrow m_j(k) - \epsilon(x_i-m_j(k))$: move the prototype away from the training point\;
+}
+Repeat step 2, decreasing the learning rate $\epsilon$ with each iteration towards $0$.
+\caption{Learning Vector Quantization}
+\end{algorithm}
+
+
+\subsection{Gaussian Mixtures}
+Each cluster is described in terms of a Gaussian density with mean and covariance matrix. The two steps of the alternating EM algorithm are very similar to the two steps in $K$-means:
+\begin{itemize}
+\item In the E-step, each observation is assigned a responsibility or weight for each cluster, based on the likelihood of each of the corresponding Gaussians. Observations close to the center of a cluster will most likely get weight $1$ for that cluster, and weight $0$ for every other cluster. Observations half-way between two clusters divide their weight accordingly.
+\item In the M-step, each observation contributes to the weighted means (and covariances) for every cluster.
+\end{itemize}
+The Gaussian mixture model is often referred to as a soft clustering method, while K-means is hard. When Gaussian mixture models are used to represent the feature density in each class, it produces smooth posterior probabilities while the classification rule is $\hat{G}(x) = \argmax{k}{\hat{p}_k(x)}$.
+
+Although the decision boundaries are roughly similar, those for the mixture model are smoother (although the prototypes are in approximately the same positions). 
+
+\begin{figure}
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=1\linewidth]{img/kmeans}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.49\textwidth}
+\centering
+\includegraphics[width=1\linewidth]{img/GaussianMix}
+\end{subfigure}
+\caption{Comparison between k-means and Gaussian Mixture model with the same prototypes.}
+\end{figure}
+
+\subsection{K-nearest neighbour classifier}
+These classifiers are memory-based, and require no model to be fit. Given a query point $x_0$, we find the k training points $x(r),r = 1,...,k$ closest in distance to $x_0$, and then classify using majority vote among the k-neighbors. Ties are broken at random.Typically we first standardize each of the features to have mean zero and variance 1, since it is possible that they are measured in different units. Because it uses only the training point closest to the query point, the bias of the 1-nearest-neighbor estimate is often low, but the variance is high.
+
+\subsection{Adaptive Nearest Neighbour}
+Implicit in near-neighbor classification is the assumption that the class probabilities are roughly constant in the neighborhood, and hence simple averages give good estimates.
+However, in the example of \ref{DANN} the class probabilities vary only in the horizontal direction. If we knew this, we would stretch the neighborhood in the vertical direction, as shown by the tall rectangular region. This will reduce the bias of our estimate and leave the variance the same.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.7]{img/DANN}
+\caption{The points are uniform in the cube, with the vertical line sepa- rating class red and green. The vertical strip denotes the 5-nearest-neighbor region using only the horizontal coordinate to find the nearest-neighbors for the target point (solid dot). The sphere shows the 5-nearest-neighbor region using both co- ordinates, and we see in this case it has extended into the class-red region (and is dominated by the wrong class in this instance).}
+\label{DANN}
+\end{figure}
+
+This suggests the idea of adapting metrics, so that the resulting neighbourhood stretch out in directions for which the class probabilities do not change much. One of these methods is the \textbf{Discriminant Adaptive Nearest-Neighbourhood (DANN)}. 
+At each query point a neighborhood of say 50 points is formed, and the class distribution among the points is used to decide how to deform the neighborhood—that is, to adapt the metric. The adapted metric is then used in a nearest-neighbor rule at the query point. Thus at each query point a potentially different metric is used.
+
+The DANN metric at a query $x_0$ is defined by:
+\begin{equation}
+\begin{aligned}
+&D(x,x_0) = (x-x_0)^T\Sigma (x-x_0)\\
+&\Sigma = \mathbf{W}^{-\frac{1}{2}} \left[ \mathbf{W}^{-\frac{1}{2}}\mathbf{B}\mathbf{W}^{-\frac{1}{2}} + \epsilon \I \right] \mathbf{W}^{-\frac{1}{2}} = \\
+&\quad\quad = \mathbf{W}^{-\frac{1}{2}}\left[ \mathbf{B}^*+\epsilon\I\right] \mathbf{W}^{-\frac{1}{2}}\\
+&\mathbf{W} = \sum_{k=1}^K \pi_k  \mathbf{W}_k\\
+& \mathbf{B} = \sum_{k=1}^K \pi_k  (\bar{x}_k - \bar{x})(\bar{x}_k - \bar{x})^T
+\end{aligned}
+\end{equation}
+
+$ \mathbf{W}$ is the pooled within-class covariance matrix and $\mathbf{B}$ is the between class covariance matrix, both computed with the $K$ nearest neighbours around $x_0$.
+The formula first spheres the data with respect to $\mathbf{W}$ and then stretches the neighbourhood in the zero-eigenvalue directions of $\mathbf{B}^*$.
+This makes sense, since locally the observed class means do not differ in these directions. The $\epsilon$ parameter rounds the neighborhood, from an infinite strip to an ellipsoid, to avoid using points far away from the query point. The value of $\epsilon = 1$ seems to work well in general.
+
+\ref{DANNConcentr} shows the resulting neighborhoods for a problem where the classes form two concentric circles. Notice how the neighborhoods stretch out orthogonally to the decision boundaries when both classes are present in the neighborhood. In the pure regions with only one class, the neighborhoods remain circular: in these cases the between matrix $\mathbf{B} = 0$, and the $\Sigma$ is the identity matrix.
+\begin{figure}
+\centering
+\includegraphics[scale=0.7]{img/DANNConcentr}
+\caption{ Neighborhoods found by the DANN procedure, at various query points (centers of the crosses). There are two classes in the data, with one class surrounding the other. 50 nearest-neighbors were used to estimate the local metrics. Shown are the resulting metrics used to form 15-nearest-neighborhoods.}
+\label{DANNConcentr}
+\end{figure}
+
+\subsubsection{Global Dimension Reduction for Nearest Neighbours}
+The discriminant-adaptive nearest-neighbor method carries out local dimension reduction, that is, dimension reduction separately at each query point. In many problems we can also benefit from global dimension reduction, that is, apply a nearest-neighbor rule in some optimally chosen subspace of the original feature space.
+
+At each training point $x_i$, the between-centroids sum of squares matrix $\mathbf{B}_i$ is computed, and then these matrices are averaged over all training points:
+\begin{equation}
+\bar{\mathbf{B}} = \frac{1}{N} \sum_{i=1}^N \mathbf{B}_i
+\end{equation}
+
+Let $e_1, \cdots, e_p$ be the eigenvectors  of the matrix $\mathbf{B}$ decreasingly ordered. These eigenvectors span the optimal subspaces for global subspace reduction. The rank-$L$ approximation to $\bar{\mathbf{B}}$ is:
+\begin{equation}
+\bar{\mathbf{B}}_L = \sum_{\ell=1}^L \theta_\ell e_\ell e_\ell^T
+\end{equation}
+and it solves the least squares problem
+\begin{equation}
+\min_{rank(\mathbf{M}) = L} \sum_{i=1}^N trace \left[ \br{\mathbf{B}_i - \mathbf{M}}^2\right]
+\end{equation}
+$\mathbf{B}_i$ contains information on the local discriminant subspace and the strength of discriminant in that subsapce, it can be seen as a way of finding the best approximating subspace of dimension $L$ to a series of $N$ subspaces by weighted least squares.
+
+For example, when some eigenvalues turn out to be large (having eigenvectors nearly spanning the interesting subspace), and the remaining six are near zero,  we project the data into the leading four-dimensional subspace, and then carry out nearest neighbour classification.
+
+\subsubsection{Computational considerations}
+One drawback of nearest-neighbour is the computational load, both in finding the neighbours and storing the entire training set.
+
+Reducing the storage requirements is difficult, and various editing and condensing procedures have been proposed. The idea is to isolate a subset of the training set that suffices for nearest-neighbour predictions, and throw away the remaining training data. Intuitively, it seems important to keep the training points that are near the decision boundaries and on the correct side of those boundaries, while some points far from the boundaries could be discarded.
+The multi-edit algorithm of Devijver and Kittler (1982) divides the data cyclically into training and test sets, computing a nearest neighbour rule on the training set and deleting test points that are misclassified. The idea is to keep homogeneous clusters of training observations.
+
+The condensing procedure of Hart (1968) goes further, trying to keep only important exterior points of these clusters. Starting with a single randomly chosen observation as the training set, each additional data item is processed one at a time, adding it to the training set only if it is misclassified by a nearest-neighbour rule computed on the current training set.
+
+
+\section{Unsupervised learning}
+In unsupervised learning one is given $N$ observations $x_1, x_N$ of a random $p$-vector $X$ having joint density $Pr(X)$. The goal is to directly infer the properties of this probability density without the help of a supervisor providing correct answers or degree of error. 
+
+The dimension of $X$ is sometimes much higher than in supervised learning, and the properties of interest are often more complicated than simple location estimates. These factors are somewhat mitigated by the fact that $X$ represents all of the variables under consideration; one is not required to infer how the properties of $Pr(X)$ change, conditioned on the changing values of another set of variables.
+
+In the context of unsupervised learning, there is no such direct measure of success. It is difficult to ascertain the validity of inferences drawn from the output of most unsupervised learning algorithms. One must resort to heuristic arguments not only for motivating the algorithms, as is often the case in supervised learning as well, but also for judgements as to the quality of the results. 
+
+\subsection{Association rule}
+The goal is to find joint values of the variables $X = (X_1, X_2, \cdots , X_p)$ that appear most frequently in the data base. It is mostly applied to binary-valued data $X_j = \{0,1\}$, where it is referred to as \textbf{Market basket analysis}. n this context the observations are sales transactions, such as those occurring at the checkout counter of a store. The variables represent all of the items sold in the store. For observation i, each variable $X_j$ is assigned $1$ if the item is purchased, $0$ otherwise.
+
+More generally, the basic goal of association rule analysis is to find a collection of prototype $X$-values $v_1,\cdots,v_L$ for the feature vector $X$, such that the probability density $Pr(v_l)$ evaluated at each of those values is relatively large. This basically means find any kind of pattern that tells us how things go together. In this way the problem can be seen as \textbf{mode finding} or \textbf{bump hunting}.
+
+A natural estimation of $Pr(v_l)$ is the number of occurrences for which $X=v_l$. With a large number of variables however, such observations will be to few to be reliable. The problem can be restated in another way.
+
+Instead of seeking the values $x$ where $Pr(x)$ is large, one seeks region of the $X$-space with high probability content relative to their size or support.
+\begin{definition}{\textbf{Support}}
+The support $\CMcal{S_j}$ of a variable $j$is the set of all possible values for the variable.
+\end{definition}
+Let $\CMcal{S_j}$ represent the set of all possible values of the $j-th$ variable (its support) and let $ s_j \subseteq \CMcal{S_j}$ be a subset of these values. The modified goal can be stated as attempting to find subsets of variable values $s_1, \cdots, s_p$ such that the probability of each of the  variables is simultaneously assuming a value within its respective subset
+
+\begin{equation}
+Pr\left[ \bigcap\limits_{j = 1}^p \br{X_j \in s_j}\right]
+\end{equation}
+ is relatively large. $\bigcap\limits_{j = 1}^p \br{X_j \in s_j}$ is the intersection of subsets and it is called \textbf{conjunctive rule}.
+
+\subsubsection{Market basket analysis}
+For commercial databases $p\sim 10^4$, $N \sim 10^8$. In this cases many existing algorithm are not feasible and market basket analysis is applied.
+
+Some simplifications are required: either $s_j$ consists of a single value of $X_j$ ($s_j = v_{0j}$), or it consists of the entire set of values of $X_j$ ($s_j = S_j$). So this simplifies to the problem of identifying the subset for which $s_j$ is a single value and and this  set is named $\CMcal{J} \subset \{1,\cdots,p\}$ and for each element in this subset find the corresponding value $v_{0j}$ such that:
+\begin{equation}
+Pr\left[ \bigcap\limits_{j \in \CMcal{J}} \br{X_j = v_{0j}}\right]
+\label{dummyVarProb}
+\end{equation}
+is large.
+
+One can apply the technique of dummy variables to turn \ref{dummyVarProb} into a problem involving only binary-valued variables. Here we assume that the support $S_j$ is finite for each variable $X_j$. Specifically, a new set of variables $Z_1, \cdots, Z_K$ is created, one such variable for each of the values $v_{lj}$ attainable by each of the original variables $X_1, \cdots, X_p$. The number of dummy variables $K$ is
+\begin{equation}
+K = \sum_{j=1}^p |\CMcal{S}_j|
+\end{equation}
+where $|\CMcal{S}_j|$ is the number of distinct values attainable by $X_j$.  Each dummy variable is assigned the value $Z_k = 1$ (with $Z_k$ being associated to $v_{lj}$), if the variable with which it is associated takes on the corresponding value to which $Z_k$ is assigned (i.e., $Z_k$ is associated with $v_{lj}$; $Z_k = 1$ if  $X_j=v_{lj}$), and $Z_k = 0$ otherwise. This corresponds to find a subset of integers $\CMcal{K} \subset \{1,\cdots, K\}$ such that:
+
+\begin{equation}
+Pr\left[ \bigcap\limits_{k \in \CMcal{K}} \br{Z_k = 1}\right] = Pr\left[ \prod_{k \in \CMcal{K}} Z_k = 1\right]
+\label{dummyVarProb}
+\end{equation}
+is large.
+
+This is the standard formulation of the market basket problem. The set $K$ is called an \textbf{item set}. The number of variables $Z_k$ in the item set is called its "size" (note that the size is no bigger than $p$).
+
+The estimated value of the previous expression is taken to be the fraction of observations in the database for which the conjunction is true:
+\begin{equation}
+\hat{Pr}\left[ \bigcap\limits_{k \in \CMcal{K}} \br{Z_k = 1}\right] = \frac{1}{N}\sum_{i=1}^N \prod_{k \in \CMcal{K}} z_{ik}
+\end{equation}
+where $z_{ik}$ is the value of $Z_k$ in the $i$-th case. This is called support or prevalence $T(\CMcal{K})$ if the item-set $\CMcal{K}$.
+
+In association rule, a lower support bound $t$ is specified and one seeks all sets $\CMcal{K}_l$ that can be formed from the variables $Z_k$ with support in the data base greater than this lower bound $t$.
+
+\subsubsection{Apriori algorithm}
+For a given support threshold $t$ The cardinality $|\{\CMcal{K}| T(\CMcal{K}) \}|$ is relatively small. Any item set consisting of a subset of the items $\CMcal{K}$ must have support greater than or equal to that of  $\CMcal{K}$:  $\CMcal{L} \subseteq \CMcal{K} \Rightarrow T(\CMcal{L})\ge T(\CMcal{K})$.
+
+The first pass over the data computes the support of all single-item sets. Those whose support is less than the threshold are discarded. The second pass computes the support of all item sets of size two that can be formed from pairs of the single items surviving the first pass. Each successive pass over the data considers only those item sets that can be formed by combining those that survived the previous pass with those retained from the first pass. Passes over the data continue until all candidate rules from the previous pass have support less than the specified threshold.
+
+The items $Z_k$, $k \in K$, are partitioned into two disjoint subsets, $A \cup B = K$, and written $A\Rightarrow B$. $A$ is called antecedent and $B$ consequent.
+
+Association rules are defined to have several properties based on the prevalence of the antecedent and consequent item sets in the data base. The support of the rule $T(A\Rightarrow B)$ is the fraction of observations in the union of the antecedent and consequent, which is just the support of the item set $K$ from which they were derived. It can be viewed as an estimate of the probability of simultaneously observing both item sets $Pr(A \text{and} B)$ in a randomly selected market basket. The "confidence" or "predictability" $C(A\Rightarrow B)$ of the rule is its support divided by the support of the antecedent:
+\begin{equation}
+C(A\Rightarrow B) = \frac{T(A\Rightarrow B)}{T(A)}
+\end{equation}
+which can be viewed as an estimate $Pr(A|B)$.
+
+The "expected confidence" is defined as the support of the consequent $T(B$), which is an estimate of the unconditional probability $Pr(B)$. Finally, the "lift" of the rule is defined as the confidence divided by the expected confidence:
+\begin{equation}
+L(A\Rightarrow B) = \frac{C(A\Rightarrow B)}{T(B)}
+\end{equation}
+This is an estimate of the association measure $Pr(A \text{and} B)/Pr(A)Pr(B)$.
+
+Suppose the item set $K = \{peanut butter, jelly, bread\}$ and consider the rule $\{peanut butter, jelly\} \Rightarrow \{bread\}$. A support value of $0.03$ for this rule means that peanut butter, jelly, and bread appeared together in $3\%$ of the market baskets. A confidence of $0.82$ for this rule implies that when peanut butter and jelly were purchased, $82\%$ of the time bread was also purchased. If bread appeared in $43\%$ of all market baskets then the rule $\{peanut butter, jelly\} \Rightarrow \{bread\}$ would have a lift of $1.95$.
+
+A confidence threshold c is set, and all rules that can be formed from those item sets with confidence greater than this value:
+\begin{equation}
+\{ A\Rightarrow B| C(A\Rightarrow B)>c\}
+\end{equation}
+
+
+The output of the entire analysis is a collection of association rules (14.7) that satisfy the constraints:
+\begin{equation}
+T(A \Rightarrow B) >t \quad \text{and}\quad C(A \Rightarrow B)>c
+\end{equation}
+
+\subsection{Generalized association rule}
+...
+
+\subsection{Cluster Analysis}
+The goal is grouping or segmenting a collection of objects into subsets or "clusters", such that those within each cluster are more closely related to one another than objects assigned to different clusters. Objects can be described by a set of measurements, or by relations to other objects. In addition, the goal is sometimes to arrange the clusters into a natural hierarchy. This involves successively grouping the clusters themselves.
+
+A clustering method attempts to group the objects based on the definition of similarity supplied to it.
+
+K-means clustering starts with guesses for the three cluster centers. Then it alternates the following steps until convergence:
+\begin{itemize}
+\item  for each data point, the closest cluster center (in Euclidean distance) is identified;
+\item each cluster center is replaced by the coordinate-wise average of all data points that are closest to it.
+\end{itemize}
+
+This is a top-down procedure.
+
+\subsubsection{Proximity Matrices and dissimilarities}
+In social science experiments, participants are asked to judge by how much certain objects differ from one another. Dissimilarities can then be computed by averaging over the collection of such judgements.
+
+This type of data can be represented by an $N \times N$ matrix $D$, where $N$ is the number of objects, and each element $d_{ii'}$ records the proximity between the $i$-th and $i'$-th objects. Most algorithms use $d_{ii}= 0$ and non negative weights.
+
+Some algorithms require a dissimilarity matrix. Given $d_j(x_{ij}, x_{i'j}$ a dissimilarity between values of the $j$-the attribute, we define the dissimilarity between objects $i$ and $i'$ as:
+\begin{equation}
+D(x_i, x_{i'}) = \sum_{j=1}^p d_j (x_{ij}, x_{i'j})
+\end{equation}
+Most likely $d_j$ is the squared distance. For quantitative variables other common choice are the absolute error or correlation:
+\begin{equation}
+\rho(x_i, x_{i}) = \frac{\sum_j (x_{ij} - \bar{x}_i)(x_{i'j} - \bar{x}_i)}{\sqrt{\sum_j (x_{ij} - \bar{x}_i)^2(x_{i'j} - \bar{x}_i)^2}}
+\end{equation}
+\textbf{Ordinal variables} are often represented as contiguous integers. Examples are academic grades (A, B, C, D, E, F), degree of preference and so on. 
+\textbf{Categorical or nominal variables} one can build a symmetric matrix with $M$ values s.t. $L_{ij}=L_{ji}\ge 0$ and $L_{ii}=0$. A popular choice is $L_{ii} = 0$.
+
+To calculate \textbf{dissimilarity between objects} generally a weighted average is used:
+\begin{equation}
+D(x_i, x_{i'}) = \sum_{j=1}^p w_j d_j (x_{ij}, x_{i'j})
+\end{equation}
+Let us define the average dissimilarity on the $j$-th attrbute as:
+\begin{equation}
+\bar{d}_j = \frac{1}{N^2}\sum_{i=1}^N\sum_{i'=1}^N d_j(x_{ij}x_{i'j})
+\end{equation}
+We might define $w_j \sim \frac{1}{\bar{d}_j}$would give all attributes equal influence in characterizing overall dissimilarity between objects. In general, setting $w_j = \frac{1}{\bar{d}_j}$ for all attributes, irrespective of type, 
+will cause each one of them to equally influence the overall dissimilarity between pairs of objects. However, if the goal is to segment the data into groups of similar objects, all attributes may not contribute equally to the (problem-dependent) notion of dissimilarity between objects.
+
+\subsubsection{Combinatorial Algorithms}
+Combinatorial algorithms work directly on the observed data with no direct reference to an underlying probability model. They assign each observation to a group or cluster without regard to a probability model describing the data. Each observation is uniquely labeled by an integer $i \in \{1,\cdots, N\}$.
+
+A prespecified number of clusters $K<N$ is assumed.  Each observation is assigned to one and only one cluster. Given the dissimilarities between every pair of observations we want to assign each point to a cluster by the algorithm outputting a value corresponding to the cluster.
+
+One approach is to directly specify a mathematical loss function and attempt to minimize it through some combinatorial optimization algorithm.Since the goal is to assign close points to the same cluster, a natural loss (or "energy") function would be:
+
+\begin{equation}
+W(C)  = \frac{1}{2}\sum_{k=1}^K \sum_{C(i) = k} \sum_{C(i') = k} d(x_i, x_{i'})
+\end{equation}
+where $C(i) = k$ is an encoder assigning someway the point $i$ to the class $k$.
+This criterion characterizes the extent to which observations assigned to the same cluster tend to be close to one another.
+
+$W(C)$ is referred to as \textbf{within-cluster point scatter} while 
+\begin{equation}
+B(C) =\frac{1}{2} \sum_{k=1}^K \sum_{C(i) = k} \sum_{C(i') \ne k} d(x_i, x_{i'}
+\end{equation}
+as the \textbf{between-cluster point scatter} and
+\begin{equation}
+T = \frac{1}{2} \sum_{i=1}^N \sum_{i'=1}^N d_{ii'} = W(C) + B(C) = const
+\end{equation}
+is the \textbf{total point scatter} which is a constant given the data. $B(C)$ tends to be large when observations assigned to different clusters are far apart.
+So we have $W(C) = T - B(C) $ minimizing $W(C)$ is equivalent to maximizing $B(C)$.
+
+Such optimization by complete enumeration is feasible only for very small data sets. The number of distinct assignments is
+\begin{equation}
+S(N,K) = \frac{1}{K!} \sum_{k=1}^K (-1)^{K-k} \binom{K}{k} k^N
+\end{equation}
+For example, $S(10, 4) = 34105$ which is still feasible, but $S(19,4) \approx 10^{10}$.  For this reason, practical clustering algorithms are able to examine only a very small fraction of all possible encoders $k = C(i)$. The goal is to identify a small subset that is likely to contain the optimal one, or at least a good suboptimal partition. Such feasible strategies are based on iterative greedy descent.
+
+\subsubsection{K-means}
+The $K$-means algorithm is one of the most popular iterative descent clustering methods. It is intended for situations in which all variables are of the quantitative type, and squared Euclidean distance.
+The within-point scatter can be written as:
+\begin{equation}
+\begin{aligned}
+&W(C) = \frac{1}{2}\sum_{k=1}^K \sum_{C(i) = k} \sum_{C(i') = k} |x_i - x_{i'}|^2= \sum_{k=1}^K N_k \sum_{C(i) = k}  |x_i - \bar{x}_{k}|^2\\
+& N_k = \sum_{i=1}^N I(C(i) = k)
+\end{aligned}
+\end{equation}
+where $\bar{x}_k$ is the mean vector associated with the $k$th-cluster. So the $N$ observations are assigned in a way such that within each cluster the average dissimilarity of the observations from the cluster mean is minimized.
+\begin{algorithm}
+For a given cluster assignment $C$, the total cluster variance is minimized w.r.t. $m_1, \cdots, m_K$, yielding the means of the currently assigned clusters\;
+Given a current set of means the total cluster variance is minimized by assigning each observation to the closest cluster mean: $C(i) = \argmin{1\le k\le K}{|x_i-m_k|^2}$\;
+Iterate the previous steps until assignment do not change.
+\caption{K-means algorithm}
+\end{algorithm}
+
+\subsubsection{Gaussian Mixtures as Soft K-means Clustering}
+The K-means clustering procedure is closely related to the EM algorithm for estimating a certain Gaussian mixture model. The E-step of the EM algorithm assigns "responsibilities" for each data point based in its relative density under each mixture component, while the M-step recomputes the component density parameters based on the current responsibilities. Suppose we specify K mixture components, each with a Gaussian density having scalar covariance matrix $\sigma^2\I$. Then the relative density under each mixture component is a monotone function of the Euclidean distance between the data point and the mixture center. Hence in this setup EM is a "soft" version of K-means clustering, making probabilistic (rather than deterministic) assignments of points to cluster centres. With $\sigma^2 \rightarrow 0$  the models coincide.
+
+\subsection{Vector quantization}
+Used in image processing to compress images at a cost of loss in quality. VQ breaks the image into small blocks of pixels $2 \times 2$ for example. Suppose the image is $1024 \times 1024$ pixels, then we get $512\times 512$ blocks of four pixels, i.e. a vector in $\CMcal{R}^4$. A k-means clustering algorithm is run in this space.  Each block is approximated with its closest cluster, known as codeword. The bigger $K$ the less lossy is the compression, and it is big enough we can achieve a lossless compression. The clustering process is called the encoding step, and the collection of centroids is called the codebook. To name and identify the codebook entries approximating the blocks will require $\log_2(K)$ bits per block. We also need to supply the codebook itself, which is $K \times 4$ real numbers.
+
+\subsubsection{K-medoids}
+Squared Euclidean distance places the highest influence on the largest distances. This causes the procedure to lack robustness against outliers that produce very large distances.  In the most common form, centres for each cluster are restricted to be one of the observations assigned to the cluster.
+\begin{algorithm}
+For a given cluster assignment C find the observation in the cluster
+minimizing total distance to other points in that cluster:
+\begin{equation}
+i_k^* = \argmin{\{i:C(i) = k\}} \sum_{C(i')=k}D(x_i, x_{i'})
+\end{equation}
+Then $m_k=x_{i_k^*}$, $k=1,\cdots, K$ are the current estimates of the cluster centres\;
+Given a current set of clusters centres $\{m_1, \cdots, m_K\}$ minimize the total error by assigning each observation to the closest current cluster centre:
+\begin{equation}
+C(i) = \argmin{1\le k\le K}{D(x_i, m_k)}
+\end{equation}\;
+Iterate the previous steps until the assignment do not change.
+\caption{K-medoids}
+\end{algorithm}
+This algorithm assumes attribute data, but the approach can also be applied to data described only by proximity matrices.
+
+\subsubsection{Number of cluster}
+Suggestions range from simple random selection to a deliberate strategy based on forward stepwise assignment. At each step a new center $i_k$ is chosen to minimize the given criterion, given the centres $i_1, \cdots, i_{k-1}$ chosen at the previous steps. This continues for $K$ steps, thereby producing $K$ initial centres with which to begin the optimization algorithm.
+
+For data segmentation $K$ is usually defined as part of the problem. For example, a company may employ $K$ sales people, and the goal is to partition a customer database into $K$ segments, one for each sales person, such that the customers assigned to each one are as similar as possible.
+
+In other cases it must be estimated typically by examining the within-cluster dissimilarity $W_K$ as a function of the number of clusters $K$. Separate solutions are obtained for $K \in \{1, \cdots , K_{max}\}$. Generally $W_k$ decreases with increasing $K$, even when the criterion is evaluated on an independent test set.
+
+\subsubsection{Hierarchical clustering}
+Hierarchical clustering methods require the user to specify a measure of dissimilarity between (disjoint) groups of observations, based on the pairwise dissimilarities among the observations in the two groups. They produce hierarchical representations in which the clusters at each level of the hierarchy are created by merging clusters at the next lower level. At the lowest level, each cluster contains a single observation. At the highest level there is only one cluster containing all of the data.
+
+Strategies for hierarchical clustering divide into two basic paradigms: agglomerative (bottom-up, ) and divisive (top-down).
+
+In agglomerative methods, the pair chosen for merging consist of the two groups with the smallest intergroup dissimilarity. For divise-methods, the split is chosen to produce two new groups with the largest between-group dissimilarity. With both paradigms there are $N - 1$ levels in the hierarchy.
+
+Recursive binary splitting/agglomeration can be represented by a rooted binary tree. 
+
+\subsubsection{Agglomerative clustering}
+Agglomerative clustering algorithms begin with every observation repre- senting a singleton cluster. At each of the $N - 1$ steps the closest two (least dissimilar) clusters are merged into a single cluster, producing one less cluster at the next higher level. Therefore, a measure of dissimilarity between two clusters (groups of observations) must be defined.
+
+Given two groups $G$ and $H$ and two observations $i \in G$, $i' \in H$ the pairwise observation dissimilarity between these two points is $d_{ii'}$. The dissimilarity bbtw $G$ and $H$ is computed from the set of all dissimilarities.
+
+\textbf{Single linkage} agglomerative clustering takes the intergroup dissimilarity to be that of the closest (least dissimalar) pair:
+\begin{equation}
+D_{SL} = \min_{i \in G, i' \in H} d_{ii'}
+\end{equation}
+This is often called \textbf{nearest neighbour technique}. \textbf{Complete linkage} agglomerative clustering  takes the intergroup dissimilarity to be that of the furthest pair (most dissimilar pair):
+\begin{equation}
+d_{CL} (G,H) = \max_{i \in G, i' \in H} d_{ii'}
+\end{equation}
+\textbf{Group average} clustering uses the average:
+\begin{equation}
+d_{GA} = \frac{1}{N_GN_H}\sum_{i \in G}\sum_{i' \in H}
+\end{equation}
+where $N$ are the num. observations in each group. If the data dissimilarities exhibit a strong clustering tendency, with each of the clusters being compact and well separated from others, then all three methods produce similar results.
+
+Single linkage only requires that a single dissimilarity be small for two groups to be considered close together, irrespective of the other observation dissimilarities between the groups. It will therefore have a tendency to combine, at relatively low thresholds, observations linked by a series of close intermediate observations. This phenomenon, referred to as \textbf{chaining}, is often considered a defect of the method.
+
+Complete linkage represents the opposite extreme. Two groups $G$ and $H$ are considered close only if all of the observations in their union are relatively similar. It will tend to produce compact clusters with small diameters.
+However, it can produce clusters that violate the "closeness" property. That is, observations assigned to a cluster can be much closer to members of other clusters than they are to some members of their own cluster.
+Group average clustering represents a compromise between the two extremes of single and complete linkage. It attempts to produce relatively compact clusters that are relatively far apart. However, its results depend on the numerical scale on which the observation dissimilarities are measured.
+\subsubsection{Divisive clustering}
+The divisive paradigm can be employed by recursively applying any of the combinatorial methods such as K-means or K-medoids , with $K = 2$, to perform the splits at each iteration.
+
+A better approach is by Smith et. al(1965). It begins by placing all observations in a single cluster $G$. It then chooses that observation whose average dissimilarity from all the other observations is largest. This observation forms the first member of a second cluster $H$. At each successive step that observation in $G$ whose average distance from those in $H$, minus that for the remaining observations in $G$ is largest, is transferred to $H$. This continues until the corresponding difference in averages becomes negative. That is, there are no longer any observations in $G$ that are, on average, closer to those in $H$.
+
+\subsubsection{Self-organizing maps}
+...
+
+\subsection{Principal components, curves and surfaces}
+The principal components of a set of data in $\CMcal{R}^p$ provide a sequence of best linear approximations to that data, of all ranks $q \le p$. Given the observations $x_1, \cdots, x_N$, the linear approximation is:
+\begin{equation}
+f(\lambda) = \mu  + \mathbf{V}_q\lambda
+\end{equation}
+where $\mathbf{V}_q$ is a $p\times q$ matrix with $q$ orthogonal unit vectors as columns, $\lambda$ a $q$ vector of parameters and $\mu$ a location vector in $\CMcal{R}^p$. This is $p$ hyperplane. Fitting such a model corresponds to minimize the reconstruction error:
+\begin{equation}
+\min_{\mu, \{\lambda_i\}, \mathbf{V}_q} \sum_{i=1}^N \| x_i -\mu - \mathbf{V}_q\lambda_u \|^2
+\end{equation}
+We can partially optimize to obtain:
+\begin{equation}
+\begin{aligned}
+\hat{\mu} &= \bar{x}\\
+\hat{\lambda}_i = \mathbf{V}_q^T (x_i - \bar{x})
+\end{aligned}
+\end{equation}
+so we must find the matrix $\mathbf{V}_q$:
+\begin{equation}
+\min_{\mathbf{V}_q} \sum_{i=1}^N  \| \br{x_i - \bar{x}} -\mathbf{V}_q\mathbf{V}_q^T\br{x_i - \bar{x}}\|^2
+\end{equation}
+For convenience we assume $\bar{x}=0$, if not true then one replaces with $\tilde{x}_i = x_i = \bar{x}$.
+The matrix
+\begin{equation}
+\mathbf{H}_q = \mathbf{V}_q \mathbf{V}_q^T
+\end{equation}
+is a projection matrix so that each point $x_i$ is mapped onto its rank-$q$ reconstruction $\mathbf{H}_q x_i$, the orthogonal projection of $x_i$ spanned by the columns $\mathbf{V}_q$.
+
+Consider the matrix $\X = \br{\x_1^T, \cdots, \x_N^T}$ of the observations and perform the singular value decomposition:
+\begin{equation}
+\X = \mathbf{U}\mathbf{D}\mathbf{V}^T
+\end{equation}
+
+$\mathbf{U}$ is a $N\times p$ orthogonal matrix $\mathbf{U}^T\mathbf{U}=\I_p$ whose columns $\mathbf{u}_j$ are called \textbf{left singular vectors}. $\mathbf{V}$ is a $p\times p$ orthogonal matrix ($\mathbf{V}^T\mathbf{V}=\I_p$) with columns $\mathbf{v}_j$ called the \textbf{right singular vectors}. $\mathbf{D}$ is a diagonal $p\times p$ matrix with $d_1\ge d_2\ge \cdots\ge d_p\ge 0$ known as \textbf{singular values}. 
+
+For each rank $q$, (i.e., the chosen dimensionality on which the observations are projected), the solution $\mathbf{V}_q$,  consists of the first $q$ columns of $\mathbf{V}$. The columns $\mathbf{UD}$ are called the \textbf{principal components} of $\X$. The $N$ optimal $\hat{\lambda}_i$ are given by the first $q$ principal components (the $N$ rows of the $N \times q$ matrix $\mathbf{U}_q\mathbf{D}_q$.
+
+\ref{SVDex} shows the one-dimensional principal component line in a $\CMcal{R}^2$ input space ($p=2$, $q=1$). For each observation point $x_i$ there is a closest point on the line given by $u_{i1}d_1v_1$ where $v_1$ is the direction of the line ($v_1$ is $p=2$ dimensional vector). $\hat{\lambda}_1=d_{i1}d_1$ measures distance along the line from the origin.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.6]{img/SVD}
+\caption{Example of SVD mapping of data from a $\CMcal{R}^2$ space (i.e., a plane) onto a line $\CMcal{R}$}
+\label{SVDex}
+\end{figure}
+\subsubsection{Applications}
+Principal components are a useful tool for dimension reduction and compression, for example for hand-written digits. If the inputs are $16\times 16$ images, inputs rely in  a $\CMcal{R}^{256}$ space.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{img/2PC}
+\caption{2 Principal components analysis applied on the $3$ hand-written digits.}
+\label{2PC}
+\end{figure}
+Consider PCA on hand-written digits of a single number, for example a $3$, and perform two principal components analysis $u_{i1}d_1$ and $u_{i2}d_2$ of each observation and calculate the quantiles $5\%, 25\%, 50\% 75\%, 95\%$ indicated by the grid in \ref{2PC}. Red circles indicate those images close to the vertices of the grid where distance is in terms of the projected coordinates (but some weight is given to the components in the orthogonal space (?)). On the right of \ref{2PC} the images corresponding to the red circles are shown and this allows to visualize the nature of the first two PC. $v_1$, the horizontal direction, mainly accounts for the length of lower "tail" of the "$3$", $v_2$ the vertical axis  accounts for character thickness. The parametrized model is:
+\begin{equation}
+\hat{f}(\lambda) = \bar{x} + \lambda_1 v_1+\lambda_2 v_2 
+\end{equation}
+that in terms of images is something like the one in \ref{modelImage}.
+
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.7]{img/modelImage}
+\caption{Equivalence of the non-parametric model using image representation.}
+\label{modelImage}
+\end{figure}
+Although there are a possible 256 principal components, approximately 50 account for 90\% of the variation in the threes, 12 account for 63\%.
+
+A relatively small subset of the principal components serve as excellent lower-dimensional features for representing the high-dimensional data.
+
+The same technique, with some further calculations, can be applied to digital signature.
+
+\subsubsection{Prinipal curves and surfaces}
+\end{document}
