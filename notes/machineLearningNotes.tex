@@ -4,7 +4,7 @@
 \usepackage{amsmath}
 \usepackage{bm}
 \usepackage{cancel}
-\usepackage[ruled, vlined]{algorithm2e}
+\usepackage[ruled, vlined,]{algorithm2e}
 \usepackage{graphicx}
 \usepackage[upgreek]{mathastext}
 \usepackage{eucal}
@@ -54,6 +54,7 @@
 \numberwithin{equation}{section}
 \numberwithin{figure}{section}
 \section{Preliminary definitions}
+
 \subsection{Trace of a matrix}
 \label{trace}
 The \textbf{trace} of a square matrix $\mathbf{A}$, denoted as $\Tr(\mathbf{A})$ is the sum of diagonal elements:
@@ -228,7 +229,37 @@ For any value outside the interval $\left[x_{\tfrac{n}{2}},x_{\tfrac{n}{2}+1}\ri
 $$
 \sum_{i=1}^4|x_i-5.2|=3.2+1.2+0.2+4.8=9.4
 $$
+\subsection{Correlation}
+In statistics, dependence or association is any statistical relationship, whether causal or not, between two random variables or bivariate data. In the broadest sense correlation is any statistical association, though it commonly refers to the degree to which a pair of variables are linearly related.
+\begin{definition}{\textbf{Correlation}}
+The most familiar measure of dependence between two quantities is the Pearson product-moment correlation coefficient, or "Pearson's correlation coefficient", commonly called simply "the correlation coefficient". It is obtained by dividing the covariance of the two variables by the product of their standard deviations. The population correlation coefficient $\rho_{X,Y}$ between two random variables $X$ and $Y$ with expected values $\mu_X$ and $\mu_Y$ and standard deviations $\sigma _{X}$ and $\sigma_Y$ is defined as
+\begin{equation}
+\begin{aligned}
+\rho_{X,Y}&= \frac{\Cov(X,Y)}{\sigma_X \sigma_Y} = \frac{\E\left[ \br{X -\mu_X} \br{Y -\mu_Y}\right]}{\sigma_X \sigma_Y} = \frac{\E\left[ \br{X -\mu_X} \br{Y -\mu_Y}\right]}{\sigma_X \sigma_Y} =\\
+&= \frac{\sum_i^N \br{X_i -\mu_X} \br{Y_i -\mu_Y}}{\sqrt{\sum_i^N(X_i-\mu_X)^2}\sqrt{\sum_i^N(Y_i-\mu_Y)^2}}
+\end{aligned}
+\end{equation}
 
+An alternative formula purely in terms of moments is
+\begin{equation}
+\rho_{X,Y} = \frac{  \E\left[ XY \right]     \E\left[ X \right]   \E\left[ Y \right]   }   {\sqrt{\E\left[ X^2\right]-\E\left[ X\right]^2}                      \sqrt{  \E\left[ Y^2\right] -    \E\left[ Y \right]^2} } 
+\end{equation}
+\end{definition}
+The correlation coefficient is symmetric: $corr(X,Y)=corr (Y,X)$. This is verified by the commutative property of multiplication.
+It is a corollary of the Cauchy–Schwarz inequality that the absolute value of the Pearson correlation coefficient is not bigger than 1. The correlation coefficient is +1 in the case of a perfect direct (increasing) linear relationship (correlation), $-1$ in the case of a perfect decreasing (inverse) linear relationship (anticorrelation), and some value in the open interval 
+$(-1,1)$ in all other cases, indicating the degree of linear dependence between the variables. As it approaches zero there is less of a relationship (closer to uncorrelated). The closer the coefficient is to either $-1$ or $1$, the stronger the correlation between the variables.
+If the variables are independent, Pearson's correlation coefficient is $0$, but the converse is not true because the correlation coefficient detects only linear dependencies between two variables.
+
+For example suppose $Y=X^2$. $Y$ is completely determined by $X$ so that they are perfectly dependent but they are uncorrelated.
+In the special case where $X$ and $Y$ are jointly normal then "uncorrelatedness" is equivalent to independence.
+
+So correlation might completely miss out non-linear relationships (\ref{corr}) and furthermore it has nothing to do with the slope.
+\begin{figure}
+\centering
+\includegraphics[scale=0.137]{img/corr}
+\caption{Plots of correlated and non correlated variables.}
+\label{corr}
+\end{figure}
 \subsection{Gaussian function and gaussian distribution}
 \label{gaussian}
 \begin{definition}{\textbf{Gaussian function}}
@@ -443,6 +474,34 @@ The bias is given by the distance of our predictions from real points. Complex m
 The error due to variance is the amount by which the prediction, over one training set, differs from the expected predicted value, over all the training sets. As with bias, you can repeat the entire model building process multiple times. To paraphrase Manning et al (2008), variance measures how inconsistent are the predictions from one another, over different training sets, not whether they are accurate or not.  A learning algorithm with low bias must be "flexible" so that it can fit the data well. But if the learning algorithm is too flexible, it will fit each training data set differently, and hence have high variance.
 
 For linear models fit by ordinary least squares, the estimation bias is zero. For restricted fits, such as ridge regression, it is positive, and we trade it off with the benefits of a reduced variance.
+
+\section{Taxonomy of machine learning algorithms}
+\subsection{Supervised vs Unsupervised}
+The first distinction is between Supervised and Unsupervised learning. Some in-between methods exist too:
+\begin{itemize}
+\item \textbf{supervised learning}: the training data you feed to the algorithm includes the desired solutions, called labels. Typical algorithms are Linear regression, K-Nearest Neighbours, Logistic Regression,  Support Vector Machines, Decision Trees and Random Forests, Neural Networks. Tasks of supervised learning are \textbf{classification} and \textbf{prediction}, i.e., \textbf{regression}.
+\item \textbf{unsupervised learning}: no label is passed as input and typical the algorithm must apply label or group data somehow. Its tasks are 
+\begin{itemize}
+\item \textbf{clustering}: whose goals is to group together similar groups. This is typically done by defining a measure of similarity (or dissimilarity) between points in the hyperspace. Popular algorithms are K-means, Hierarchical clustering Analysis, Expectation Maximization; 
+\item \textbf{Visualization and dimensionality reduction}: for visualization applications, one feeds them a lot of complex and unlabeled data, and they output a 2D or 3D representation of your data that can easily be plotted. The goal of dimensionality reduction instead is to simplify the data without losing too much information by merging correlated features. Popular algorithms are Principal component analysis (PCA), Kernel PCA, Locally-Linear Embedding, t-distributed Stochastic Neighbour Embedding
+\item \textbf{Association Rule Learning}: Apriori, Eclat.
+\end{itemize}
+\item \textbf{semi-supervised learning}: Some algorithms can deal with partially labeled training data, usually a lot of unlabeled data and a little bit of labeled data. Some photo-hosting services, such as Google Photos, are good examples of this. Once you upload all your family photos to the service, it automatically recognizes that the same person.
+\item \textbf{Reinforcement learning}: The learning system, called an agent in this context, can observe the environment, select and perform actions, and get rewards or penalties in return. It must then learn by itself what is the best strategy, called a \textbf{policy}, to get the most reward over time.
+\end{itemize}
+
+\subsection{Batch and online Learning}
+Another criterion used to classify Machine Learning systems is whether or not the system can learn incrementally from a stream of incoming data.
+\begin{itemize}
+\item \textbf{batch-learning}: the system is incapable of learning incrementally: it must be trained using all the available data. this is called \textbf{offline learning}.
+\item \textbf{online learning}: you train the system incrementally by feeding it data instances sequentially, either individually or by small groups called mini-batches. Online learning is great for systems that receive data as a continuous flow (e.g., stock prices) and need to adapt to change rapidly or autonomously. It is also a good option if you have limited computing resources.
+\end{itemize}
+
+\subsection{Instance-based vs Model based}
+\begin{itemize}
+\item \textbf{instance-based learning}: the system learns the examples by heart, for example by using a measure of similarity such as number of similar words in two emails to classify spam emails.
+\item \textbf{Model-based learning}: it builds a model to perform predictions
+\end{itemize}
 
 \section{Linear Regression Models}
 We start from the \textit{univariate linear regression}, i.e., each output consists of a single value while the input is a vector of values.
@@ -2638,6 +2697,13 @@ K-fold cross-validation uses part of the available data to fit the model, and a 
 For the $k-th$ part, we fit the model using the other $K-1$ parts for training and we calculate the prediction error of the fitted model on the $k-th$ part. We do this for all $k=1,\cdots, K$, fitting the model resulting from the previous step using the new partition of data.
 Typical choices of $K$ are $5$ or $10$. $K=N$ case is known as live-one-out cross-validation. The higher value of $K$ leads to less biased model (but large variance might lead to overfit), where as the lower value of $K$ is similar to the train-test split approach we saw before.
 
+\subsubsection{Cross validation according to "Hands on Machine Learning"}
+Generally a model can be evaluated using a training set and a test set. When one has to choose a hyperparameter a \textbf{validation set} of data is used. Models with different parameters are trained using the training set, the model and hyperparameters that perform best according to the validation test are selected and one is satisfied by the performances, finally run a single test on the test set. 
+
+When evaluating the hyperparameter on the test-set directly, the problem is that the test-set is being used multiple times: to select the hyperparameters and to finally evaluate the model. The hyperparameters were chosen for this specific test-set so it is clear the error on this specific set is reduced.
+
+This however requires lots of data. To avoid this cross validation is used:  the training set is split into complementary subsets, and each model is trained against a different combination of these subsets and validated against the remaining parts. Once the model type and hyperparameters have been selected, a final model is trained using these hyperparameters on the full training set, and the generalized error is measured on the test set.
+
 \subsection{Bootstrap Methods}
 The general idea  is to randomly draw datasets with replacement from training data. Samples are constructed by drawing observations from a large data sample one at a time and returning them to the data sample after they have been chosen. This allows a given observation to be included in a given small sample more than once. This approach to sampling is called sampling with replacement. This is done $B$ times, producing $B$ datasets.
 
@@ -3694,7 +3760,7 @@ The principal components of a set of data in $\CMcal{R}^p$ provide a sequence of
 \begin{equation}
 f(\lambda) = \mu  + \mathbf{V}_q\lambda
 \end{equation}
-where $\mathbf{V}_q$ is a $p\times q$ matrix with $q$ orthogonal unit vectors as columns, $\lambda$ a $q$ vector of parameters and $\mu$ a location vector in $\CMcal{R}^p$. This is $p$ hyperplane. Fitting such a model corresponds to minimize the reconstruction error:
+where $\mathbf{V}_q$ is a $p\times q$ matrix with $q$ orthogonal unit vectors as columns, $\lambda$ a $q$ vector of parameters and $\mu$ a location vector in $\CMcal{R}^p$. This is a $p$ hyperplane. Fitting such a model corresponds to minimize the reconstruction error:
 \begin{equation}
 \min_{\mu, \{\lambda_i\}, \mathbf{V}_q} \sum_{i=1}^N \| x_i -\mu - \mathbf{V}_q\lambda_u \|^2
 \end{equation}
@@ -3702,7 +3768,7 @@ We can partially optimize to obtain:
 \begin{equation}
 \begin{aligned}
 \hat{\mu} &= \bar{x}\\
-\hat{\lambda}_i = \mathbf{V}_q^T (x_i - \bar{x})
+\hat{\lambda}_i &= \mathbf{V}_q^T (x_i - \bar{x})
 \end{aligned}
 \end{equation}
 so we must find the matrix $\mathbf{V}_q$:
@@ -3723,13 +3789,13 @@ Consider the matrix $\X = \br{\x_1^T, \cdots, \x_N^T}$ of the observations and p
 
 $\mathbf{U}$ is a $N\times p$ orthogonal matrix $\mathbf{U}^T\mathbf{U}=\I_p$ whose columns $\mathbf{u}_j$ are called \textbf{left singular vectors}. $\mathbf{V}$ is a $p\times p$ orthogonal matrix ($\mathbf{V}^T\mathbf{V}=\I_p$) with columns $\mathbf{v}_j$ called the \textbf{right singular vectors}. $\mathbf{D}$ is a diagonal $p\times p$ matrix with $d_1\ge d_2\ge \cdots\ge d_p\ge 0$ known as \textbf{singular values}. 
 
-For each rank $q$, (i.e., the chosen dimensionality on which the observations are projected), the solution $\mathbf{V}_q$,  consists of the first $q$ columns of $\mathbf{V}$. The columns $\mathbf{UD}$ are called the \textbf{principal components} of $\X$. The $N$ optimal $\hat{\lambda}_i$ are given by the first $q$ principal components (the $N$ rows of the $N \times q$ matrix $\mathbf{U}_q\mathbf{D}_q$.
+For each rank $q$, (i.e., the chosen dimensionality on which the observations are projected), the solution $\mathbf{V}_q$  consists of the first $q$ columns of $\mathbf{V}$. The columns $\mathbf{UD}$ are called the \textbf{principal components} of $\X$. The $N$ optimal $\hat{\lambda}_i$ are given by the first $q$ principal components (the $N$ rows of the $N \times q$ matrix $\mathbf{U}_q\mathbf{D}_q$.
 
 \ref{SVDex} shows the one-dimensional principal component line in a $\CMcal{R}^2$ input space ($p=2$, $q=1$). For each observation point $x_i$ there is a closest point on the line given by $u_{i1}d_1v_1$ where $v_1$ is the direction of the line ($v_1$ is $p=2$ dimensional vector). $\hat{\lambda}_1=d_{i1}d_1$ measures distance along the line from the origin.
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.6]{img/SVD}
+\includegraphics[scale=0.5]{img/SVD}
 \caption{Example of SVD mapping of data from a $\CMcal{R}^2$ space (i.e., a plane) onto a line $\CMcal{R}$}
 \label{SVDex}
 \end{figure}
@@ -3752,7 +3818,7 @@ that in terms of images is something like the one in \ref{modelImage}.
 \begin{figure}
 \centering
 \includegraphics[scale=0.7]{img/modelImage}
-\caption{Equivalence of the non-parametric model using image representation.}
+\caption{Equivalence of the parametrized model using image representation.}
 \label{modelImage}
 \end{figure}
 Although there are a possible 256 principal components, approximately 50 account for 90\% of the variation in the threes, 12 account for 63\%.
@@ -3762,4 +3828,338 @@ A relatively small subset of the principal components serve as excellent lower-d
 The same technique, with some further calculations, can be applied to digital signature.
 
 \subsubsection{Prinipal curves and surfaces}
+Principal curves generalize the concept of the principal component line to obtain smoother curves. 
+
+Let $f(\lambda)$ be a parametrized smooth curve in $\CMcal{R}^p$. It is a vector function of with $p$ coordinates, each a smooth function of the single parameter $\lambda$. For example $\lambda$ can be chosen to be the arc-length along the curve from a fixed origin. For each data value $x$, let $\lambda_f(x)$ define the closest point on the curve to $x$. Then $f(\lambda)$ is called a principal component curve for the distribution of the random vector $X$ if:
+\begin{equation}
+f(\lambda) = \E\br{X|\lambda_f(X) = \lambda}
+\end{equation}
+So $f(\lambda)$ is the average of all data points that project to it (\textbf{self-consistency} property). Although in practice, continuous multivariate distributes have infinitely many principal curves (Duchamp and Stuetzle, 1996), we are interested mainly in the smooth ones.
+
+A principal curve is defined by its coordinate functions: $f(\lambda) = [ f_1(\lambda), f_p(\lambda)]$ and let $X^T = (X_1, \cdots, X_p)$. Consider the following alternate steps:
+\begin{equation}
+\begin{aligned}
+&1) \quad \hat{f}_j(\lambda)\leftarrow \E \br{X_j|\lambda(X) = \lambda}; \quad j=1,\cdots, p\\
+&2) \quad \hat{\lambda}_f(x) \leftarrow \argmin{\lambda'}{\|x -\hat{f}(\lambda')\|^2}
+\end{aligned}
+\end{equation}
+In the first $\lambda$ is fixed and it enforces the self-consistency requirement. In the second the curve is fixed and it finds the closest point on the curve to each data point.
+
+With finite data, the principal curve algorithm starts with the linear principal component, and iterates the two steps until convergence.
+A scatterplot smoother is used to estimate the conditional expectations in the frist step by smoothing each $X_j$ as a function of the arc-length $\lambda(X)$, and the projection in the second step is done for each of the observed data points. Proving convergence in general is difficult, but one can show that if a linear least squares fit is used for the scatterplot smoothing, then the procedure converges to the first linear principal component, and is equivalent to the power method for finding the largest eigenvector of a matrix.
+
+Principal surfaces have exactly the same form as principal curves, but are of higher dimension. The mostly commonly used is the two-dimensional principal surface, with coordinate functions
+\begin{equation}
+f(\lambda_1, \lambda_2) = \left[ f_1(\lambda_1, \lambda_2), \cdots, f_p(\lambda_1, \lambda_2)\right]
+\end{equation}
+Principal surfaces of dimension greater than two are rarely used, since the visualization aspect is less attractive, as is smoothing in high dimensions.
+
+\subsubsection{Spectral Clustering}
+Traditional clustering methods like K-means use a spherical or elliptical metric to group data points. Hence they will not work well when the clusters are non-convex, such as the concentric circles.
+
+Spectral clustering solves this problem by firstly building a $N\times N$ matrix of pairwise similarities $s_{ij}\ge 0$ between all observation pairs.We represent the observations in an undirected similarity graph $G = \left\langle V, E\right\rangle$. The $N$ vertices $v_i$ are the observations and pairs of vertices are connected by an edge if their similarity is positive or exceeds some threshold. Edges are weighted by $s_{ij}$.
+
+Clustering now is a graph-partition problem where we identify connected components with clusters. We  want to partition the graph such that edges between different groups have low weight and within a group have high weight.
+
+Consider $N$ points $x_i \in \CMcal{R}^p$ and let $d_{ij}$ be the Euclidean distance between $x_i$ and $x_j$. We will use as similarity matrix the radial-kernel matrix:
+\begin{equation}
+s_{ij} = \e^{-\frac{d_{ij}^2}{c}}
+\end{equation}
+where $c >0$ is a scale parameter. A popular way to define the similarity matrix is the \textbf{mutual K-nearest-neighbour graph}. Define $\mathcal{N}_k$ the symmetric set of nearby pairs of points: a pair $(i,j)$ is in $\mathcal{N}_k$ if $i$ is in the $K$-neighbourhood of $j$ or viceversa. Then we connect all NN and give them edge-weight $w_{ij} = s_{ij}$, otherwise the weight is $0$.
+Alternatively, a fully connected graph includes all pairwise edges with weights $w_{ij} = s_{ij}$ , and the local behaviour is controlled by the scale parameter $c$.
+The matrix $\mathbf{W} = \{w_{ij}\}$ is called \textbf{adjacency matrix}; the \textbf{degree of vertex $i$} is:
+\begin{equation}
+g_i = \sum_j w_{ij}
+\end{equation}
+Let $\mathbf{G}$ be a diagonal matrix of $d_{ij}$. The \textbf{unnormalized graph Laplacian} is
+\begin{equation}
+\mathbf{L} = \mathbf{G} -\mathbf{W}
+\end{equation}
+Spectral clustering finds the $m$ eigenvectors $\mathbf{Z}_{N\times m}$ corresponding to the $m$ smallest eigenvalues of $\mathbf{G}$.  Using a standard method like $K$-means, we then cluster the rows of $\mathbf{Z}$ to yield a clustering of the original data points.
+
+Spectral clustering works because for any vector $\mathbb{f}$:
+\begin{equation}
+\mathbb{f}^T\mathbb{Lf}= \sum_{i=1}^Ng_i f_i^2 -\sum_{i=1}^N\sum_{j=1}^N f_i f_j w_{ij} = \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N  w_{ij}(f_i -f_j)^2 
+\end{equation}
+A small value of $\mathbb{f}^T\mathbb{Lf}$ will be achieved for coordinates that are close together.
+$\mathbb{1}^T\mathbb{L1}=0$ for any graph: the trivial constant vector corresponding to the $0$ eigenvalue. If the graph is connected $\mathbb{1}^T\mathbb{L1}$ is the only $0$ eigenvector.
+
+With $m$ connected components, the nodes can be reordered so that $L$ is block diagonal with a block for each connected component. Then $L$ has $m$ eigenvectors of eigenvalue $0$, and the eigenspace of eigenvalue $0$ is spanned by the indicator vectors of the connected components. In practice one has strong and weak connections, so $0$ eigenvalues are approximated by small eigenvalues.
+
+Spectral clustering is an interesting approach for finding non-convex clusters. 
+\subsubsection{Kernel Principal components}
+...
+
+\subsubsection{Sparse Principal components}
+...
+\subsection{Non-negative matrix factorization}
+It assumes non-negative data, i.e. images. Given $\X \in \CMcal{R}^{N\times p}$, it can be approximated with
+\begin{equation}
+\X \sim \mathbf{W}\mathbf{H}
+\end{equation}
+where $\mathbf{W} \in \CMcal{R}^{N\times r}$ and $\mathbf{H} \in \CMcal{R}^{r\times p}$, $r\le max(N,p)$. We assume $x_{ij}, w_{ik}, h_{kj}\ge 0$. $\mathbf{W}$ and $\mathbf{H}$ are found by maximizing
+\begin{equation}
+L(\mathbf{W}, \mathbf{H}) = \sum_{i=1}^N\sum_{j=1}^p \left[ x_{ij}\log(\mathbf{WH}_{ij}) - \mathbf{WH}_{ij} \right]
+\end{equation}
+
+This is the log-likelihood from a model in which $x_{ij}$ has a Poisson distribution with mean $(\mathbf{WH})_ij$ -quite reasonable for positive data.
+
+The following alternating algorithm (Lee and Seung, 2001) converges to a local maximum of $\mathbf{WH}$:
+\begin{equation}
+\begin{aligned}
+w_{ik} &\leftarrow w_{ik}\frac{\sum_{j=1}^p \frac{h_{kj} x_{ij}}{\br{\mathbf{WH}}_{ij}}}{\sum_{j=1}^p h_{kj}}\\
+h_{kj} &\leftarrow  h_{kj}\frac{\sum_{i=1}^p  \frac{w_{ik}x_{ij}}{\br{\mathbf{WH}}_{ij}}} {\sum_{j=1}^p h_{kj}}
+\end{aligned}
+\end{equation}
+
+Unlike VQ and PCA, NMF learns to represent faces with a set of basis images resembling parts of faces.
+Donoho and Stodden (2004) point out a potentially serious problem with non-negative matrix factorization. Even in situations where $X = \mathbf{WH}$ holds exactly, the decomposition may not be unique.
+
+For example, data points in \ref{nonUnique} lie in$ p = 2$ dimensions, and there is "open space" between the data and the coordinate axes. We can choose the basis vectors $h_1$ and $h_2$ anywhere in this open space, and represent each data point exactly with a nonnegative linear combination of these vectors. This non-uniqueness means that the solution found by the above algorithm depends on the starting values, and it would seem to hamper the interpretability of the factorization.
+\begin{figure}
+\centering
+\includegraphics[scale=0.4]{img/NonUniqueness}
+\caption{Any choice of the basis vectors h1 and h2 in the open space between the coordinate axes and data, gives an exact reconstruction of the data.}
+\label{nonUnique}
+\end{figure}
+
+\subsubsection{Archetypal Analysis}
+...
+
+\subsection{Independent component analysis and Exploratory Projection Pursuit}
+Multivariate data are often viewed as multiple indirect measurements arising from an underlying source. Variables that cannot be directly observed are called \textbf{latent variables}. Example are psychological IQ tests: answers are the multivariate variables (data) and the intelligence, is the latent variable we want to measure and that generated those data. The same for the EEG brain scans to measure neuronal activity: electromagnetic signals are measured by sensors placed at different points. Other examples exist.
+
+\subsubsection{Latent variables and Factor analysis}
+Factor analysis is a statistical technique that aims to find latent sources mostly exploiting Gaussian distributions.
+Consider the SVD:
+\begin{equation}
+\begin{aligned}
+\X &= \mathbf{UDV}^T\\
+\mathbf{S} &= \sqrt{N}\mathbf{U}\\
+\mathbf{A}^T = \frac{\mathbf{DV}^T}{\sqrt{N}}\\
+\Rightarrow \X = \mathbf{SA}^T
+\end{aligned}
+\end{equation}
+and hence each of the columns of $\X$ is a linear combination of the columns of $\mathbf{S}$. Now since $\mathbf{U}$ is orthogonal, and assuming as before that the columns of $\X$ (and hence $\mathbf{U}$) each have mean zero, this implies that the columns of $\mathbf{S}$ have zero mean, are uncorrelated and have unit variance.
+
+However this representation is not unique: given the orthogonal matrix $\mathbf{R}$: $\X = \mathbf{AR^TRS}$.  It is therefore impossible to identify any particular latent variables as unique underlying sources.
+
+With $q<p$ the classical factor analysis is $X = AS + \epsilon$. Here $\mathbf{S}$ is a vector of $q < p$ underlying latent variables or factors, $A$ is a $p \times q$ matrix of factor loadings, and the $\epsilon_j$ are uncorrelated zero-mean disturbances. The idea is that the latent variables $S_\ell$ are common sources of variation amongst the $X_j$, and account for their correlation structure, while the uncorrelated $\epsilon_j$ are unique to each $X_j$ and pick up the remaining unaccounted variation. Typically the $S_\ell$ and the $\epsilon_j$ are modeled as Gaussian random variables, and the model is fit by maximum likelihood.
+
+The parameters all reside in the covariance matrix
+\begin{equation}
+\Sigma = AA^T +D_\epsilon
+\end{equation}
+Lack of uniqueness still remains.
+
+\subsubsection{Independent Component analysis}
+ICA assumes $S_\ell$ to be statistically independent rather than uncorrelated. Intuitively, lack of correlation determines the second-degree cross-moments (covariances) of a multivariate distribution, while in general statistical independence determines all of the cross-moments. These extra moment conditions allow us to identify the elements of $\mathbf{A}$ uniquely.
+
+The multivariate Gaussian distribution is determined by its second moments alone. Hence identifiability problems can be avoided if we assume that the $S_\ell$ are independent and non-Gaussian.
+
+ICA can be used to separate two mixed signals in the classical \textbf{cocktail party problem} where different microphones  $\X_j$ pick up mixtures of different independent sources $S_\ell$. ICA is able to perform \textbf{blind source separation} by exploiting independence and non-Gaussianity of the original sources.
+
+Defining the entropy as 
+\begin{equation}
+H(Y) = -\int g(y) \log g(y) dy,
+\end{equation}
+a result in information Theory states that among all random variables with equal variance, Gaussian variables have the maximum entropy. The \textbf{mutual information $I(Y)$}  between the components of the random vector $Y$ is a natural measure of dependence:
+\begin{equation}
+I(Y) = \sum_{j=1}^pH(Y_j) - H(Y)
+\end{equation}
+where $I(Y)$ is called \textbf{Kullback-Leibler distance} between the density $g(y)$ of $Y$ and its independence version $\prod_{j=1}^p g_j(y_j)$ where $g_j(y_j)$ is the marginal density of $Y_J$.
+
+Now if $\X$ has covariance $\I$, and $Y = A^T\X$ with $A$ orthogonal, then it is easy to show that:
+\begin{equation}
+\begin{aligned}
+I(Y) = \sum_{j=1}^p H(Y_j)-H(X) - \log |det(A)| = \sum_{j=1}^p H(Y_j)-H(X)
+\end{aligned}
+\end{equation}
+
+Finding an $A$ to minimize $I(Y)$ looks for the orthogonal transformation that leads to the most independence between its components. For convenience, rather than using the entropy $H(Y_j)$, the negentropy measure is sometimes used $J(Y_j)$ defined by:
+\begin{equation}
+J(Y_j) = H(Z_j) - H(Y_j)
+\end{equation}
+where $Z_j$ is a Gaussian random variable with the same variance as $Y_j$ . Negentropy is non-negative, and measures the departure of $Y_j$ from Gaussianity. ICA solutions use the approximation:
+\begin{equation}
+\begin{aligned}
+J(Y_j) &\sim \left[EG(Y_j) - EG(Z_j)\right]\\
+G(u) = \frac{1}{a}\log\cosh(au) \quad\quad 1\le a \le 2
+\end{aligned}
+\end{equation}
+In summary then, ICA applied to multivariate data looks for a sequence of orthogonal projections such that the projected data look as far from Gaussian as possible.
+
+ICA has become an important tool in the study of brain dynamics.
+
+\subsubsection{Exploratory Projection Pursuit}
+It is graphical exploration technique for visualizing high-dimensional data. It assumes projections of high- dimensional data look Gaussian. Interesting structure, such as clusters or long tails, would be revealed by non-Gaussian projections.
+
+It proposes a number of projection indices for optimization, each focusing on a different departure from Gaussianity. Typically with projection pursuit, the directions $a_j$ are not constrained to be orthogonal.
+
+MDS requires only the dissimilarities $d_{ij}$.
+
+Multidimensional scaling seeks values $z_1, \cdots , z_N \in \CMcal{R}^k$ to minimize the so-called stress function:
+\begin{equation}
+S_M(z_1, \cdots, z_N) = \sum_{i\ne j}\br{d_{ij}- \| z_i - z_j \|}^2
+\end{equation}
+This is known as \textbf{least squares} or \textbf{Kruskal-Shepherd scaling}. The idea is to find a lower-dimensional representation of the data that preserves the pairwise distances as well as possible. Notice that the approximation is in terms of the distances rather than squared distances. A gradient descent algorithm is used to minimize SM.
+A variation on least squares scaling is the so-called \textbf{Sammon mapping} which minimizes:
+\begin{equation}
+S_{S_m}(z_1, \cdots, z_N = \sum_{i\ne j}\frac{\br{d_{ij} - \|z_i - z+j\|}^2}{d_{ij}}
+\end{equation}
+Here more emphasis is put on preserving smaller pairwise distances.
+
+In classical scaling, we instead start with similarities $s_{ij}$ : often we use the centered inner product $s_{ij} = \left\langle x_i - \bar{x} , x_j - \bar{x}\right\rangle$. The problem then is to minimize
+\begin{equation}
+S_C(z_1, \cdots, z_N) = \sum_{i,j} \br{s_{ij} - \left\langle z_i-\bar{z}, z_j - \bar{z}\right\rangle}^2
+\end{equation}
+This is attractive because there is an explicit solution in terms of eigenvectors. If we have Euclidean distances instead of inner products we can convert them to centered inner-products. If the similarities are in fact centered inner-products, classical scaling is exactly equivalent to principal components, an inherently linear dimension- reduction technique. Classical scaling is not equivalent to least squares scaling; the loss functions are different, and the mapping can be nonlinear.
+
+Least squares and classical scaling are referred to as \textbf{metric scaling methods}, in the sense that the actual dissimilarities or similarities are approximated. \textbf{Shephard-Kruskal nonmetric scaling} effectively uses only ranks:
+\begin{equation}
+S_{NM}(z_1, \cdots, z_N)  = \frac{\sum_{i\ne j} \left[ \|z_i - z_j\| - \theta(d_{ij})\right]^2}{\sum_{i\ne j}\|z_i - z_j\| }
+\end{equation}
+over $z_i$ and an arbitrary increasing function $\theta$. With $\theta$ fixed, we minimize over $z_i$ by gradient descent. With the $z_i$ fixed, the method of isotonic regression is used to find the best monotonic approximation $\theta(d_{ij})$ to $\|z_i - z_j \|$. These steps are iterated until the solutions stabilize.
+
+\section{Random forests}
+Random forests builds a large collection of decorrelated trees and then averages them. It is an alternative to boosting.
+\subsection{Definition}
+The idea is to average many noise but unbiased models to reduce the variance. Trees are ideal candidates for bagging, since they can capture complex interaction structures.
+\begin{algorithm}
+\For{$b\gets1$ \KwTo{$B$}}{
+	Draw a bootstrap sample $\mathbf{Z}^*$ of size $N$ from the training data;\\
+	Grow a random-forest tree $T_b$ to the bootstrapped data, by recursively repeating the following steps for each terminal node of the tree, until the minimum node size $n_{min}$ is reached\;
+	      (i) Select $m$ variables  at random from $p$ variables\;
+	      (ii) Pick the best variable/split-point among $m$\;
+	      (iii) Split the node into two daughter nodes.\\
+}
+Output the ensemble of trees $\{T_b\}_1^B$\;
+\caption{Random Forests}
+\end{algorithm}
+The \textbf{decision rule for regression} is:
+\begin{equation}
+\hat{f}_{rf}^B(x) = \frac{1}{B}\sum_{b=1}^BT_b(x) 
+\end{equation}
+The \textbf{decision rule for classification} is:
+\begin{equation}
+\hat{C}_{rf}^B(x) = \textit{majority vote}\{\hat{C}_b\}_1^B
+\end{equation}
+Trees are famous to be noisy so they benefit from the averaging. Moreover since each tree is identically distributed, the expectation of an average of $B$ such trees is the same as the expectation of anyone of them. So the bias remains the same and the only improvement is on the variance reduction. In boosting trees are not identically distributed.
+Summing such $B$ trees each of variance $\sigma^2$, the final variance is reduced to $\frac{1}{B}\sigma^2$. 
+
+If the variables are simply identically distributed but not necessarily independent with positive pairwise correlation $\rho$, the variance of the average is:
+\begin{equation}
+\rho \sigma^2 + \frac{1-\rho}{B}\sigma^2
+\end{equation}
+As $B$ increases, the second term disappears while the first remains. Correlation limits the benefits of averaging.
+
+The idea of Random forests is to improve variance reduction of bagging by reducing the correlation between trees, without increasing variance too much.
+
+Specifically, when growing a tree on a bootstrapped dataset, before each split, select $m \le p$ of the input variables at random as candidates for splitting. Typical values are $m= \sqrt{p}$, or even $1$.
+
+For classification, the default value for $m$ is $\lfloor{\sqrt{p}}\rfloor$ and the minimum node size is $1$, for regression, the default value for m is $\lfloor{p/3}\rfloor$ and the minimum node size is five.
+
+After $B$ such trees are grown the predictor is 
+\begin{equation}
+\hat{f}_{rf}^B(x) = \frac{1}{B}\sum_{b=1}^BT(x, \Theta_b) 
+\end{equation}
+$\Theta_b$ characterizes the $b-th$ random forest tree in terms of split variables, cutpoints at each node, and terminal-node values.
+Not all estimators can be improved by shaking up the data like this. It seems that highly nonlinear estimators, such as trees, benefit the most.
+
+Random forests do remarkably well, with very little tuning required. A random forest classifier achieves $4.88\%$ misclassification error on the spam test data, which compares well with all other methods, and is not significantly worse than gradient boosting at $4.5\%$. Bagging achieves $5.4\%$ which is significantly worse than either , so it appears on this example the additional randomization helps.
+
+\subsubsection{Overfitting}
+When the number of variables is large, but the fraction of relevant variables small, random forests are likely to perform poorly with small $m$. At each split the chance can be small that the relevant variables will be selected. When the number of relevant variables increases, the performance of random forests is surprisingly robust to an increase in the number of noise variables.  This robustness is largely due to the relative insensitivity of misclassification cost to the bias and variance of the probability estimates in each tree.
+
+Another claim is that random forests "cannot overfit" the data. It is certainly true that increasing $B$ does not cause the random forest sequence to overfit. The distribution of $\Theta$ here is conditional on the training data. However, this limit can overfit the data; the average of fully grown trees can result in too rich a model, and incur unnecessary variance. Using full-grown trees seldom costs much, and results in one less tuning parameter.
+
+\subsubsection{Variance analysis}
+Taking the limit for $B\rightarrow \infty$ of the random forest regression estimator:
+\begin{equation}
+\hat{f}_{rf}(x) = \E_{\Theta|Z} T(x \Theta(Z)
+\end{equation}
+At a single target point:
+\begin{equation}
+\Var \hat{f}_{rf}(x)  =\rho(x) \sigma^2 (x)
+\end{equation}
+$\rho(x)$ is the sampling correlation between any pair of trees used in averaging:
+\begin{equation}
+\rho(x) = corr\left[ T(x,\Theta_1(Z)), T(x,\Theta_2(Z))\right]
+\label{roX}
+\end{equation}
+Where $T(x,\Theta_1(Z))$ and $T(x,\Theta_2(Z))$ are a randomly drawn pair of random forest trees grown to the randomly sampled $Z$. $\sigma^2$ is the sampling variance of any single randomly drawn tree:
+\begin{equation}
+\sigma^2(x) = Var T(x, \Theta(Z))
+\label{s2}
+\end{equation}
+$\rho(x)$ \textbf{is not} the average correlation between fitted trees in a given random-forest ensemble. It is the theoretical correlation between a pair of random-forest trees evaluated at $x$, induced by repeatedly making training sample draws $Z$ from the population, and then drawing a pair of random forest trees. In statistical jargon, this is the correlation induced by the sampling distribution of $Z$ and $\Theta$.
+
+The variability averaged over in the calculations in\ref{roX} and \ref{s2} is both conditional on $Z$ for the bootstrap sampling and feature sampling at each split and a result of the sampling variability of $Z$ itself.
+\begin{equation}
+\textit{Total variance} = \Var_Z \hat{f}_{rf}(x) + \textit{within-$\mathbf{Z}$ variance}
+\end{equation}
+The second term increases as $m$ decreases. The first term is in fact the sampling variance of the random forest ensemble, which decreases as $m$ decreases. 
+The variance of the individual trees does not change appreciably over much of the range of $m$, the variance of the ensemble is dramatically lower than this tree variance:
+\begin{equation}
+\Var_{\Theta,Z} T(x, \Theta(Z)) = \Var_Z \E_{\Theta|Z}T(x, \Theta(X)) + E_Z\Var_{\Theta|Z}T(x, \Theta(X))
+\end{equation}
+
+\subsubsection{Bias analysis}
+As in bagging, the bias is the same for any individual sampled tree.
+\begin{equation}
+Bias(x) = \mu(x) - \E_Z\hat{f}_{rf}(x) = \mu(x) - \E_Z E_{\Theta|Z}T(x, \Theta(Z))
+\end{equation}
+This is also typically greater (in absolute terms) than the bias of an unpruned tree grown to $Z$, since the randomization and reduced sample space impose restrictions.
+
+\section{Ensemble Learning}
+...
+\section{Undirected Graphical Models}
+
+A graph consists of a set of vertices (nodes), along with a set of edges joining some pairs of the vertices. In graphical models, each vertex represents a random variable, and the graph gives a visual way of understanding the joint distribution of the entire set of random variables. They can be useful for either unsupervised or supervised learning. In an undirected graph, the edges have no directional arrows. In undirected graphical models, also known as Markov random fields or Markov networks, the absence of an edge between two vertices has a special meaning: the corresponding random variables are conditionally independent, given the other variables.
+
+The main challenges in working with graphical models are model selection (choosing the structure of the graph), estimation of the edge parameters from data, and computation of marginal vertex probabilities and expectations, from their joint distribution. The last two tasks are sometimes called learning and inference in the computer science literature.
+
+There is a large and active literature on directed graphical models or Bayesian networks; these are graphical models in which the edges have directional arrows (but no directed cycles). Directed graphical models rep- resent probability distributions that can be factored into products of conditional distributions, and have the potential for causal interpretations.
+
+ A graph $G$ consists of a pair $(V, E)$, where $V$ is a set of vertices and $E$ the set of edges (defined by pairs of vertices). Two vertices $X$ and $Y$ are called adjacent if there is a edge joining them; this is denoted by $X \approx Y$. A path $X_1,X_2,\cdots,X_n$ is a set of vertices that are joined, that is $X_{i-1} \approx X_i$ for$ i = 2,\cdots,n$. A complete graph is a graph with every pair of vertices joined by an edge. A subgraph $U \in V$ is a subset of vertices together with their edges.
+In a Markov graph $G$, the absence of an edge implies that the corresponding random variables are conditionally independent given the variables at the other vertices. This is expressed with the following notation:
+
+\begin{equation}
+\textit{No edge joining $X$ and $Y$} \Longleftrightarrow  X \perp Y|rest
+\end{equation}
+where \textit{rest} refers to the other vertices in the graph (first figure in \ref{graphs}). These are known as \textit{pairwise Markov independencies} of $G$.
+
+If $A$, $B$ and $C$ are subgraphs, then $C$ is said to separate $A$ and $B$ if every path between $A$ and $B$ intersects a node in $C$. For example, $Y$ separates $X$ and $Z$ in \ref{graphs}(a) and \ref{graphs}(d), and $Z$ separates $Y$ and $W$ in \ref{graphs}(d). In '\ref{graphs}(b) $Z$ is not connected to $X$,$Y$,$W$ so we say that the two sets are separated by the empty set. In \ref{graphs}(c), $C = \{X,Z\}$ separates $Y$ and $W$.
+
+Separators have the nice property that they break the graph into conditionally independent pieces. Specifically, in a Markov graph G with sub-graphs A, B and C,
+\begin{equation}
+\textit{if $C$ separates $A$ and $B$} \Rightarrow A\perp B|C
+\end{equation}
+These are known as the \textbf{global Markov properties} of $G$.
+
+The global Markov property allows us to decompose graphs into smaller more manageable pieces and thus leads to essential simplifications in computation and interpretation. For this purpose we separate the graph into cliques. A \textbf{clique} is a complete subgraph a set of vertices that are all adjacent to one another; it is called \textbf{maximal}, if it is a clique and no other vertices can be added to it and still yield a clique. The maximal cliques for the graphs of \ref{graphs} are
+\begin{itemize}
+\item $\{X, Y\}$, $\{Y, Z\}$;
+\item $\{X, Y, W\}$, $\{Z\}$;
+\item $\{X, Y\}$, $\{Y, Z\}, \{Z, W\},\{X, W\}$;
+\item $\{X, Y\}$, $\{Y, Z\}, \{X, W\}$.
+\end{itemize}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.45]{img/graphs}
+\caption{Examples of undirected graphical models or Markov networks. Each node or vertex represents a random variable, and the lack of an edge between two nodes indicates conditional independence. For example, in graph (a), $X$ and $Z$ are conditionally independent, given $Y$. In graph (b), $Z$ is independent of each of $X$, $Y$, and $W$.}
+\label{graphs}
+\end{figure}
+A probability density function f over a Markov graph G can be can represented as
+\begin{equation}
+(x) = \frac{1}{Z} \prod_{C \in \CMcal{C}} \Psi_C (x_C)
+\end{equation}
+where $C$ is the set of maximal cliques, and the positive functions $\Psi C()$ are called clique potentials.  These are not in general density functions, but rather are affinities that capture the dependence in $X_C$ by scoring certain instances $X_C$ higher than others. The quantity
+\begin{equation}
+X = \sum_{x \in \CMcal{X}} \prod_{c \in \CMcal{C}} \X_C{x_C}
+\end{equation}
+is the normalizing constant, also known as the partition function
+
+....
 \end{document}
