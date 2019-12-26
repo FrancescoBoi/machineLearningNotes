@@ -1239,9 +1239,11 @@ Some software packages implement hybrid stepwise-selection strategies that consi
 Other more traditional packages base the selection on \textit{F}-statistics, adding "significant" terms, and dropping "non-significant" terms. These are out of fashion.
 
 \subsubsection{Forward stagewise regression}
-As forward stepwise, it starts with the intercept. At each step the algorithm identifies the variable most correlated with the residual and computes the linear regression coefficient of the residual on this chosen variable and then adds it to the current coefficient for that variable. This is continued till none of the variables have correlation with the residual.
+As forward stepwise, it starts with the intercept. At each step the algorithm identifies the variable most correlated with the residual and for the chosen variable it computes the linear regression coefficient using the residual (instead of the full target) itself and just the chosen variable (instead of the full input matrix). This scalar value is added to the old value of the coefficient.
 
-At each step only one coefficient is updated by a small step so that the number of steps is bigger than $p$. This slow-fitting pays in high dimensions.
+This is continued till none of the variables have correlation with the residual. The correlation can be calculated as a scalar product, it must be remembered to use absolute values when comparing correlations.
+
+At each step only one coefficient is updated and the update might not give the final coefficient so that the number of steps is bigger than $p$. This slow-fitting pays in high dimensions.
 
 \textbf{Note}: forward stagewise is very competitive in 
 
@@ -2195,10 +2197,10 @@ where the algorithm uses the stochastic gradient descent where the coefficients 
 \item many steps might be required;
 \item when data are not separable, the algorithm will not converge;
 \end{itemize}
+
 \subsection{Optimal separating hyperplanes}
 \label{OSH}
 The optimal separating hyperplane separates the two classes and maximizes the distance to the closest point from either class (Vapnik, 1996). Not only does this provide a unique solution to the separating hyperplane problem, but by maximizing the margin between the two classes on the training data, this leads to better classification performance on test data.
-
 Suppose $M$ is the distance. Then
 \begin{equation}
 \begin{aligned}
@@ -2240,6 +2242,75 @@ For logistic regression, if a separate hyperplane exists, since the log-likeliho
 
 When data are not separable there will be no feasible solution and an alternative formulation is needed.
 
+\subsubsection{Complete derivation}
+\textit{https://nlp.stanford.edu/IR-book/html/htmledition/support-vector-machines-the-linearly-separable-case-1.html}
+\textit{https://www.youtube.com/watch?v=\_PwhiWxHK8o}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.6]{img/separableClasses}
+\caption{Example of infinite lines separating two perfectly separable classes.}
+\label{separableClasses}
+\end{figure}
+
+Consider two classes on a space (for example the space in \ref{separableClasses} is two dimensional) and suppose the two classes are perfectly separable. We want to divide the two classes with a straight line. The problem becomes to define what is the best straight line since infinite lines exist that separate  perfectly the two classes. The solution is to choose the line that separates the classes as much as possible, which is as faraway as possible from both the classes. If the line is thought as the middle line of a street separating the two classes, then we want to fit the widest possible street between the two classes (see \ref{separableClassesPy}).
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.6]{img/separableClassesPy}
+\caption{Example of best separating line maximizing the margin.}
+\label{separableClassesPy}
+\end{figure}
+
+Let us consider a vector $\vec{w}$ of any length, perpendicular to the gutter of the street and consider an unknown instance to be classified (\ref{W}) called $\vec{u}$. To see if this unknown is on the left or right side of the street, we project its vector $\vec{u}$ onto the vector $\vec{w}$ that is perpendicular to the street. The bigger this product, the more likely the point is to be on the right side of street, hence the more likely it is to be of class $+$.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.6]{img/W}
+\caption{Vector perpendicular to the separator and its margins.}
+\label{W}
+\end{figure}
+
+Mathematically:
+\begin{equation}
+\vec{u}\cdot \vec{w} \ge c \Leftrightarrow \vec{u}\cdot \vec{w} + b \ge0\Rightarrow \text{Class } 1 \quad\quad \text{with } b=-c
+\end{equation}
+This is the \tb{decision rule}. The problem is that both $\vec{w}$ and $b$ are unknown; only the direction of $\vec{w}$ is known but not its length.
+
+Now other constraints must be added to calculate $\vec{w}$ and $b$. Now suppose one positive and one negative instances $x_+$ and $x_-$ are given. We want:
+\begin{equation}
+\begin{aligned}
+\vec{w} \cdot \vec{x}_+ b \ge 1\\
+\vec{w} \cdot \vec{x}_- b \le -1
+\end{aligned}
+\end{equation}
+Now, just for mathematical convenience we introduce a new variable $y_i$ for each instance such that:
+\begin{equation}
+\begin{aligned}
+y_i = 1 \quad \text{if } \vec{x}_+\\
+y_i = -1 \quad \text{if } \vec{x}_-\\ 
+\end{aligned}
+\end{equation}
+In this way:
+\begin{equation}
+y_i (\vec{w}\cdot \vec{x}_i + b) \ge 1
+\end{equation}
+that can be rearranged as:
+\begin{equation}
+y_i (\vec{w}\cdot \vec{x}_i + b) -1 \ge 0
+\end{equation}
+
+Now another constraint is going to be added: for the points in the gutter, i.e., within the margins, the previous equation is forced to be $0$:
+\begin{equation}
+y_i (\vec{w}\cdot \vec{x}_i + b) -1 = 0
+\end{equation}
+So this equation holds for the points that are closest to the separator, i.e., the ones that decide and limit the width of the street. Now we need to express the width of the street. Consider the difference between these two points and project it onto the normal: \textbf{this is exactly the width of the street}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Basis expansion and regularization}
 To extend the flexibility of linear model, a transformation of $\X$ can be performed and then use a linear model to the derived input features. Denoting the transformation $h_m(\X) : \CMcal{R}^p\rightarrow \CMcal	{R}$ for a single input $m$, we have the model:
 \begin{equation}
@@ -3473,12 +3544,16 @@ f_m(X) = f_{m-1}(x) + \nu \sum_{i=1}^J \gamma_{jm}I(x \in R_{jm}).
 \end{equation}
 Smaller values of $\nu$ (more shrinkage) result in larger training risk for the same number of iterations $M$. Empirically it has been found (Friedman, 2001) that smaller values of $\nu$ favor better test error, and require correspondingly larger values of $M$. The best strategy appears to be to set $\nu$ to be very small ($\nu < 0.1$) and then choose $M$ by early stopping, however more iterations are needed so the computational cost is higher. 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Support Vector Machines and Flexible Discriminants}
 We have seen \textbf{Optimal separating hyperplabes} in \ref{OSH}. Here we will see the case for non-separable classes, where the classes overlap.
 \subsection{Support Vector Classifier}
 With $N$ pairs $(x_i, y_i) \in \CMcal{R}^p$ and $y_i \in \{-1, 1\}$, define a hyperplane:
 \begin{equation}
-\{x: f(c) = x^T\beta+ \beta_0=0\}
+\{x: f(x) = x^T\beta+ \beta_0=0\}
 \end{equation}
 where $\left|\beta\right|=1$ is a unit vector. A classification rule induced by $f(x)$ is:
 \begin{equation}
@@ -3514,8 +3589,13 @@ The value $\xi_i$ is the proportional amount by which the prediction $f(x_i) = x
 \begin{equation}
 \begin{aligned}
 &M = \frac{1}{\left| \beta\right|}\\
-\textit{subject to} \quad &y_i(x_i^T\beta +\be_0) \ge 1-\xi_i \quad \forall i\\
-\textit{and subject to} \quad & \xi_i \ge 0, \sum_i \xi_i \le constant
+\textit{subject to } &\left\{
+		\begin{array}{ll}
+				y_i(x_i^T\beta +\be_0) \ge 1-\xi_i \quad \forall i \\ 
+ 				\xi_i \ge 0\\
+ 				\sum_i \xi_i \le constant
+		\end{array} 
+\right.
 \end{aligned}
 \label{SVMOpt}
 \end{equation}
@@ -3524,14 +3604,14 @@ The value $\xi_i$ is the proportional amount by which the prediction $f(x_i) = x
 \includegraphics[scale=0.5]{img/SVM}
 \caption{Separable and non separable support vector classifiers.}
 \end{figure}
-The misclassified points are on the wrong side for an amount $\xi* = M \xi$ while the correctly classified points have $\xi*=0$. One sees that points inside their class boundary do not play a big role in shaping the boundary. This seems like an attractive property, and one that differentiates it from linear discriminant analysis (\ref{LDA}). In LDA, the decision boundary is determined by the covariance of the class distributions and the positions of the class centroids. Logistic regression is more similar to the support vector classifier in this regard.
+The misclassified points are on the wrong side for an amount $\xi^* = M \xi$ while the correctly classified points have $\xi^*=0$. One sees that points inside their class boundary do not play a big role in shaping the boundary. This seems like an attractive property, and one that differentiates it from linear discriminant analysis (\ref{LDA}). In LDA, the decision boundary is determined by the covariance of the class distributions and the positions of the class centroids. Logistic regression is more similar to the support vector classifier in this regard.
 \subsubsection{Computing the support vector classifier}
 
 The problem \ref{SVMOpt} is quadratic with linear inequality constraints, hence it is a convex optimization problem. We describe a quadratic programming solution using Lagrange multipliers. Computationally it is convenient to re-express \ref{SVMOpt} in the equivalent form:
 \begin{equation}
 \begin{aligned}
 &\min_{\beta, \beta_0} \frac{1}{2}\left|\beta\right|^2 + C\sum_{i=1}^N \xi_i\\
-\textit{subject to} &\xi \ge 0, y_i(x_i^T\beta+\beta_0)\ge 1-\xi_i, \forall i
+\textit{subject to } &\xi \ge 0, \quad y_i(x_i^T\beta+\beta_0)\ge 1-\xi_i \quad\forall i
 \end{aligned}
 \end{equation}
 where $C$ replaces the constant. The separable case corresponds to $C = \infty$.
@@ -3564,7 +3644,7 @@ L_D &= \frac{1}{2}\be^T\be + \sum_{i=1}^N \left[\br{C-\mu_i} \xi_i \right]- \sum
 \end{aligned}
 \label{LagrangeDueal}
 \end{equation}
-where we used the properties that $\alpha_i, \y_i$ are scalar and that $\be, \be_0$ can be taken out. Notice that $\be^T\be  = \sum_{i=1}^N \alpha_i y_i \x_i^T\sum_{j=1}^N\alpha_j y_j \x_j =\sum_{i=1}^N \sum_{j=1}^N \alpha_i y_i \alpha_j y_j  \x_i^T\x_j \ne \sum_{i=1}^N  (\alpha_i y_i)^2 \x_i^T\x_i$. In fact consider for example: $\be = c_1\x_1 + c_2\x_2$ with $\x_i = \left[x_{1i}, x_{2i}\right]^T$. $\be = \left[ c_1x_{11}+c_2x_{12}, c_1x_{21}+c_2x_{22} \right]^T$ and $\be^T\be = (c_1x_{11}+c_2x_{12})^2+(c_1x_{21}+c_2x_{22})^2$, so we are missing some cross-products. The Lagrangian (Wolfe) dual objective function gives a lower bound on the objective function for any feasible point. We maximize $L_D$ subject to $0\le \alpha_i\le C$ and $\sum_{i=1}^N\alpha_iy_i$. In addition to the derivatives, the \textbf{Karush-kuhn-Tucker} conditions include constraints:
+where we used the properties that $\alpha_i, y_i$ are scalar and that $\be, \be_0$ can be taken out. Notice that $\be^T\be  = \sum_{i=1}^N \alpha_i y_i \x_i^T\sum_{j=1}^N\alpha_j y_j \x_j =\sum_{i=1}^N \sum_{j=1}^N \alpha_i y_i \alpha_j y_j  \x_i^T\x_j \ne \sum_{i=1}^N  (\alpha_i y_i)^2 \x_i^T\x_i$. In fact consider for example: $\be = c_1\x_1 + c_2\x_2$ with $\x_i = \left[x_{1i}, x_{2i}\right]^T$. $\be = \left[ c_1x_{11}+c_2x_{12}, c_1x_{21}+c_2x_{22} \right]^T$ and $\be^T\be = (c_1x_{11}+c_2x_{12})^2+(c_1x_{21}+c_2x_{22})^2$, so we are missing some cross-products. The Lagrangian (Wolfe) dual objective function gives a lower bound on the objective function for any feasible point. We maximize $L_D$ subject to $0\le \alpha_i\le C$ and $\sum_{i=1}^N\alpha_iy_i$. In addition to the derivatives, the \textbf{Karush-kuhn-Tucker} conditions include constraints:
 \begin{equation}
 \begin{aligned}
 \alpha_i \left[ y_i\br{x_i^T\be+\be_0}-\br{1-xi_i}\right] &=0\\
@@ -3601,7 +3681,7 @@ So $f(x)$ can be written as
 f(x) = h(x)^T\be + \be_0 = \sum_{i=1}^N \alpha_iy_i \left\langle  h(x), h(x_i)  \right\rangle +\be_0
 \end{equation}
 
-As before, given $\alpha_i$, $\be_0$ can be determined by solving $y_i f(x_i) = 1$ for any(or all) $x_i$ for which $0<\alpha_i <C$.
+As before, given $\alpha_i$, $\be_0$ can be determined by solving $y_i f(x_i) = 1$ for any (or all) $x_i$ for which $0<\alpha_i <C$.
 So $h(x0)$ is involved only in terms of its inner product: \textbf{we do not need to specify the transformation but only the knowledge of the kernel function is required}:
 \begin{equation}
 K(x, x') = \left\langle  h(x), h(x')  \right\rangle
@@ -3610,9 +3690,9 @@ $K$ should be symmetric positive (semi-) definite.   Possible popular choices ar
 
 \begin{equation}
 \begin{aligned}
-\textbf{dth-Degree polynomial:} \quad K(x, x') = \br{1+\left\langle  x,x'  \right\rangle}^d\\
-\textbf{Radial basis:} \quad K(x, x') =e^{-\gamma\left| x-x' \right|^2}\\
-\textbf{Neural Network:} \quad K(x, x') = tanh\br{k_1\left\langle  x,x'  \right\rangle+k_2}\\
+\textbf{dth-Degree polynomial:} &\quad K(x, x') = \br{1+\left\langle  x,x'  \right\rangle}^d\\
+\textbf{Radial basis:} &\quad K(x, x') =e^{-\gamma\left| x-x' \right|^2}\\
+\textbf{Neural Network:} &\quad K(x, x') = tanh\br{k_1\left\langle  x,x'  \right\rangle+k_2}\\
 \end{aligned}
 \end{equation}
 \subsection{SVM for Regression}
