@@ -10,7 +10,9 @@
 \usepackage{eucal}
 \usepackage{subcaption}
 \usepackage{hyperref}
+\usepackage{flafter} %avoids that figures are floated before they were defined, i.e. before section title
 \usepackage{listings}
+\usepackage{booktabs}% pandas.to_latex() \toprule, \bottomrule, 
 \usepackage[dvipsnames,table,xcdraw]{xcolor}
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}[section] 
@@ -44,6 +46,9 @@
 \newcommand{\HM}{\mathrm{\inv\X^T}} 
 \newcommand{\hb}{\mathrm{\hat{\mathbf{\beta}}}} 
 \newcommand{\mb}{\mathrm{\mathbf}}
+\newcommand\norm[1]{\left\lVert#1\right\rVert}
+%\newcommand\br[1]{\left(#1\right)}
+%\newcommand\sbr[1]{\left[#1\right]}
 
 \newcommand{\argmax}[1]{\underset{#1}{\operatorname{arg}\,\operatorname{max}}\;}
 \newcommand{\argmin}[1]{\underset{#1}{\operatorname{arg}\,\operatorname{min}}\;}
@@ -577,8 +582,8 @@ A common solution is to use each instance's identifier to decide whether or not 
   columns=fixed,                    		% Using fixed column width (for e.g. nice alignment)
   emph ={split_train_test_by_id, test_set_check},
   emphstyle=\ttb\color{deepred},
-  morekeywords={split_train_test_by_id}  
-  deletekeywords={hash,apply}
+  morekeywords={split_train_test_by_id},
+	deletekeywords=[2]{hash,apply},
 }
 
 \begin{lstlisting}[caption=Example of function to split according to the last by of the hash on the id.]
@@ -883,6 +888,7 @@ By minimizing we get:
 
 \begin{align}
 \hat{\beta} = \left( \X^T \X\right)^{-1} \X^TY
+\label{OLSRegression}
 \end{align}
 Geometrically we are projecting $y$ onto the hyperplane spanned by $X$ and the projections is referred to as $\hat{y}$:
 
@@ -1421,6 +1427,172 @@ $\cdots$
 %%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
+
+\section{Hands on linear regression}
+The data are taken from 
+
+\ti{wget https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data} 
+
+and are the same used in the book \ti{Elements of statistical learning}. They comes from a study by Stamey et al. (1989) They examined the correlation between the level of prostate-specific antigen and a number of clinical measures in men who were about to receive a radical prostatectomy. The variables are log cancer volume (\lstinline[columns=fixed]{lcavol}), log prostate weight (\lstinline[columns=fixed]{lweight}), \lstinline[columns=fixed]{age}, log of the amount of benign prostatic hyperplasia (\lstinline[columns=fixed]{lbph}), seminal vesicle invasion (\lstinline[columns=fixed]{svi}), log of capsular penetration (\lstinline[columns=fixed]{lcp}), Gleason score (\lstinline[columns=fixed]{gleason}), and percent of Gleason scores 4 or 5 (\lstinline[columns=fixed]{pgg45}).
+
+\subsection{Analyzing data}
+We can read data and analyze the correlation:
+
+\begin{lstlisting}
+import numpy as np;
+import pandas as pd;
+import scipy;
+from sklearn.preprocessing import StandardScaler;
+from sklearn import preprocessing as pp;
+from sklearn.pipeline import Pipeline;
+df = pd.read_csv("prostate.data",header=0, delimiter="\t",);
+#drop first column: it is repeating the index
+df.drop([df.columns[0]],inplace=True, axis='columns');
+std_scaler = StandardScaler();
+X_train = X[X['train']=="T"];
+y_train = y[X['train']=="T"];
+X_test = X[X['train']=="F"];
+y_test = y[X['train']=="F"];
+X_train = X_train.drop('train',axis=1)
+X_scaled = pp.scale(X_train.astype('float'));
+# or alternatively:
+X_scaled2 = std_scaler.fit_transform(X_train.astype('float'));
+df_scaled = pd.concat([pd.DataFrame(X_scaled), y_train], axis=1, );
+#-1 because df has still 'train' column
+df_scaled.columns = df.columns[:-1];
+\end{lstlisting}
+The last line will show the correlation (since pandas dataframe class has the method $Dataframe.tolatex()$ to print the elements as a table we did: $Dataframe.corr().round(3).tolatex()$):
+
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+{} &  lcavol &  lweight &    age &   lbph &    svi &    lcp &  gleason &  pgg45 &   lpsa \\
+\midrule
+lcavol  &   1.000 &    0.300 &  0.286 &  0.063 &  0.593 &  0.692 &    0.426 &  0.483 &  0.727 \\
+lweight &   0.300 &    1.000 &  0.317 &  0.437 &  0.181 &  0.157 &    0.024 &  0.074 &  0.598 \\
+age     &   0.286 &    0.317 &  1.000 &  0.287 &  0.129 &  0.173 &    0.366 &  0.276 &  0.345 \\
+lbph    &   0.063 &    0.437 &  0.287 &  1.000 & -0.139 & -0.089 &    0.033 & -0.030 &  0.396 \\
+svi     &   0.593 &    0.181 &  0.129 & -0.139 &  1.000 &  0.671 &    0.307 &  0.481 &  0.452 \\
+lcp     &   0.692 &    0.157 &  0.173 & -0.089 &  0.671 &  1.000 &    0.476 &  0.663 &  0.435 \\
+gleason &   0.426 &    0.024 &  0.366 &  0.033 &  0.307 &  0.476 &    1.000 &  0.757 &  0.332 \\
+pgg45   &   0.483 &    0.074 &  0.276 & -0.030 &  0.481 &  0.663 &    0.757 &  1.000 &  0.368 \\
+lpsa    &   0.727 &    0.598 &  0.345 &  0.396 &  0.452 &  0.435 &    0.332 &  0.368 &  1.000 \\
+\bottomrule
+\end{tabular}
+As it can be seen, since the matrix is real, it is symmetric and of course square. It shows many strong correlations. Before calculating it, data have been standardized and centred such that they have zero mean. From the correlation matrix we see that both $lcavol$ and $lcp$ show a strong relationship with the response $lpsa$, and with each other.
+
+\subsection{Fitting the ordinary least square model}
+We can directly calculate the coefficients by ourselves using \ref{OLSRegression}:
+\begin{lstlisting}
+from numpy.linalg import inv;
+X_b = np.c_[np.ones((len(X_scaled), 1)), X_scaled];
+print(np.mean(X_b, axis=0));
+theta = inv(X_b.T.dot(X_b)).dot(X_b.T).dot(y_train);
+\end{lstlisting}
+The estimated coefficients are:
+
+\begin{tabular}{lr|r|r|r|r|r|r|r|}
+\toprule
+\midrule
+2.452 &  0.711 &  0.290 & -0.141  &  0.210 &  0.307  & -0.287 & -0.021 &  0.275 \\
+\bottomrule
+\end{tabular}
+
+$sklearn$ offers the $LinearRegression$ class to fit a linear model:
+\begin{lstlisting}
+from sklearn.linear_model import LinearRegression;
+lr = LinearRegression();
+lr.fit( X_scaled, y_train);
+print(lr.coef_, lr.intercept_);
+\end{lstlisting}
+yielding the same coefficient estimation.
+
+We can also use the stochastic gradient estimation technique:
+\begin{lstlisting}
+n_iter = 1000;
+np.random.seed(42);
+eta = 0.1
+theta_gd = np.random.randn(X_b.shape[1],1);
+for ii in range(n_iter):
+    gradient =  -2/len(X_b)*X_b.T.dot(np.c_[y_train] - X_b.dot(theta_gd));
+    theta_gd = theta_gd - eta*gradient;
+print(theta_gd);
+\end{lstlisting}
+In this case the coefficients are slightly different since it is an approximated solution:
+\begin{tabular}{rrrrrrrrr}
+\toprule
+ 2.478387 &  0.661709 &  0.265103 & -0.157378 &  0.139586 &  0.313699 & -0.147519 &  0.035365 &  0.12507 \\
+\bottomrule
+\end{tabular}
+
+
+\subsection{Predicting values}
+We can predict the values by matrix mulitplication. For example in the mean square error on the training set is calculated as:
+\begin{lstlisting}
+from sklearn.metrics import mean_squared_error;
+y_pred_man = X_b.dot(theta);
+np.sum(np.square(y_train-y_pred_man))/len(y_pred), mean_squared_error(y_train, y_pred_man)
+\end{lstlisting}
+where the error has been calculated both manually and using the $mean_squared_error$ sklearn function. The value is $0.43919976805833433$.
+
+With the sklearn $LinearRegression$ class we can use the method $predict$:
+\begin{lstlisting}
+from sklearn.metrics import mean_squared_error;
+y_pred = lr.predict(X_scaled);
+error = mean_squared_error(y_train, y_pred);
+\end{lstlisting}
+
+$sklearn$ does not support statistical inference. To calculate the $Z-scores$ we can create a function or we can extend the $LinearRegression$ class. In the latter case:
+\begin{lstlisting}
+class customLinearRegression(LinearRegression):
+    def __init__(self):
+        super(customLinearRegression, self).__init__();
+    def z_scores(self, y, X, bias=False):
+        p = len(self.coef_);
+        if (bias):
+            y_pred = self.predict(X[:,1:]);
+            X_with_bias = X;
+        else:
+            y_pred = self.predict(X);
+            X_with_bias = np.c_[np.ones((X.shape[0], 1)), X];
+        sigma_hat_sq = np.sum(np.square(y_train-y_pred))/(len(y_train)-p-1);
+        std_err  = np.sqrt(np.diag(inv(X_with_bias.T.dot(X_with_bias)))*sigma_hat_sq);
+        z_scores = np.multiply(np.append(self.intercept_, self.coef_), 1/std_err);
+        return std_err, z_scores;
+    def get_intercept_coef(self):
+        return np.append(self.intercept_, self.coef_);
+        
+std_err_lr, z_scores_lr = lr.z_scores(y_train, X_scaled);
+pd.DataFrame({"Coefficient": lr.get_intercept_coef(), "Std. error" : std_err_lr,
+              r"$Z$ score" : z_scores_lr},
+             index=pd.Index(["intercept"]).append(X_train.columns)
+            ).round(2).head(10)
+\end{lstlisting}
+We get the following values:
+
+\begin{tabular}{lrrr}
+\toprule
+{} &  Coefficient &  Std. error &  $Z$ score \\
+\midrule
+intercept &         2.45 &        0.09 &      28.18 \\
+lcavol    &         0.71 &        0.13 &       5.37 \\
+lweight   &         0.29 &        0.11 &       2.75 \\
+age       &        -0.14 &        0.10 &      -1.40 \\
+lbph      &         0.21 &        0.10 &       2.06 \\
+svi       &         0.31 &        0.12 &       2.47 \\
+lcp       &        -0.29 &        0.15 &      -1.87 \\
+gleason   &        -0.02 &        0.14 &      -0.15 \\
+pgg45     &         0.28 &        0.16 &       1.74 \\
+\bottomrule
+\end{tabular}
+
+The predictor $lcavol$ shows the strongest effect, with $lweight$ and $svi$ also strong. Notice that $lcp$ is not significant, once $lcavol$ is in the model (when used in a model without $lcavol$, $lcp$ is strongly significant).
+
+\subsection{Best subset selection}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Bayesian inference}
 
 \subsection{Introduction to Bayes' theorem}
@@ -1503,6 +1675,10 @@ P(y_n|\y,\x_n, \X) = \frac{Pr(y_n\cap \y|\x_n,\X)}{Pr(\y|\X)} = \frac{Pr(\y|\X) 
 \end{equation}
 [TO BE CONTINUED WAITING ON ANSWER ON CROSS-VALIDATED STACK EXCHANGE]
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Linear Classification}
 For classification problem, in this section we assume the classification boundaries are linear, i.e., in the input hyperspace the points belonging to different classes can be separated by hyperplanes. 
 
@@ -2168,6 +2344,7 @@ Pr(Y_{new}=1|\x_{new}, \X,\y,\sigma^2) = \frac{1}{N_s} \sum_{s=1}^{N_s} \frac{1}
 LR is used as data analysis tool where the goal is to  understand the role of the input variables in explaining the outcome. Typically many models are fit in a search for a parsimonious model involving a subset of the variables, possibly with some interactions terms. 
 
 It is widely used in biostatistical applications where binary responses (two classes) occur quite frequently. For example, patients survive or die, have heart disease or not, or a condition is present or absent.
+
 \subsection{Regularized Logistic regression}
 We can use the $L_1$ penalty for variable selection and shrinkage:
 
@@ -2200,112 +2377,7 @@ where the algorithm uses the stochastic gradient descent where the coefficients 
 
 \subsection{Optimal separating hyperplanes}
 \label{OSH}
-The optimal separating hyperplane separates the two classes and maximizes the distance to the closest point from either class (Vapnik, 1996). Not only does this provide a unique solution to the separating hyperplane problem, but by maximizing the margin between the two classes on the training data, this leads to better classification performance on test data.
-Suppose $M$ is the distance. Then
-\begin{equation}
-\begin{aligned}
-&\max\limits_{\beta,\beta_0, ||\beta||=1} M \\
-& y_i(x_i^T\beta + \beta_0) \ge M
-\end{aligned}
-\end{equation}
-We  can move the constrain on the module $\||\be||=1$ to the condition $\frac{1}{||\be||}y_i(x_i^T\beta + \beta_0) \ge M$, which redefines $\be_0$. 
-
-For a pair of coefficients satisfying this inequalities, any positively scaled multiple satisfies them too, so we can set arbitrarily set $||\be||=\frac{1}{M}$:
-\begin{equation}
-\begin{aligned}
-&\min_{\be, \be_0}{\frac{1}{2}||\be||^2}\\
-\textit{subject to } &y_i(x_i^T\be+\be_0)\ge1
-\end{aligned}
-\end{equation}
-
-With this constraint, a margin around the decision boundary with thick $\frac{1}{||\be||}$ is present. We choose $\be$ to maximize the thickness of margin margin.  This is a convex optimization problem. The Lagrange primal function to be minimized is:
-\begin{equation}
-\label{eq}
-L_p = \frac{1}{2} ||\be||^2 = \sum_{i=1}^N \alpha_i\left[ y_i \br{x_i^T\be+\be_0}\right]
-\end{equation}
-and setting the derivatives to $0$:
-\begin{equation}
-\begin{aligned}
-\be &= \sum_{i=1}^N \alpha_i y_i x_i
-0  &= \sum_{i=1}^N \alpha_i y_i
-\end{aligned}
-\end{equation}
-and substituting in \ref{eq}:
-\begin{equation}
-\begin{aligned}
-L_D = \sum_{i=1}^N \alpha_i -\frac{1}{2}\sum_{i=1}^N\sum_{k=1}^N \alpha_i \alpha_ky_iy_kx_i^Tx_k\\
-\textit{subject to } \alpha_i\ge0 \textit{ and } \sum_{i=1}^N \alpha_iy_i=0
-\end{aligned}
-\end{equation}
-The optimal hyperplane focuses more on points that counts, i.e., close to the border. For this reason it is more robust. LDA depends on all the data, even points faraway. If classes are really Gaussian LDA is optimal and separating hyperplane will pay a price for focusing on noisier data.
-For logistic regression, if a separate hyperplane exists, since the log-likelihood can be driven to $0$.
-
-When data are not separable there will be no feasible solution and an alternative formulation is needed.
-
-\subsubsection{Complete derivation}
-\textit{https://nlp.stanford.edu/IR-book/html/htmledition/support-vector-machines-the-linearly-separable-case-1.html}
-\textit{https://www.youtube.com/watch?v=\_PwhiWxHK8o}
-
-\begin{figure}
-\centering
-\includegraphics[scale=0.6]{img/separableClasses}
-\caption{Example of infinite lines separating two perfectly separable classes.}
-\label{separableClasses}
-\end{figure}
-
-Consider two classes on a space (for example the space in \ref{separableClasses} is two dimensional) and suppose the two classes are perfectly separable. We want to divide the two classes with a straight line. The problem becomes to define what is the best straight line since infinite lines exist that separate  perfectly the two classes. The solution is to choose the line that separates the classes as much as possible, which is as faraway as possible from both the classes. If the line is thought as the middle line of a street separating the two classes, then we want to fit the widest possible street between the two classes (see \ref{separableClassesPy}).
-
-\begin{figure}
-\centering
-\includegraphics[scale=0.6]{img/separableClassesPy}
-\caption{Example of best separating line maximizing the margin.}
-\label{separableClassesPy}
-\end{figure}
-
-Let us consider a vector $\vec{w}$ of any length, perpendicular to the gutter of the street and consider an unknown instance to be classified (\ref{W}) called $\vec{u}$. To see if this unknown is on the left or right side of the street, we project its vector $\vec{u}$ onto the vector $\vec{w}$ that is perpendicular to the street. The bigger this product, the more likely the point is to be on the right side of street, hence the more likely it is to be of class $+$.
-
-\begin{figure}
-\centering
-\includegraphics[scale=0.6]{img/W}
-\caption{Vector perpendicular to the separator and its margins.}
-\label{W}
-\end{figure}
-
-Mathematically:
-\begin{equation}
-\vec{u}\cdot \vec{w} \ge c \Leftrightarrow \vec{u}\cdot \vec{w} + b \ge0\Rightarrow \text{Class } 1 \quad\quad \text{with } b=-c
-\end{equation}
-This is the \tb{decision rule}. The problem is that both $\vec{w}$ and $b$ are unknown; only the direction of $\vec{w}$ is known but not its length.
-
-Now other constraints must be added to calculate $\vec{w}$ and $b$. Now suppose one positive and one negative instances $x_+$ and $x_-$ are given. We want:
-\begin{equation}
-\begin{aligned}
-\vec{w} \cdot \vec{x}_+ b \ge 1\\
-\vec{w} \cdot \vec{x}_- b \le -1
-\end{aligned}
-\end{equation}
-Now, just for mathematical convenience we introduce a new variable $y_i$ for each instance such that:
-\begin{equation}
-\begin{aligned}
-y_i = 1 \quad \text{if } \vec{x}_+\\
-y_i = -1 \quad \text{if } \vec{x}_-\\ 
-\end{aligned}
-\end{equation}
-In this way:
-\begin{equation}
-y_i (\vec{w}\cdot \vec{x}_i + b) \ge 1
-\end{equation}
-that can be rearranged as:
-\begin{equation}
-y_i (\vec{w}\cdot \vec{x}_i + b) -1 \ge 0
-\end{equation}
-
-Now another constraint is going to be added: for the points in the gutter, i.e., within the margins, the previous equation is forced to be $0$:
-\begin{equation}
-y_i (\vec{w}\cdot \vec{x}_i + b) -1 = 0
-\end{equation}
-So this equation holds for the points that are closest to the separator, i.e., the ones that decide and limit the width of the street. Now we need to express the width of the street. Consider the difference between these two points and project it onto the normal: \textbf{this is exactly the width of the street}.
-
+See \ref{HardMarginSVM}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
@@ -2633,6 +2705,11 @@ where each of the components are splines of the required dimension. There are ma
 When the number of potential dimensions is large automatic methods are desirable (for example MARS and MART procedures).
 \subsection{Wavelet smoothing}
 $\cdots$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Kernel smoothing methods}
 \subsection{One-dimensional kernel smoothers}
 We have seen the \textit{k-nearest neighbourhood} average as an estimate of the regression function $\E(Y|X=x)$:
@@ -2832,6 +2909,10 @@ It is possible to use any density instead of the Gaussian densities.
 
 The parameters are usually fit by maximum likelihood, using the EM algorithm. If the covariance matrix is force to be scalar $\Sigma_m = \sigma_m \I$, then \ref{mix} has the form of a radial basis expansion. If $\sigma_m = \sigma >0$ and $M \uparrow $
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Model assessment and selection}
 \textit{Take a look also at this: https://machinelearningmastery.com/probabilistic-model-selection-measures/}
 \begin{definition}{\textbf{Training error}}: it is the average loss over the training samples:
@@ -3183,6 +3264,10 @@ For the process we need to decide the number of bootstrap samples and a sample s
 [From wiki:]
 As an example, assume we are interested in the average (or mean) height of people worldwide. We cannot measure all the people in the global population, so instead we sample only a tiny part of it, and measure that. Assume the sample is of size N; that is, we measure the heights of N individuals. From that single sample, only one estimate of the mean can be obtained. In order to reason about the population, we need some sense of the variability of the mean that we have computed. The simplest bootstrap method involves taking the original data set of N heights, and, using a computer, sampling from it to form a new sample (called a 'resample' or bootstrap sample) that is also of size N. The bootstrap sample is taken from the original by using sampling with replacement (e.g. we might 'resample' 5 times from [1,2,3,4,5] and get [2,5,4,4,1]), so, assuming N is sufficiently large, for all practical purposes there is virtually zero probability that it will be identical to the original "real" sample. This process is repeated a large number of times (typically 1,000 or 10,000 times), and for each of these bootstrap samples we compute its mean (each of these are called bootstrap estimates). We now can create a histogram of bootstrap means. This histogram provides an estimate of the shape of the distribution of the sample mean from which we can answer questions about how much the mean varies across samples.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Additive models}
 A linear model has the form $\alpha + f_1(X_1) + f_2(X_2) + f_3(X_3) + \cdots$, where $X$ are the predictors.
 
@@ -3191,7 +3276,7 @@ Tree-based methods partition the feature space into a set of rectangles, and the
 
 We restrict attention to recursive binary partitions. We first split the space into two regions, and model the response by the mean of $Y$ in each region. We choose the variable and split-point to achieve the best fit. Then one or both of these regions are split into two more regions, and this process is continued, until some stopping rule is applied.
 
-For example we first split at $X_1 = t_1$. Then the region $X_1 \le t_1$ is split at $X_2 =t_2$ and the region $X_1 >t_1$ is split at $X_1 =t_3$ and so on. To each sub-region we assign a constan as output:
+For example we first split at $X_1 = t_1$. Then the region $X_1 \le t_1$ is split at $X_2 =t_2$ and the region $X_1 >t_1$ is split at $X_1 =t_3$ and so on. To each sub-region we assign a constant as output:
 \begin{equation}
 \hat{f}(X) = \sum_{m=1}^M c_m I\{(\x \in \CMcal{R}_m\}
 \end{equation}
@@ -3209,7 +3294,7 @@ An advantage of this representation is its interpretability. When more than 2 in
 \subsubsection{Regression Trees}
 The algorithm needs to decide automatically the splitting variables and points. We can start defining the values of the constant of each region:
 \begin{equation}
-\hat{c}_m = ave(y_i|x_i \in CMcal{R}_m)
+\hat{c}_m = ave(y_i|x_i \in \CMcal{R}_m)
 \end{equation}
 Now finding the best binary partition in terms of minimum sum of squares is generally computationally infeasible. Hence we proceed with a greedy algorithm. Consider a splitting variable $j$ and split point $s$ and define the pair of half-planes:
 \begin{equation}
@@ -3232,9 +3317,9 @@ The preferred strategy is to grow a large tree $T_0$, stopping the splitting pro
 The \textbf{cost-complexity pruning} is the following. We define a subtree $T$ of $T_0$. obtained by collapsing any number of its internal nodes. We index the terminal nodes by $m$. let $|T|$ denote the number of terminal nodes in $T$ and 
 \begin{equation}
 \begin{aligned}
-&N_m = \#\{x_i \in \CMcal{R}_m\}\\
-&\hat{c}_m = \frac{1}{N_m} \sum_{x_i \ in \CMcal{R}_m} y_i\\
-Q_m(T) = \frac{1}{N_m} \sum_{x_i \in R_m}(y_i - \hat{c}_m)^2
+N_m &= \#\{x_i \in \CMcal{R}_m\}\\
+\hat{c}_m &= \frac{1}{N_m} \sum_{x_i \ in \CMcal{R}_m} y_i\\
+Q_m(T) &= \frac{1}{N_m} \sum_{x_i \in R_m}(y_i - \hat{c}_m)^2
 \end{aligned}
 \end{equation} 
 We define the cost complexity criterion:
@@ -3256,7 +3341,7 @@ k(m) =argmax_k \hat{p}_{mk},
 the majority class in node $m$. Different measures $Q_m(T)$ of node impurity exist
 \begin{equation}
 \begin{aligned}
-&\textbf{Misclassification error} \quad \frac{1}{N_m} \sum_{i\in CMcal{R}_m} I(y_i \ne k(m))=1-\hat{p}_{km}\\
+&\textbf{Misclassification error} \quad \frac{1}{N_m} \sum_{i\in \CMcal{R}_m} I(y_i \ne k(m))=1-\hat{p}_{km}\\
 &\textbf{Gini index} \quad\quad \sum_{k\ne k'} \hat{p}_{mk}\hat{p}_{mk'} = \sum_{k=1}^K \hat{p}_{mk}(1- \hat{p}_{mk})\\
 &\textbf{Cross-entropy or deviance} \quad -\sum_{k=1}^K \hat{p}_{mk}\log \hat{p}_{mk}
 \end{aligned}
@@ -3463,6 +3548,7 @@ Stagewise additive modelling is equivalent to AdaBoost.M1 using the exponential 
 L(y, f(x))  = exp(-yf(x))
 \end{equation}
 The principal attraction of exponential loss in the context of additive modeling is computational; it leads to the simple modular reweighting AdaBoost algorithm.
+
 \section{Procedure for datamining}
 In data mining applications, usually only a small fraction of the large number of predictor variables that have been included in the analysis are actually relevant to prediction. Also, unlike many applications such as pat- tern recognition, there is seldom reliable domain knowledge to help create especially relevant features and/or filter out the irrelevant ones, the inclu- sion of which dramatically degrades the performance of many methods.
 In addition, data mining applications generally require interpretable mod- els. It is not enough to simply produce predictions. It is also desirable to have information providing qualitative understanding of the relationship between joint values of the input variables and the resulting predicted re- sponse value. Thus, black box methods such as neural networks, which can be quite useful in purely predictive settings such as pattern recognition, are far less useful for data mining.
@@ -3474,7 +3560,7 @@ The boosted tree model is a sum of tress induced in a forward stagewise manner:
 \begin{equation}
 \begin{aligned}
 f_M(x) &= \sum_{m=1}^M T(x, \Theta_m)\\
-T(x, \Theta_m) = \sum_{j=1}^J\gamma_j I(x \in R_j)
+T(x, \Theta_m) &= \sum_{j=1}^J\gamma_j I(x \in R_j)
 \end{aligned}
 \end{equation}
 where $\Theta_m$ is the vector of parameters. Considering a single tree, the parameters are found by minimizing the empirical risk:
@@ -3549,8 +3635,242 @@ Smaller values of $\nu$ (more shrinkage) result in larger training risk for the 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Support Vector Machines and Flexible Discriminants}
+The optimal separating hyperplane separates the two classes and maximizes the distance to the closest point from either class (Vapnik, 1996). Not only does this provide a unique solution to the separating hyperplane problem, but by maximizing the margin between the two classes on the training data, this leads to better classification performance on test data.
+\iffalse
+Suppose $M$ is the distance. Then
+
+\begin{equation}
+\begin{aligned}
+&\max\limits_{\beta,\beta_0, ||\beta||=1} M \\
+& y_i(x_i^T\beta + \beta_0) \ge M
+\end{aligned}
+\end{equation}
+
+We  can move the constrain on the module $\||\be||=1$ to the condition $\frac{1}{||\be||}y_i(x_i^T\beta + \beta_0) \ge M$, which redefines $\be_0$. 
+
+For a pair of coefficients satisfying this inequalities, any positively scaled multiple satisfies them too, so we can set arbitrarily set $||\be||=\frac{1}{M}$:
+
+\begin{equation}
+\begin{aligned}
+&\min_{\be, \be_0}{\frac{1}{2}||\be||^2}\\
+\textit{subject to } &y_i(x_i^T\be+\be_0)\ge1
+\end{aligned}
+\end{equation}
+
+With this constraint, a margin around the decision boundary with thick $\frac{1}{||\be||}$ is present. We choose $\be$ to maximize the thickness of margin margin.  This is a convex optimization problem. The Lagrange primal function to be minimized is:
+
+\begin{equation}
+\label{eq}
+L_p = \frac{1}{2} ||\be||^2 = \sum_{i=1}^N \alpha_i\left[ y_i \br{x_i^T\be+\be_0}\right]
+
+\end{equation}
+
+and setting the derivatives to $0$:
+
+\begin{equation}
+\begin{aligned}
+\be &= \sum_{i=1}^N \alpha_i y_i x_i
+0  &= \sum_{i=1}^N \alpha_i y_i
+\end{aligned}
+\end{equation}
+
+and substituting in \ref{eq}:
+
+\begin{equation}
+\begin{aligned}
+L_D = \sum_{i=1}^N \alpha_i -\frac{1}{2}\sum_{i=1}^N\sum_{k=1}^N \alpha_i \alpha_ky_iy_kx_i^Tx_k\\
+\textit{subject to } \alpha_i\ge0 \textit{ and } \sum_{i=1}^N \alpha_iy_i=0
+\end{aligned}
+\end{equation}
+\fi
+
+
+The optimal hyperplane (or hard margin SVM) focuses more on points that counts, i.e., close to the border, that are called \tb{support vector}. For this reason it is more robust. LDA depends on all the data, even points faraway. If classes are really Gaussian LDA is optimal and separating hyperplane will pay a price for focusing on noisier data.
+For logistic regression, if a separate hyperplane exists, since the log-likelihood can be driven to $0$.
+
+When data are not separable there will be no feasible solution and an alternative formulation is needed. In this case the we allow some points to be beyond the margin and the problem is generally referred to as \ti{soft margin classification}.
+
+First we analyze the hard margin SVM classification problem with the following steps, then extend it to the non perfectly separable case with the soft margin classification and finally show how it can work for regression as well.
+
+\subsection{Hard margin Support Vector Machine classification}
+\label{HardMarginSVM}
+\textit{https://nlp.stanford.edu/IR-book/html/htmledition/support-vector-machines-the-linearly-separable-case-1.html}
+\textit{https://www.youtube.com/watch?v=\_PwhiWxHK8o}
+
+We will follow the following steps:
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.6]{img/separableClasses}
+\caption{Example of infinite lines separating two perfectly separable classes.}
+\label{separableClasses}
+\end{figure}
+
+Consider two classes on a space (for example a two dimensional space as in \ref{separableClasses}) and suppose the two classes are perfectly separable. We want to divide the two classes with a straight line. The problem becomes to define what is the best straight line since such lines exist. The solution is to choose the line that separates the classes as much as possible, lying as faraway as possible from both the classes. Such line can be thought as the middle line of a street separating the two classes; then we want to fit the widest possible street between the two classes (see \ref{separableClassesPy}). The closest occurrences of the two classes closest to the separator defines the margins, the gutters of the street (the dashed lines in \ref{separableClassesPy}).
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.4]{img/separableClassesPy}
+\caption{Example of best separating line maximizing the margin.}
+\label{separableClassesPy}
+\end{figure}
+
+Let us consider a vector $\vec{w}$ of any length, perpendicular to the gutters of the street and consider an unknown instance to be classified (\ref{separableClassesPy}) called $\vec{u}$. To see if this unknown is on the left or right side of the street, we project its vector $\vec{u}$ onto the vector $\vec{w}$ that is perpendicular to the street. The bigger this product, the more likely the point is to be on the right side of street, hence the more likely it is to be of class $+$.
+
+Mathematically:
+\begin{equation}
+\vec{u}\cdot \vec{w} \ge c \Leftrightarrow \vec{u}\cdot \vec{w} + b \ge0\Rightarrow \text{Class } 1 \quad\quad \text{with } b=-c
+\end{equation}
+This is the \tb{decision rule}. The problem is that both $\vec{w}$ and $b$ are unknown; only the direction of $\vec{w}$ is known but not its length.
+
+\tb{Other constraints must be added} to calculate $\vec{w}$ and $b$. Now suppose one positive and one negative instances $x_+$ and $x_-$ are given. We want:
+\begin{equation}
+\begin{aligned}
+\vec{w} \cdot \vec{x}_+ + b &\ge 1\\
+\vec{w} \cdot \vec{x}_- + b &\le -1
+\end{aligned}
+\end{equation}
+Just for mathematical convenience we introduce a new variable $y_i$ for each instance such that:
+\begin{equation}
+\begin{aligned}
+y_i = 1 \quad \text{if } \vec{x}_+\\
+y_i = -1 \quad \text{if } \vec{x}_-\\ 
+\end{aligned}
+\end{equation}
+In this way:
+\begin{equation}
+y_i (\vec{w}\cdot \vec{x}_i + b) \ge 1
+\end{equation}
+that can be rearranged as:
+\begin{equation}
+y_i (\vec{w}\cdot \vec{x}_i + b) -1 \ge 0
+\end{equation}
+
+Now \tb{another constraint} is going to be added: \tb{the previous equation is forced to be $0$ for the points in the gutter}, i.e., on the margins:
+\begin{equation}
+y_i (\vec{w}\cdot \vec{x}_i + b) -1 = 0
+\label{SVMmargin}
+\end{equation}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.4]{img/SVMwidth}
+\caption{Derivation of the width.}
+\label{SVMwidth}
+\end{figure}
+
+So this equation holds for the points $x_+$ and $x_-$ that are closest to the separator (the black solid line on the previous plots), i.e., the ones that decide and limit the width of the street. Now we need to express the width of the street. Consider the difference between these two points $(\vec{x}_+ - \vec{x}_-)$ (\ref{SVMwidth}) and project it onto the normal: \textbf{this is exactly the width of the street}.
+\begin{equation}
+\begin{aligned}
+\text{width} = 2M = \left( \vec{x}_+ - \vec{x}_-\right) \cdot \frac{\vec{w}}{\norm{\vec{w}}}
+\end{aligned}
+\label{width0}
+\end{equation}
+
+For $\vec{x}_+$, $y_i=1$. From \ref{SVMmargin}:
+\begin{equation}
+\vec{w} \vec{x}_+ + b = 1\Rightarrow \vec{w} \vec{x}_+ = 1-b
+\end{equation}
+for the same reason, considering $x_-$:
+\begin{equation}
+-\vec{w} \vec{x}_- - b = 1\Rightarrow -\vec{w} \vec{x}_+ = 1+b
+\end{equation}
+
+So substituting in \ref{width0}:
+\begin{equation}
+\begin{aligned}
+\text{width} = \frac{2}{\norm{\vec{w}}}
+\end{aligned}
+\label{width0}
+\end{equation}
+
+\tb{Now we have to maximize the width}:
+\begin{equation}
+\max \frac{2}{\norm{\vec{w}}} \Leftrightarrow \max \frac{1}{\norm{\vec{w}}} \Leftrightarrow\min \norm{\vec{w}} \Leftrightarrow \min \frac{1}{2} \norm{\vec{w}}^2
+\label{SVMmin}
+\end{equation}
+
+We have the expression \ref{SVMmin} for which we want to find the minimum, its extreme, and we have the constraint \ref{SVMmargin}. By \tb{Lagrange}, if we want to find the extreme of a function with constraints, then we have to use \tb{Lagrange multipliers} which will result in a new expression that can be maximized or minimized directly without any constraint. 
+\begin{equation}
+L(\vec{w}, b) = \frac{1}{2}\norm{\vec{w}}^2 - \sum_i \alpha_i\left[ y_i\left( \vec{w}\cdot \vec{x}_i+b\right)-1\right]
+\label{SVMLagranceMult}
+\end{equation}
+where the second term is a sum of all the constraints weighted by $\alpha_i$, the Lagrange multipliers. These multipliers will be different from $0$ for only the points in the gutter; if the same class has more than one point on the margin then all of them will be part of the expression. We need to find the extreme of this expression. To do that, we take the derivatives and set them to $0$.
+\begin{equation}
+\begin{aligned}
+&\frac{\partial L}{\partial \vec{w}} = w - \sum_i \alpha_i y_i \vec{x}_i = 0 \Rightarrow &\vec{w} = \sum_i \alpha_i y_i \vec{x}_i
+\end{aligned}
+\label{SVMLagrDevw}
+\end{equation}
+This tells that the vector $\vec{w}$ is a linear combination of all the sample vectors lying on the margin, the \tb{support vector}.
+
+Differentiating with respect to $b$:
+\begin{equation}
+\begin{aligned}
+&\frac{\partial L}{\partial b} = \sum_i \alpha_i y_i = 0 \Rightarrow \sum_i \alpha_i y_i = 0
+\end{aligned}
+\label{SVMLagrDevb}
+\end{equation}
+
+We try to substitute these results in \ref{SVMLagranceMult} to find its extreme:
+\begin{equation}
+\begin{aligned}
+L &= \frac{1}{2} \left(  \sum_i \alpha_i y_i \vec{x}_i\right) \left( \sum_j \alpha_j y_j \vec{x}_j\right) - \sum_i \alpha_i y_i \vec{x}_i \cdot\left(\sum_j \alpha_j y_j \vec{x}_j\right) -\sum_i \alpha_i y_i b + \sum_i \alpha_i =\\
+& = \frac{1}{2} \left(  \sum_i \alpha_i y_i \vec{x}_i\right) \left( \sum_j \alpha_j y_j \vec{x}_j\right) - \sum_i \alpha_i y_i \vec{x}_i \cdot\left(\sum_j \alpha_j y_j \vec{x}_j\right) -b \cancel{\sum_i \alpha_i y_i} + \sum_i \alpha_i  =\\
+&= \sum_i \alpha_i - \frac{1}{2}\sum_i \sum_j \alpha_i \alpha_j y_i y_j \vec{x}_i \cdot \vec{x}_j 
+\end{aligned}
+\end{equation}
+where $b$ has been taken out of the sum since it is a constant. This expression allows to see what the value of the extreme point depends on with respect to these vectors. It depends only on the dot product of pairs of samples.
+
+Let us see how the decision rule is affected:
+\begin{equation}
+\sum_i \alpha_i y_i \vec{x}_i \cdot \vec{u} + b \ge 0 \Rightarrow \vec{u} \text{ belongs to class } +
+\end{equation}
+
+Note that the space we are working on is a convex space, so there is no chance to get stuck in a local minimum/maximum, as opposite to neural nets.
+
+This process does not work with linear inseparable problems. In these cases we can switch to another space: we call this transformation $\phi(\vec{x})$. The maximization process depends only on the dot product, so we just need to find $\phi(\vec{x}_i)\cdot \phi(\vec{x}_j)$ in order to maximize in the new space. So actually the mapping function $\phi(\cdot)$ is not needed to be known, we need to know a function such as
+\begin{equation}
+K(\vec{x}_i, \vec{x}_j) = \phi(\vec{x}_i)\cdot \phi(\vec{x}_j)
+\end{equation} 
+Such a function is called \tb{Kernel function}. Popular choices of kernels are
+\begin{itemize}
+\item linear kernel $\left(\vec{u} \cdot \vec{v}+1\right)^n$
+\item $e^{-\frac{\norm{\vec{x}_i - \vec{x}_j}}{\sigma}}$: be careful to choose a not too small $\sigma$ the points are shrunk around and we get overfitting.
+\end{itemize}
+
 We have seen \textbf{Optimal separating hyperplabes} in \ref{OSH}. Here we will see the case for non-separable classes, where the classes overlap.
-\subsection{Support Vector Classifier}
+\subsection{Soft Margin Support Vector Machine}
+The hard margin SVM works well when data do not contain outliers or noisy samples close to the separator. In such cases, the outlier can make the margin too small or move the separator toward the other class and this might cause misclassification. It is generally preferable to have a fat margin allowing to some noisy samples to be inside or on the wrong side of the margin.
+
+We still want to maximize the margins $M$ allowing some points to be on the wrong side. For each misclassified point we pay a cost proportional to its distance from the margin. To do this, we define a slack variable $\xi=\br{\xi_1, \xi_2, \cdots, \xi_N}$ with $\xi_i\ge 0$, whose value is not null for the points beyond the margin:
+\begin{equation}
+\xi_i = \max \left(0, 1-y_i(\vec{w}\vec{x_i}+b)\right)
+\end{equation}
+where $1-y_i(\vec{w}\vec{x_i}+b)$ is proportional to the distance from the margin.	
+The decision rule hence becomes:
+\begin{equation}
+\begin{aligned}
+& y_i \left( \vec{w} \vec{x}_i + b\right) \ge 1 - \xi_i \Rightarrow y_i \left( \vec{w} \vec{x}_i + b\right) - 1+ \xi_i  \ge 0 \\
+& \xi_i \ge 0
+\end{aligned}
+\end{equation}
+However, we want to limit the number of misclassified points so the objective becomes
+\begin{equation}
+\begin{aligned}
+&\min \frac{1}{2} \norm{\vec{w}} + C \sum_i \xi_i\\
+\textit{subject to }&\left\{
+		\begin{array}{ll}
+				y_i(\vec{w} \cdot \vec{x}_i+b) \ge 1-\xi_i\\ 
+ 				\xi_i \ge 0
+		\end{array} 
+\right.
+\end{aligned}
+\end{equation}
+The width remains the same as the one in \ref{HardMarginSVM}. 
+
+\iffalse
+\subsubsection{}
 With $N$ pairs $(x_i, y_i) \in \CMcal{R}^p$ and $y_i \in \{-1, 1\}$, define a hyperplane:
 \begin{equation}
 \{x: f(x) = x^T\beta+ \beta_0=0\}
@@ -3575,7 +3895,8 @@ or equivalently:
 \end{equation}
 $M$ is the distance from the hyperplane to the wider side and it is called \textbf{margin}. This is a convex optimization problem.
 
-\textbf{Suppose now that the classes overlap in the feature space}. We can still maximize $M$ allowing some points to be on the wrong side. We define a slack variable $\xi=\br{\xi_1, \xi_2, \cdots, \xi_N}$. There are two ways to modify the constraint:
+
+\textbf{Suppose that the classes overlap in the feature space}. We still want to maximize $M$ allowing some points to be on the wrong side. We define a slack variable $\xi=\br{\xi_1, \xi_2, \cdots, \xi_N}$. There are two ways to modify the constraint:
 \begin{equation}
 \begin{aligned}
 &y_i (x_i^T\beta+\beta_0)\ge M -\xi_i\\
@@ -3583,7 +3904,8 @@ $M$ is the distance from the hyperplane to the wider side and it is called \text
 &\forall i, \xi_i\ge  0, \sum_{i=1}^N \xi_i \le constant.
 \end{aligned}
 \end{equation}
-The two choices lead to different solutions. The first choice is more natural since it measures overlap in actual distance from the margin. The second choice measures the overlap in relative distance, which changes the width of the margin $M$. However, the first choice leads to a nonconvex optimization, while the second results to the standard support vector classifier. 
+The two choices lead to different solutions. The first choice is more natural since it measures overlap in actual distance from the margin. The second choice measures the overlap in relative distance, which changes the width of the margin $M$. However, the first choice leads to a nonconvex optimization, while the second results to the standard support vector classifier.
+
 
 The value $\xi_i$ is the proportional amount by which the prediction $f(x_i) = x_i^T\beta+\beta_0$ is on the wrong side of the margin. Hence by up-bounding the sum $\sum \xi_i$ we limit the total proportional amount by which predictions fall on the wrong side. Misclassifications occur when $\xi_i> 1$. So using  a constant $K$ one bounds the total number of misclassifications to $K$. Again, we can drop the norm constraint on $\beta$:
 \begin{equation}
@@ -3605,6 +3927,7 @@ The value $\xi_i$ is the proportional amount by which the prediction $f(x_i) = x
 \caption{Separable and non separable support vector classifiers.}
 \end{figure}
 The misclassified points are on the wrong side for an amount $\xi^* = M \xi$ while the correctly classified points have $\xi^*=0$. One sees that points inside their class boundary do not play a big role in shaping the boundary. This seems like an attractive property, and one that differentiates it from linear discriminant analysis (\ref{LDA}). In LDA, the decision boundary is determined by the covariance of the class distributions and the positions of the class centroids. Logistic regression is more similar to the support vector classifier in this regard.
+
 \subsubsection{Computing the support vector classifier}
 
 The problem \ref{SVMOpt} is quadratic with linear inequality constraints, hence it is a convex optimization problem. We describe a quadratic programming solution using Lagrange multipliers. Computationally it is convenient to re-express \ref{SVMOpt} in the equivalent form:
@@ -3615,57 +3938,55 @@ The problem \ref{SVMOpt} is quadratic with linear inequality constraints, hence 
 \end{aligned}
 \end{equation}
 where $C$ replaces the constant. The separable case corresponds to $C = \infty$.
+\subsubsection{}
+\fi
 
-The Lagrange primal function is 
+The problem is quadratic with linear inequalities, hence it is still convex. The Lagrange primal function becomes:
 \begin{equation}
-L_P = \frac{1}{2}\left| \beta\right|^2 + C \sum_{i=1}^N \xi_i - \sum_{i=1}^N \alpha_i \left[y_i\br{x_i^T\beta+\beta_0}-\br{1-\xi_i}\right] - \sum_{i=1}^N \mu_i \xi_i 
+L_P = \frac{1}{2}\norm{ \vec{w}}^2 + C \sum_{i=1}^N \xi_i - \sum_{i=1}^N \alpha_i \left[y_i\br{
+\vec{w} \cdot \vec{x}_i+b}-\br{1-\xi_i}\right] - \sum_{i=1}^N \mu_i \xi_i 
 \label{Lp}
 \end{equation}
-which we minimize w.r.t. $\beta, \be_0, \xi$. Setting the respective derivatives to $0$:
+where $\mu_i$ are the Lagrange multipliers for the newly introduced constraint $\xi_i\ge 0$.
+We minimize w.r.t. $\vec{w}, b, \xi_i$. The first two have already been calculated in \ref{SVMLagrDevw} and \ref{SVMLagrDevb}:
 \begin{equation}
 \begin{aligned}
-\be &= \sum_{i=1}^N  \alpha_i y_i x_i,\\
-0 &= \sum_{i=1}^N \alpha_i y_i\\
-\alpha_i &= C - \mu_i \quad \forall i\\
-\textit{constrained to } \quad  &\alpha_i,\mu_i, \xi_i \ge 0 \quad \forall i
+\frac{\partial L_P}{\partial \xi_i} = \Rightarrow \alpha_i &= C - \mu_i \quad \forall i\\
 \end{aligned}
 \end{equation}
 Substituting in \ref{Lp}, we obtain the Lagrangian (Wolfe) dual objective function:
 \begin{equation}
 \begin{aligned}
-L_D &= \frac{1}{2}\be^T\be + \sum_{i=1}^N \left[\br{C-\mu_i} \xi_i \right]- \sum_{i=1}^N \alpha_i y_i \x_i^T\beta- \sum_{i=1}^N \alpha_i y_i\beta_0+\\
-&+ \sum_{i=1}^N \alpha_i-\sum_{i=1}^N \alpha_i\xi_i = \\
-&=\frac{1}{2}\sum_{i=1}^N  \alpha_i y_i \x_i^T\cdot \sum_{j=1}^N  \alpha_j y_j \x_j \cancel{+ \sum_{i=1}^N \alpha_i \xi_i}- \sum_{i=1}^N \alpha_i y_i \x_i^T\beta- \sum_{i=1}^N \alpha_i y_i\beta_0+\\
-&+ \sum_{i=1}^N \alpha_i\cancel{-\sum_{i=1}^N \alpha_i\xi_i} =\\
-&=\frac{1}{2}\sum_{i=1}^N  \alpha_i y_i \x_i^T\cdot \sum_{j=1}^N  \alpha_j y_j \x_j- \sum_{i=1}^N \alpha_i y_i \x_i^T\beta \cancel{- \beta_0\sum_{i=1}^N \alpha_i y_i}+ \sum_{i=1}^N \alpha_i =\\
-&=\frac{1}{2}\sum_{i=1}^N  \alpha_i y_i \x_i^T\cdot \sum_{j=1}^N  \alpha_j y_j \x_j- \sum_{i=1}^N \alpha_i y_i \x_i^T\sum_{j=1}^N \alpha_j y_j \x_j+ \sum_{i=1}^N \alpha_i =\\
-&= \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N \alpha_i y_i \x_i^T\sum_{j=1}^N \alpha_j y_j \x_j = \\
-&= \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i y_i \alpha_j y_j\x_i^T  \x_j
+L_D &=  \frac{1}{2}\norm{ \vec{w}}^2 + \cancel{C \sum_{i=1}^N \xi_i} - \sum_{i=1}^N \alpha_i \left[y_i\br{
+\vec{w} \cdot \vec{x}_i+b} -1\right]+\cancel{\alpha_i\br{\xi_i}} - \cancel{\sum_{i=1}^N \mu_i \xi_i} = \\
+&=\frac{1}{2}\sum_{i=1}^N  \alpha_i y_i \vec{x}_i \cdot \sum_{j=1}^N  \alpha_j y_j \vec{x}_j- \sum_{i=1}^N \alpha_i y_i \vec{x}_i\vec{w} \cancel{- b\sum_{i=1}^N \alpha_i y_i}+ \sum_{i=1}^N \alpha_i =\\
+&=\frac{1}{2}\sum_{i=1}^N  \alpha_i y_i \vec{x}_i \cdot \sum_{j=1}^N  \alpha_j y_j \vec{x}_j- \sum_{i=1}^N \alpha_i y_i \vec{x}_i\sum_{j=1}^N \alpha_j y_j \vec{x}_j+ \sum_{i=1}^N \alpha_i =\\
+&= \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N \alpha_i y_i \vec{x}_i\sum_{j=1}^N \alpha_j y_j \vec{x}_j = \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i y_i \alpha_j y_j\vec{x}_i  \vec{x}_j
 \end{aligned}
 \label{LagrangeDueal}
 \end{equation}
-where we used the properties that $\alpha_i, y_i$ are scalar and that $\be, \be_0$ can be taken out. Notice that $\be^T\be  = \sum_{i=1}^N \alpha_i y_i \x_i^T\sum_{j=1}^N\alpha_j y_j \x_j =\sum_{i=1}^N \sum_{j=1}^N \alpha_i y_i \alpha_j y_j  \x_i^T\x_j \ne \sum_{i=1}^N  (\alpha_i y_i)^2 \x_i^T\x_i$. In fact consider for example: $\be = c_1\x_1 + c_2\x_2$ with $\x_i = \left[x_{1i}, x_{2i}\right]^T$. $\be = \left[ c_1x_{11}+c_2x_{12}, c_1x_{21}+c_2x_{22} \right]^T$ and $\be^T\be = (c_1x_{11}+c_2x_{12})^2+(c_1x_{21}+c_2x_{22})^2$, so we are missing some cross-products. The Lagrangian (Wolfe) dual objective function gives a lower bound on the objective function for any feasible point. We maximize $L_D$ subject to $0\le \alpha_i\le C$ and $\sum_{i=1}^N\alpha_iy_i$. In addition to the derivatives, the \textbf{Karush-kuhn-Tucker} conditions include constraints:
+where we used the properties that $\alpha_i, y_i$ are scalar and that $\vec{w}, b$ can be taken out. Notice that $\vec{w}\cdot \vec{w}  = \sum_{i=1}^N \alpha_i y_i \vec{x}_i\cdot\sum_{j=1}^N\alpha_j y_j \vec{x}_j =\sum_{i=1}^N \sum_{j=1}^N \alpha_i y_i \alpha_j y_j  \vec{x}_i\vec{x}_j \ne \sum_{i=1}^N  (\alpha_i y_i)^2 \vec{x}_i\vec{x}_i$. In fact consider for example: $\vec{w} = c_1\vec{x}_1 + c_2\vec{x}_2$ with $\vec{x}_i = \left[x_{1i}, x_{2i}\right]^T$. $\vec{w} = \left[ c_1x_{11}+c_2x_{12}, c_1x_{21}+c_2x_{22} \right]^T$ and $\vec{w}\cdot \vec{w} = (c_1x_{11}+c_2x_{12})^2+(c_1x_{21}+c_2x_{22})^2$, so we are missing some cross-products. The Lagrangian (Wolfe) dual objective function gives a lower bound on the objective function for any feasible point. We maximize $L_D$ subject to $0\le \alpha_i\le C$ and $\sum_{i=1}^N\alpha_iy_i$. In addition to the derivatives, the \textbf{Karush-kuhn-Tucker} conditions include constraints:
 \begin{equation}
 \begin{aligned}
-\alpha_i \left[ y_i\br{x_i^T\be+\be_0}-\br{1-xi_i}\right] &=0\\
+\alpha_i \left[ y_i\br{\vec{w}\cdot\vec{x}_i+b}-\br{1-\xi_i}\right] &=0\\
 \mu_i \xi_i &= 0\\
-y_i(x_i^T\be+\be_0) - (1 - \xi_i) &\ge 0
+y_i(\vec{x}_i\vec{w}+b) - (1 - \xi_i) &\ge 0
 \end{aligned}
 \label{KKT}
 \end{equation}
 for $i=1,\cdots, N$. These constraints and the ones originating from the derivatives uniquely characterize the primal and dual problem.
 
-From $\be = \sum_{i=1}^N  \alpha_i y_i x_i$, we can see:
+From $\vec{w} = \sum_{i=1}^N  \alpha_i y_i \vec{x}_i$, we can see:
 \begin{equation}
-\hat{\be} = \sum_{i=1}^N \hat{\alpha}_i y_i x_i
+\hat{\vec{w}} = \sum_{i=1}^N \hat{\alpha}_i y_i \vec{x}
 \end{equation}
-with $\hat{\alpha}_i \ne 0$ only for those observations $i$ for which the constraints in the last equation of \ref{KKT} are exactly met. These observations are called \textbf{support vectors}, since $\hat{\be}$ is represented in terms of them alone. Among these support points, some will lie on the edge of the margin ($\hat{\xi}_i=0$) and hence will be characterized by $0 < \hat{\alpha_i} <C$: the remainder ($\hat{\xi}_i>0$) have $\hat{\alpha}_i=C$. We can see that any of these margin points ($0<\hat{\alpha}_i$, $\hat{\xi}_i = 0$), can be used to solve for $\be_0$, and we typically use an average of all the solutions for numerical stability. Maximizing the dual is a simpler convex quadratic programming problem than the primal and can be solved with standard techniques such (Murray et. al, 1981).
+with $\hat{\alpha}_i \ne 0$ only for those observations $i$ for which the constraints in the last equation of \ref{KKT} are exactly met. These observations are called \textbf{support vectors}, since $\hat{\vec{w}}$ is represented in terms of them alone. Among these support points, some will lie on the edge of the margin ($\hat{\xi}_i=0$) and hence will be characterized by $0 < \hat{\alpha_i} <C$: the remainder ($\hat{\xi}_i>0$) have $\hat{\alpha}_i=C$. We can see that any of these margin points ($0<\hat{\alpha}_i$, $\hat{\xi}_i = 0$), can be used to solve for $b$, and we typically use an average of all the solutions for numerical stability. Maximizing the dual is a simpler convex quadratic programming problem than the primal and can be solved with standard techniques such (Murray et. al, 1981).
 
 Points on the wrong side of the boundary are support vectors. In addition, points on the correct side of the boundary but close to it (in the margin), are also support vectors. 
 
-Given the solutions $\hat{\be}, \hat{\be}_0$, the decision function can be written as:
+Given the solutions $\hat{\vec{w}}, \hat{b}$, the decision function can be written as:
 \begin{equation}
-\hat{G} (x) = sign \br{\hat{f}(x)}= sign\br{x^T\hat{\be}+\be_0}
+\hat{G} (x) = sign \br{\hat{f}(x)}= sign\br{\hat{\vec{w}}\cdot \vec{x}_i+b}
 \end{equation}
 The tuning parameter of this procedure is the cost parameter $C$. The optimal value for C can be estimated by cross-validation.
 \subsection{Support vector machines and Kernels}
@@ -3678,10 +3999,10 @@ L_D = \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i y_i \
 \end{equation}
 So $f(x)$ can be written as 
 \begin{equation}
-f(x) = h(x)^T\be + \be_0 = \sum_{i=1}^N \alpha_iy_i \left\langle  h(x), h(x_i)  \right\rangle +\be_0
+f(x) = h(x)\cdot\vec{w} + b = \sum_{i=1}^N \alpha_iy_i \left\langle  h(x), h(x_i)  \right\rangle +b
 \end{equation}
 
-As before, given $\alpha_i$, $\be_0$ can be determined by solving $y_i f(x_i) = 1$ for any (or all) $x_i$ for which $0<\alpha_i <C$.
+As before, given $\alpha_i$, $b$ can be determined by solving $y_i f(x_i) = 1$ for any (or all) $x_i$ for which $0<\alpha_i <C$.
 So $h(x0)$ is involved only in terms of its inner product: \textbf{we do not need to specify the transformation but only the knowledge of the kernel function is required}:
 \begin{equation}
 K(x, x') = \left\langle  h(x), h(x')  \right\rangle
