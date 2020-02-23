@@ -14,6 +14,8 @@
 \usepackage{listings}
 \usepackage{booktabs}% pandas.to_latex() \toprule, \bottomrule, 
 \usepackage[dvipsnames,table,xcdraw]{xcolor}
+\usepackage{imakeidx}
+\makeindex
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}[section] 
  
@@ -63,18 +65,22 @@
 \DeclareFixedFont{\ttb}{T1}{txtt}{bx}{n}{10} % for bold
 \DeclareFixedFont{\ttm}{T1}{txtt}{m}{n}{10}  % for normal
  
+ 
+ 
  \begin{document}
+
+
 \title{Machine learning notes}
 \author{Francesco Boi}
 \date{\vspace{-5ex}}
 \maketitle
 \numberwithin{equation}{section}
 \numberwithin{figure}{section}
-
-
+\tableofcontents
 \section{Preliminary definitions}
-
-\subsection{Trace of a matrix}
+\subsection{Matrix properties and definitions}
+\subsubsection{Trace of a matrix}
+\index{Trace of a matrix}
 \label{trace}
 The \textbf{trace} of a square matrix $\mathbf{A}$, denoted as $\Tr(\mathbf{A})$ is the sum of diagonal elements:
 \begin{equation}
@@ -83,7 +89,122 @@ The \textbf{trace} of a square matrix $\mathbf{A}$, denoted as $\Tr(\mathbf{A})$
 It follows that $Tr(\mathbf{I_d}) = p$.
 Also $\Tr(\mathbf{AB}) = \Tr(\mathbf{AB})$ and $\Tr(\x^T\x) = \x^T\x$ the latter being a scalar.
 
+\subsubsection{Exponential matrices}
+\label{ExponentialMatrices}
+\index{Exponential Matrices}
+\begin{definition}{\tb{Exponential matrix}} The matrix exponential is a matrix function on square matrices analogous to the ordinary exponential function. Let $X$ be an $N\times N$ real or complex matrix. Its exponential denoted by $e^X$ is the $N \times N$ matrix given by the power series:
+\begin{equation}
+e^X = \sum_{k=0}^\infty \frac{1}{k!} X^k
+\end{equation}
+where $X^0 = I_N$.
+\end{definition}
+
+\subsubsection{Similar matrices}
+\label{MatrixSimilarity}
+\index{Similar matrices}
+\begin{definition}{\tb{Similar matrices}}In linear algebra, two $N\times N$ matrices $A$ and $B$ are called \tb{similar} if there exists a $N\times N$ invertible matrix $P$ such that:
+\begin{equation}
+B = P^{-1}AP
+\end{equation}	
+\end{definition}
+\index{Similar matrices}
+
+\paragraph{\tb{Example}} Similar matrices represent the same linear map under two (possibly) different bases, with $P$ being the change of basis matrix. For example, a rotation around an axis not aligned with the coordinate axis might be difficult to express.  If the axis of rotation is aligned with the positive $z$-axis, then the rotation is simply $S =\begin{bmatrix}\cos \theta &-\sin \theta &0\\\sin \theta &\cos \theta &0\\0&0&1\end{bmatrix}$. So in these new space such a rotation is $y' = Sx'$ where $x'$ and $y'$ are respectively the points before and after the rotation in the new more convenient space. 
+In the original space the transformation is $y = Tx$. Then assuming $P$ is the change of base matrix, $T$ can be found as $y' = P y = PTx= S x' \Rightarrow T = P^{-1} S P$.
+
+\subsubsection{Diagonalizable matrices}
+\index{Diagonalizable matrices}
+\begin{definition}{\tb{Diagonalizable matrices}} In linear algebra, a matrix is called \tb{diagonalizable} if it is similar \ref{MatrixSimilarity} to a diagonal matrix, i.e., if there exists an invertible matrix $P$ and a diagonal matrix $D$ such that $P^{-1}AP =D$.
+\end{definition}
+
+\subsection{Eigenvalue decomposition}
+\index{Eigenvalue}
+\index{Eigenvector}
+\begin{definition}{\tb{Eigenvalues and eigenvector}}
+A (non-zero) vector $\vec{v}$ is an \tb{eigenvector} of a square matrix $A \in \CMcal{R}^{N\times N}$ if it satisfies the linear equation:
+\begin{equation}
+A\vec{v} = \lambda \vec{v}
+\label{eigenvector}
+\end{equation}
+where $\lambda$ is a scalar, termed \tb{eigenvalue} associated to the eigenvector $\vec{v}$. 
+\end{definition}
+That is, the eigenvectors are the vectors that the linear transformation A merely elongates or shrinks, and the amount that they elongate/shrink by is the eigenvalue.
+
+From this we get an equation for the eigenvalues.
+\begin{definition}{\tb{characteristic polynomial} and \tb{characteristic equation}}
+\begin{equation}
+p(\lambda) = \det\br{A - \lambda I}  = 0
+\end{equation}
+$p(\lambda)$ is called \tb{characteristic polynomial} and the equation \tb{characteristic equation}.
+\end{definition}
+$p(\lambda)$ is a $N$-th order polynomial equation in $\lambda$. The set of solution is called \tb{spectrum of $A$}.  
+$p(\lambda)$ can be refactored as:
+\begin{equation}
+p(\lambda) = \br{\lambda - \lambda_1}^{n_1} \br{\lambda - \lambda_2}^{n_2}\cdots \br{\lambda - \lambda_\lambda}^{n_\lambda}
+\end{equation}
+where $n_i$ is termed the \tb{algebraic multiplicity of the eigenvalue $\lambda_i$}. The number of distinct eigenvalue is $0\le N_\lambda\le N$.
+
+For each eigenvalue we have a specific eigenvalue equation:
+\begin{equation}
+\br{A-\lambda_i I} \vec{v}= 0
+\end{equation}
+and there will be $0\le m_i \le n_i$ linearly independent solutions to each eigenvalue equation. The term $m_i$ is termed \tb{geometric multiplicity of $\lambda_i$}, with $m_i \le n_i$, the algebraic multiplicity.
+
+\subsection{Decomposition}
+\index{Eigenvalues decomposition}
+Eigendecomposition or sometimes spectral decomposition is the factorization of a matrix into a canonical form, whereby the matrix is represented in terms of its eigenvalues and eigenvectors. Only diagonalizable matrices can be factorized in this way. 
+
+Let $A$ be a $N\times N$ square matrix with $N$ linearly independent eigenvectors $q_i$ where $i=1, \cdots, n$. Then $A$ can be factorized as 
+\begin{equation}
+A = Q \Lambda Q^{-1}
+\end{equation}
+where $Q$ is  the square $n\times n$ matrix whose $i-th$ column is the eigenvector $q_i$ of $A$, and $\Lambda$ is the diagonal matrix whose diagonal elements are the eigenvalues. The $q_i$ eigenvector are generally normalized but they need not be: the magnitudes of the eigenvectors in $Q$ get cancelled by $Q^{-1}$:
+\begin{equation}
+A\vec{v} = \lambda \vec{v}\Rightarrow AQ = Q\Lambda \Rightarrow A = Q\Lambda Q^{-1}
+\end{equation}
+The eigenvalue decomposition gives an easy way to compute power of matrices or exponential matrices:
+\begin{equation}
+\begin{aligned}
+A^{-1} &= Q\Lambda^{-1}Q^{-1}\\
+A^n    &=  Q\Lambda^{n}Q^{-1}\\
+e^A    &=  Q\left[diag\br{e^\lambda_{ii}}\right]Q^{-1}\\
+\end{aligned}
+\end{equation}
+
+\subsection{Singular Value Decomposition}
+\label{SVD}
+It is a factorization of a real or complex matrix that generalizes of the eigendecomposition of a square normal matrix to any $m\times n$ matrix. Given a $m\times n$ real or complex matrix $M$,
+\begin{equation}
+M = U \Sigma V^*
+\end{equation}
+where $U$ is a $m \times m$ real or complex unitary matrix, $\Sigma$ is a $m \times n$ rectangular diagonal matrix with non-negative real numbers termed \tb{singular values} on the diagonal and $V$ is a real or complex $n\times n$ unitary matrix. If $M$ is real, $U$ and $V*=V$ are orthonormal matrices, i.e., $U^TU=I$ and $V^TV=I$.
+
+The number of non-zero singular values is equal to the rank of $M$. The column of $U$ and $V$ are called \tb{left singular vectors} and \tb{right singular vectors}. The SVD is not unique. However, it is always possible to choose the decomposition in order to have the singular values in descending order: $\sigma_1 \ge \sigma_2 \ge \sigma_3 \cdots$. In this way $\Sigma$ is uniquely determined, but \tb{not} $U$ and $V$.
+
+In the special case when $M$ is an $m \times m$ real square matrix, the matrices $U$ and $V*$ can be chosen to be real $m \times m$ matrices too. In that case, "unitary" is the same as "orthonormal". Then, interpreting each such matrix $A$ as the linear transformation $x \rightarrow Ax$ of the space $\CMcal{R}^m$, the matrices $U$ and $V*$ represent rotations or reflection of the space, while $\Sigma$ represent the scaling of each coordinate $x_i$ by the factor $\sigma_i$. Thus the SVD decomposition breaks down any invertible linear transformation of $R^m$ into a composition of three geometrical transformations: a rotation or reflection ($V^*$), followed by a coordinate-by-coordinate scaling ($\Sigma$), followed by another rotation or reflection ($U$).
+
+The singular values can be interpreted as the magnitude of the semiaxis of an ellipse in 2D. Singular values encode magnitude of the semiaxis, while singular vectors encode direction. the columns of $U$, $U^*$, $V$, and $V^*$ are orthonormal bases. When the $\mathbf {M}$ is a normal matrix, $U$ and $V^*$ reduce to the unitary used to diagonalize $\mathbf {M}$. However, when 
+$\mathbf {M}$  is not normal but still diagonalizable, its eigendecomposition and singular value decomposition are distinct.
+
+
+\subsubsection{Relationship with eigendecomposition}
+\label{SVDEigenDec}
+\begin{equation}
+\begin{aligned}
+M^*M &= V \Sigma^* U^*U \Sigma V^* = V\Sigma^* \Sigma V^*\\
+MM^* &= U \Sigma V^*V \Sigma^* U^* = U \Sigma \Sigma^* U^*
+\end{aligned}
+\end{equation}
+The right-hand sides of these relations describe the eigenvalue decompositions of the left-hand sides. The columns of $V$ (right-singular vectors) are eigenvectors of $M^*M$. The columns of $U$ (left-singular vectors) are eigenvectors of $MM^*$. The non-zero elements of $\Sigma$ (non-zero singular values) are the square roots of the non-zero eigenvalues of $M^*M$ or $MM^*$.
+
+Defining the \tb{matrix of principal component variables}
+\begin{equation}
+Z = U\Sigma
+\end{equation}
+we can find $Z$ from the eigenvalue-decomposition of $M^*M = W D W^{-1}$.$\Sigma$ is found as explained above. If $W$ is chosen to be orthogonal, then we can set $U=W$, hence we have $Z$.
+
 \subsection{Expectation}
+\index{Expectation}
 \begin{definition}{\textbf{Expectation}}
 Let $X$ be a random variable with a finite number of outcomes $x_1, x_2, \cdots, x_k$ occurring respectively with probabilities $p_1, p_2, \cdots, p_k$. The expectation value is the summation of each outcome times its probability.
 \begin{equation}
@@ -111,6 +232,7 @@ $$E_X[h(X,Y)] = \int_{-\infty}^\infty h(x,y) f_{X}(x) \, dx $$
 
 
 \subsection{Variance}
+\index{Variance}
 \label{Variance}
 \begin{definition}{\textbf{Variance}}
 The variance of a random variable $X$ is the expected value of the squared deviation from the mean of $X$:
@@ -132,6 +254,7 @@ Variance can be expressed in another way recalling $\mu = E\left[ X\right]$ and 
 \end{definition}
 
 \subsection{Median}
+\index{Median}
 \begin{definition}{\textbf{Median}}
 For any probability distribution on the real line $\R$ with cumulative distribution function $F$, regardless of whether it is any kind of continuous probability distribution, in particular an absolutely continuous distribution (which has a probability density function), or a discrete probability distribution, a median is by definition any real number $m$ that satisfies the inequalities:
 \begin{align}
@@ -145,6 +268,7 @@ or equivalently the inequalities
 \end{definition}
 
 \subsection{Median as the minimizer of $L_1$ norm}
+%\index{Preliminary definitions!Median as the minimizer of $L_1$ norm}
 \label{medianMin}
 Assume that $S$ is a finite set, with say $k$ elements. Line them up in order, as $s_1<s_2<\cdots <s_k$.  
 
@@ -248,6 +372,9 @@ For any value outside the interval $\left[x_{\tfrac{n}{2}},x_{\tfrac{n}{2}+1}\ri
 $$
 \sum_{i=1}^4|x_i-5.2|=3.2+1.2+0.2+4.8=9.4
 $$
+
+%%%%%%%%%
+\index{Correlation}
 \subsection{Correlation}
 In statistics, dependence or association is any statistical relationship, whether causal or not, between two random variables or bivariate data. In the broadest sense correlation is any statistical association, though it commonly refers to the degree to which a pair of variables are linearly related.
 \begin{definition}{\textbf{Correlation}}
@@ -279,7 +406,9 @@ So correlation might completely miss out non-linear relationships (\ref{corr}) a
 \caption{Plots of correlated and non correlated variables.}
 \label{corr}
 \end{figure}
-\subsection{Gaussian function and gaussian distribution}
+\subsection{Gaussian functions and Gaussian distributions}
+\index{Gaussian functions}
+\index{Gaussian distributions}
 \label{gaussian}
 \begin{definition}{\textbf{Gaussian function}}
 A Gaussian function is a mathematical function in the form:
@@ -340,6 +469,33 @@ A Standard Normal Gaussian distribution is a Gaussian distribution with $0$ mean
 \end{definition}
 
 
+\subsection{Hermitian function}
+\begin{definition}{\tb{Hermitian function}}
+\label{Hermitian}
+An hermitian function is a complex function for which its complex conjugate is equal to the original function with the variable changed of sign:
+\begin{equation}
+\bar{f(x)} = f(-x)
+\end{equation}
+where the bar indicates the complex conjugate.
+From this definition it follows immediately that $f$ is a Hermitian function if and only if:
+\begin{itemize}
+\item the real part of $f$ is an even function;
+\item the imaginary part of $f$ is an odd function.
+\end{itemize}
+\end{definition}
+
+\subsection{Non-negative definite kernels}
+\begin{definition}{\tb{Non-negative definite kernels}}
+$K$ is said to be non-negative definite (or positive semidefinite) iff
+\begin{equation}
+\sum _{i=1}^{n}\sum _{j=1}^{n}K(x_{i},x_{j})c_{i}c_{j}\geq 0
+\end{equation}
+for all finite sequences of points $\forall x_i,x_j \in \CMcal{X}$ and $\forall c_i, c_j \in \CMcal{R}$.
+\end{definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Statistical Decision Theory}
 \subsection{Expected prediction error}
 Let $X \in \R^p$ denote a real valued random input vector, and $Y \in \R^p$ a real valued random output variable, with joint distribution $Pr(X,Y)$. We seek a function $f(X)$ for predicting $Y$ given values of the input $X$. This theory requires a loss function $L(Y,f(X))$ for penalizing errors in prediction, and by far the most common and convenient is 
@@ -494,6 +650,10 @@ The error due to variance is the amount by which the prediction, over one traini
 
 For linear models fit by ordinary least squares, the estimation bias is zero. For restricted fits, such as ridge regression, it is positive, and we trade it off with the benefits of a reduced variance.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Taxonomy of machine learning algorithms}
 \subsection{Supervised vs Unsupervised}
 The first distinction is between Supervised and Unsupervised learning. Some in-between methods exist too:
@@ -1369,11 +1529,11 @@ we get the same coefficient path of the lasso and this is called LAR(lasso). So 
 When a large number of inputs is present, often there is a high correlation among them. In this case is convenient to regress on a new set inputs obtained form a linear combination of the original input.
 
 \subsubsection{Principal component analysis}
-First input must be standardized since this analysis depends on the scaling. The principal components are defined as  	
+The first input must be standardized since this analysis depends on the scaling. The principal components are defined as  	
 \begin{equation}
 z_i = X v_i
 \end{equation}
-where $v_i$ are the column vectors of $V$ from the SVD decomposition of $X=UDV^T$ (recall that $z_m$ are orthogonal). The algorithm then regress $X$ on $z_1,\cdots, z_M$ for $M\le p$ and we have:
+where $v_i$ are the column vectors of $V$ from the SVD decomposition of $X=U\Sigma V^T$ (recall that $z_m$ are orthogonal)(\ref{SVD}). The algorithm then regress $X$ on $z_1,\cdots, z_M$ for $M\le p$ and we have:
 
 \begin{equation}
 \hat{y}^{pcr}_{(M)} = \bar{y}\mathbf{1} + \sum_{m=1}^M \hat{\theta}_m z_m
@@ -1386,8 +1546,73 @@ where $\hat{\theta}_m = \langle z_m, y\rangle/\langle z_m, z_m \rangle$. Since $
 With $M=p$ we get the usual least squares. Principal component analysis discards the $p-M$ smallest eigenvalue components.
 
 The value $M$ is suggested by cross-validation.
+
+\begin{theorem}{\tb{PCA seeks principal directions of highest variance under the unit-norm constraint}}
+\label{PCAmaxVar}
+\begin{proof}
+Consider an input space $\X$ endowed with the inner product operation $\langle \x_i, \x_j\rangle = \x_i^T \x_j$. Let $\{\x_1\}, \x_2, \cdots, \x_n$ denote a set of available data (observations) from $\X$. Let us call the axes that maximise the variance $\psi_1, \cdots, \psi_k$. Consider the first axis $\psi_1$ and project data onto it. The mean of the projection is $\langle \psi, \bar{x}\rangle$ with $\bar{x} = \frac{1}{N} \sum_{i=1}^n \x_i$.
+By applying the variance definition:
+\begin{equation}
+\begin{aligned}
+\sigma^2 &= \E\left[ \br{\psi_1^T\x -\E\left[ \psi^T\x\right]}^2 \right] = \\
+&= \E\left[ \br{\psi_1^T\br{\x - \E\left[\x\right]}}^2 \right] = \\
+&= \E\left[ \br{\psi_1^T\br{\x - \bar{\x}}}^2 \right] = \\
+&= \E\left[ \psi_1^T\br{\x - \bar{\x}}^T\br{\x - \bar{\x}}\psi_1 \right] = \\
+&= \psi_1^T\E\left[ \br{\x - \bar{\x}}^T\br{\x - \bar{\x}} \right]\psi_1  =\psi_1^T S \psi_1 
+\end{aligned}
+\end{equation}
+where $S$ is the covariance matrix, i.e., the measure of the directional relationship between two random variables.
+The variance must be maximized. A simple way would be to make $psi_1$ as big as possible but that is not an interesting solution. That is why is module is restricted: $\psi_1^T \psi_1=1$. To combine the objective and constraint the Lagrange multipliers are used:
+\begin{equation}
+\begin{aligned}
+L &= \psi_1^T S \psi_1  - \alpha_1 \psi_1^T \psi -1\\
+\Rightarrow \frac{\partial L}{\partial \psi_1} &= \cancel{2}S \psi -\cancel{2} \alpha_1 = 0\\
+\Rightarrow \alpha_1 \psi_1 &= S \psi_1
+\end{aligned}
+\end{equation}
+So the pair $\br{\alpha_1, \psi_1}$ is an eigenvalue-eigenvector pair. We can define additional principal components in an incremental fashion by choosing each new direction to be that which maximizes the projected variance amongst all possible directions orthogonal to those already considered (eigenvectors are not always perpendicular). In order to do so, one might consider to remove from the covariance matrix the component corresponding to the projection of the previously found axis and maximise the covariance of the residual. Suppose at step $l$ one found $l$ axis: then instead of using $S$ one will use: $S-[\psi_1, \cdots, \psi_l, 0, \cdots 0]^T S$.
+
+These are the axes that maximize the variance. Recalling that PCA is obtained through SVD and recalling the property of SVD in \ref{SVDEigenDec}, it is clear that PCA maximize the variance.
+\end{proof}
+\end{theorem}
+Eigenvectors lie in the span of data and eigenvectors associated to the largest eigenvalues provides a low-dimensional subspace:
+
+\begin{equation}
+\begin{aligned}
+\psi_l  &= \frac{1}{\lambda_l} S \psi_l = \frac{1}{\lambda_l} \br{\frac{1}{n}X^TX} \psi_l = \frac{1}{n\lambda_l} \left[\x_1, \cdots, \x_n \right] \begin{bmatrix} \x_1^T \\ \vdots\\ \x_n^T\end{bmatrix} \psi_l = \\
+&= \frac{1}{n\lambda_l} \begin{bmatrix}
+x_{11}^2 +\cdots  +x_{n1}^2             & x_{11}x_{12}+\cdots +x_{n1}x_{n2}& \cdots &x_{11}x_{1k}+\cdots +x_{n1}x_{nk}\\
+x_{12} x_{11} +\cdots + x_{n2}x_{n1} & x_{12}^2+\cdots +x_{n2}^2          &\cdots &x_{12}x_{1k}+\cdots +x_{n2}x_{nk}\\
+\vdots&\vdots&\cdots &\vdots \\
+x_{1k} x_{11} +\cdots + x_{nk}x_{n1} & x_{1k}x_{12} +\cdots +x_{nk}x_{n2}          &\cdots &x_{1k}^2+\cdots +x_{nk}^2
+\end{bmatrix}\psi_l =\\
+&= \frac{1}{n\lambda_l} \begin{bmatrix}
+\sum_{i=1}^n x_{i1}^2     &\sum_{i=1}^n x_{i1}x_{i2}& \cdots &\sum_{i=1}^n x_{i1}x_{ik}\\
+\sum_{i=1}^nx_{i2} x_{i1} & \sum_{i=1}^n x_{i2}^2          &\cdots &\sum_{i=1}^n x_{i2}x_{ik}\\
+\vdots&\vdots&\cdots &\vdots \\
+\sum_{i=1}^n x_{ik} x_{i1}  & \sum_{i=1}^n x_{ik}x_{i2}         &\cdots &\sum_{i=1}^n x_{ik}^2
+\end{bmatrix}\psi_l = \sum_{i=1}^n \br{\x_i \x_i^T}\psi_l=\\
+&= \sum_{i=1}^n \br{\x_i \x_i^T\psi_l} = \sum_{i=1}^n \langle \x_i,\psi_l\rangle\x_i
+\end{aligned}
+\end{equation}
+
+Principal components can be written as linear combinations of input data:
+\begin{equation}
+\label{PCALinComb}
+\psi_l = \sum_{i=1}^n \alpha_{il} \x_i
+\end{equation}
+
+%the following has also another element
+%\psi_l  &= \frac{1}{\lambda_l} S \psi_l = \frac{1}{\lambda_l} \br{\frac{1}{n}X^TX} \psi_l = \\
+%&= \frac{1}{n\lambda_l} \left[\x_1, \cdots, \x_n \right] \begin{bmatrix} \x_1^T \\ \vdots\\ \x_n^T\end{bmatrix} \psi_l = \\
+%&= \frac{1}{n\lambda_l} \begin{bmatrix}
+%x_{11}^2 + x_{21}^2 +\cdots  +x_{n1}^2             & x_{11}x_{12}+x_{21}x_{22} +\cdots +x_{n1}x_{n2}&\cdots &x_{11}x_{1k}+x_{21}x_{2k} +\cdots +x_{n1}x_{nk}\\
+%x_{12} x_{11} + x_{22}x_{21} +\cdots + x_{n2}x_{n1} & x_{12}^2+x_{22}^2 +\cdots +x_{n2}^2          &\cdots &x_{12}x_{1k}+x_{22}x_{2k} +\cdots +x_{n2}x_{nk}\\
+%\vdots&\vdots&\cdots &\vdots \\
+%x_{1k} x_{11} + x_{2k}x_{21} +\cdots + x_{nk}x_{n1} & x_{1k}x_{12}+x_{2k}x_{22} +\cdots +x_{nk}x_{n2}          &\cdots &x_{1k}^2+x_{2k}^2 +\cdots +x_{nk}^2
+
 \subsubsection{Partial least squares}
-This technique use a set of linear combinations of $y$ in addition to $X$ for the construction. It is not scale invariant so each $x_j$ must be standardized.
+This technique use a set of linear combinations of $y$ in addition to $X$ for the construction. It is not scale invariant so each $\x_j$ must be standardized.
 \begin{algorithm}
 standardize $x_j$ to $0$ mean and $1$ variance\;
 $\hat{y}^{(0)}\leftarrow \bar{y}\mathbf{1}$\;
@@ -1423,6 +1648,7 @@ $\cdots$
 
 \subsubsection{The Grouped Lasso}
 $\cdots$
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1433,10 +1659,10 @@ The data are taken from
 
 \ti{wget https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data} 
 
-and are the same used in the book \ti{Elements of statistical learning}. They comes from a study by Stamey et al. (1989) They examined the correlation between the level of prostate-specific antigen and a number of clinical measures in men who were about to receive a radical prostatectomy. The variables are log cancer volume (\lstinline[columns=fixed]{lcavol}), log prostate weight (\lstinline[columns=fixed]{lweight}), \lstinline[columns=fixed]{age}, log of the amount of benign prostatic hyperplasia (\lstinline[columns=fixed]{lbph}), seminal vesicle invasion (\lstinline[columns=fixed]{svi}), log of capsular penetration (\lstinline[columns=fixed]{lcp}), Gleason score (\lstinline[columns=fixed]{gleason}), and percent of Gleason scores 4 or 5 (\lstinline[columns=fixed]{pgg45}).
+and are the same used in the book \ti{Elements of statistical learning}. They come from a study by Stamey et al. (1989) and examine the correlation between the level of prostate-specific antigen and a number of clinical measures in men who were about to receive a radical prostatectomy. The variables are log cancer volume (\lstinline[columns=fixed]{lcavol}), log prostate weight (\lstinline[columns=fixed]{lweight}), \lstinline[columns=fixed]{age}, log of the amount of benign prostatic hyperplasia (\lstinline[columns=fixed]{lbph}), seminal vesicle invasion (\lstinline[columns=fixed]{svi}), log of capsular penetration (\lstinline[columns=fixed]{lcp}), Gleason score (\lstinline[columns=fixed]{gleason}), and percent of Gleason scores 4 or 5 (\lstinline[columns=fixed]{pgg45}).
 
 \subsection{Analyzing data}
-We can read data and analyze the correlation:
+We can read the data and analyse the correlation:
 
 \begin{lstlisting}
 import numpy as np;
@@ -1449,6 +1675,8 @@ df = pd.read_csv("prostate.data",header=0, delimiter="\t",);
 #drop first column: it is repeating the index
 df.drop([df.columns[0]],inplace=True, axis='columns');
 std_scaler = StandardScaler();
+y = df['lpsa'];
+X = df.drop(['lpsa'],axis=1);
 X_train = X[X['train']=="T"];
 y_train = y[X['train']=="T"];
 X_test = X[X['train']=="F"];
@@ -1457,11 +1685,12 @@ X_train = X_train.drop('train',axis=1)
 X_scaled = pp.scale(X_train.astype('float'));
 # or alternatively:
 X_scaled2 = std_scaler.fit_transform(X_train.astype('float'));
+#put together scaled data and output to see the correlation
 df_scaled = pd.concat([pd.DataFrame(X_scaled), y_train], axis=1, );
 #-1 because df has still 'train' column
 df_scaled.columns = df.columns[:-1];
 \end{lstlisting}
-The last line will show the correlation (since pandas dataframe class has the method $Dataframe.tolatex()$ to print the elements as a table we did: $Dataframe.corr().round(3).tolatex()$):
+The last line will show the correlation (since pandas dataframe class has the method $Dataframe.tolatex()$ to print the elements as in the following table, we did: $Dataframe.corr().round(3).tolatex()$):
 
 \begin{tabular}{lrrrrrrrrr}
 \toprule
@@ -1478,7 +1707,7 @@ pgg45   &   0.483 &    0.074 &  0.276 & -0.030 &  0.481 &  0.663 &    0.757 &  1
 lpsa    &   0.727 &    0.598 &  0.345 &  0.396 &  0.452 &  0.435 &    0.332 &  0.368 &  1.000 \\
 \bottomrule
 \end{tabular}
-As it can be seen, since the matrix is real, it is symmetric and of course square. It shows many strong correlations. Before calculating it, data have been standardized and centred such that they have zero mean. From the correlation matrix we see that both $lcavol$ and $lcp$ show a strong relationship with the response $lpsa$, and with each other.
+As it can be seen, since data are real-valued, it is symmetric and of course square. It shows many strong correlations. Before calculating it, data have been standardized and centred such that they have zero mean. From the correlation matrix we see that both $lcavol$ and $lcp$ show a strong relationship with the response $lpsa$, and with each other.
 
 \subsection{Fitting the ordinary least square model}
 We can directly calculate the coefficients by ourselves using \ref{OLSRegression}:
@@ -1492,6 +1721,7 @@ The estimated coefficients are:
 
 \begin{tabular}{lr|r|r|r|r|r|r|r|}
 \toprule
+ intercept &  lcavol &  lweight &    age &  lbph &    svi &    lcp &  gleason &  pgg45 \\
 \midrule
 2.452 &  0.711 &  0.290 & -0.141  &  0.210 &  0.307  & -0.287 & -0.021 &  0.275 \\
 \bottomrule
@@ -1517,10 +1747,13 @@ for ii in range(n_iter):
     theta_gd = theta_gd - eta*gradient;
 print(theta_gd);
 \end{lstlisting}
-In this case the coefficients are slightly different since it is an approximated solution:
+According to the number of iterations, in this case the coefficients might be slightly different since it is an approximated solution. For $n_iter=1000$ one gets the same coefficients:
+
 \begin{tabular}{rrrrrrrrr}
 \toprule
- 2.478387 &  0.661709 &  0.265103 & -0.157378 &  0.139586 &  0.313699 & -0.147519 &  0.035365 &  0.12507 \\
+ intercept &  lcavol &  lweight &    age &  lbph &    svi &    lcp &  gleason &  pgg45 \\
+\midrule
+     2.452 &   0.711 &     0.29 & -0.141 &  0.21 &  0.307 & -0.287 &   -0.021 &  0.275 \\
 \bottomrule
 \end{tabular}
 
@@ -1530,9 +1763,10 @@ We can predict the values by matrix mulitplication. For example in the mean squa
 \begin{lstlisting}
 from sklearn.metrics import mean_squared_error;
 y_pred_man = X_b.dot(theta);
-np.sum(np.square(y_train-y_pred_man))/len(y_pred), mean_squared_error(y_train, y_pred_man)
+print(np.sum(np.square(y_train-y_pred_man))/len(y_pred));
+print(mean_squared_error(y_train, y_pred_man));
 \end{lstlisting}
-where the error has been calculated both manually and using the $mean_squared_error$ sklearn function. The value is $0.43919976805833433$.
+where the error has been calculated both manually and using the $mean_squared_error$ sklearn function. The value is $0.4392$.
 
 With the sklearn $LinearRegression$ class we can use the method $predict$:
 \begin{lstlisting}
@@ -1554,18 +1788,23 @@ class customLinearRegression(LinearRegression):
         else:
             y_pred = self.predict(X);
             X_with_bias = np.c_[np.ones((X.shape[0], 1)), X];
-        sigma_hat_sq = np.sum(np.square(y_train-y_pred))/(len(y_train)-p-1);
-        std_err  = np.sqrt(np.diag(inv(X_with_bias.T.dot(X_with_bias)))*sigma_hat_sq);
-        z_scores = np.multiply(np.append(self.intercept_, self.coef_), 1/std_err);
+        sigma_hat_sq = np.sum(np.square(y_train-y_pred))/
+        		(len(y_train)-p-1);
+        std_err  = np.sqrt(np.diag(inv(
+        		X_with_bias.T.dot(X_with_bias)))*sigma_hat_sq);
+        z_scores = np.multiply(np.append(self.intercept_, self.coef_),
+        		1/std_err);
         return std_err, z_scores;
     def get_intercept_coef(self):
         return np.append(self.intercept_, self.coef_);
         
 std_err_lr, z_scores_lr = lr.z_scores(y_train, X_scaled);
-pd.DataFrame({"Coefficient": lr.get_intercept_coef(), "Std. error" : std_err_lr,
+pd.DataFrame({"Coefficient": lr.get_intercept_coef(), 
+			"Std. error" : std_err_lr,
               r"$Z$ score" : z_scores_lr},
              index=pd.Index(["intercept"]).append(X_train.columns)
             ).round(2).head(10)
+\label{CustomLinearRegression}
 \end{lstlisting}
 We get the following values:
 
@@ -1587,7 +1826,124 @@ pgg45     &         0.28 &        0.16 &       1.74 \\
 
 The predictor $lcavol$ shows the strongest effect, with $lweight$ and $svi$ also strong. Notice that $lcp$ is not significant, once $lcavol$ is in the model (when used in a model without $lcavol$, $lcp$ is strongly significant).
 
-\subsection{Best subset selection}
+\subsection{Subset selection}
+First we define to classes. One is supposed work as interface for all subset selection models:
+\begin{lstlisting}
+class best_submodel_abstract:
+    def __init__(self):
+        self._standardInit();
+        self.pipeline = Pipeline([
+                ('Scaler', StandardScaler()), 
+                ('LinearRegression',  CustomLinearRegression())]);  
+    
+    def get_scaler(self):
+        return self.pipeline.named_steps['Scaler'];
+    def get_model(self):
+        return self.pipeline.named_steps['LinearRegression'];
+        
+    def _standardInit(self):
+        self.X_small = None;
+        self.num_features  = None;
+        self.feature_names = None;
+        self.best_subset_idx = None; #wrt X_with_bias_coeffs
+        self.best_error    = None;
+        self.all_errors    = error_sequence();
+        self.skl_model     = None;   
+        
+    def _removeBias(self, X, num_features, isItwithoutBias=True):
+        self.num_features = num_features;
+        if (not isItwithoutBias):
+            print("removing bias");
+            X_small = X[:,1:];
+        else:
+            X_small = X;
+        return X_small;
+    
+    def fit(self, X, y,num_features, isItwithoutBias=True):
+        return
+\end{lstlisting}
+The initialization consists of defining a pipeline made up by a scaler and a linear regressor as defined in \ref{CustomLinearRegression} so that we can use the $z$-score metric. The initializer also calls a private method $_standardInit()$ that initialize all attributes to $None$. Elements of the pipeline are easily accessed through the methods $get_scaler$ and $get_model$.  The model also has a $_removeBias()$ method so that if input data have the column vector of $1$ for the intercept, it can be removed.
+
+The second class to stores the errors associated to given sets of features and prints them:
+\begin{lstlisting}
+class error_sequence:
+    def __init__(self, errors=tuple(), sequence=tuple()):
+        self.errors = errors;
+        self.names  = sequence;
+    
+    def printErrs(self):
+        for err, el in zip(self.errors, self.names):
+            print(str(el) + ": " + str(err));
+\end{lstlisting}
+Finally the best subset selection model is the following:
+\begin{lstlisting}
+class best_submodel_sk(best_submodel_abstract):
+    def __init__(self):
+        super(best_submodel_sk, self).__init__();
+                self.errors = {"features":list(), "errors":list()};
+       
+    def _update_best_model(self, pipeline, subset, mse, col_names):
+        self.pipeline        = pipeline;
+        self.best_subset     = subset;
+        self.best_subset_idx = subset; #wrt X_with_bias_coeffs
+        self.best_error      = mse;
+        self.model           = self.get_model();
+        self.scaler          = self.get_scaler();
+        if col_names:
+            self.feature_names = col_names;
+        return 
+    
+    def fit(self, X, y, num_features, isItwithoutBias=True):
+        column_names = None;
+        self.num_features = num_features;
+        if isinstance(X, pd.DataFrame):
+            column_names = list(X.columns);
+            X = X.values;
+        X_no_bias   = super()._removeBias(X,num_features, isItwithoutBias);
+        err = np.infty;
+        all_idx = [i for i in range(X_no_bias.shape[1])];
+        errors = {"features":list(), "errors":list()};
+        if num_features==0:
+            X_small = np.ones((X_no_bias.shape[0],1));
+            temp_pipe = clone(self.pipeline); 
+            temp_pipe.fit(X_small, y); #probably separate scaler for transform
+            #print(temp_pipe.named_steps['LinearRegression'].intercept_)
+            y_pred_sk  = temp_pipe.predict(X_small);
+            mse_sk     = mean_squared_error(y_train,y_pred_sk);
+            if column_names:
+                errors["features"].append(('intercept',));
+            else:
+                errors["features"].append(0);
+            errors['errors'].append(mse_sk);
+            self._update_best_model(temp_pipe, None, mse_sk, tuple(('intercept',)));
+            self.all_errors = error_sequence(tuple(errors['errors']),
+                                             tuple(errors["features"]));
+            return;
+        elif num_features>X_no_bias.shape[1]:
+            num_features=X_no_bias.shape[1];
+        for ff in list(itertools.combinations(all_idx, num_features)):
+            X_small = X_no_bias[:,ff]; 
+            temp_pipe = clone(self.pipeline); 
+            temp_pipe.fit(X_small, y); #probably separate scaler for transform
+            y_pred_sk  = temp_pipe.predict(X_small);
+            mse_sk     = mean_squared_error(y_train,y_pred_sk);
+            if column_names:
+                errors["features"].append(X_train.columns[list(ff)].values);
+            else:
+                errors["features"].append(ff);
+            errors['errors'].append(mse_sk);
+            self.all_errors = error_sequence(tuple(errors['errors']),
+                                             tuple(errors["features"]));
+            if mse_sk < err:
+                err = mse_sk;
+                if column_names:
+                    names = ["intercept"] + [column_names[ii] for ii in ff]
+                self._update_best_model(temp_pipe, ff, mse_sk, names);
+\end{lstlisting}
+The initializer calls the parent initializer (the one of the class defined above). The calculation is in the $fit()$ method, which takes input and target data and the number of features to select. If the selected number of features is $0$ we have only the intercept, if it is bigger the features in input data, then it is set to the features in the input matrix. $itertools.combinations(all_idx, num_features)$ returns all possible combinations of sub-groups of the features having size $num_elements$. 
+\paragraph{Note}: to copy the structure of the pipeline of the instance, $clone$ is used, otherwise it is copied by reference and when it is changed at the next iteration, also the variable to which it is assigned are changed.
+
+The pipeline is fit to the data, outputs are predicted and the RSE is calculated. The $all_errors$ is updated and if this is the best error, data are stored as the best parameters in the $_update_best_model$ private method.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%------------------------------NEW SECTION------------------------------%%%%%%%%%
@@ -1958,6 +2314,7 @@ The third method samples from the posterior and hence to get a good approximatio
 We have seen that in some cases we cannot compute the posterior but we can compute the numerator of the expression, i.e., the prior multiplied by the likelihood. The value that maximizes the posterior is also the value that maximizes the numerator. We have already seen a likelihood maximization procedure in \ref{likelihoodMax}; here we are maximizing the likelihood times the prior. This solution is the \textbf{maximum a posteriori (MAP)} estimate.
 
 \paragraph{The Newton-Raphson method}
+\label{NewtonsMethod}
 The Newton-Raphson method finds the points where $f(x)=0$. Starting from an estimation $x_n$ of such points, the estimation is updated by moving to the point where the tangent to the function at $x_n$ passes throw the x-axis. This point is computed by approximating the gradient as a change in $f(x)$ divided by a change in $x$:
 
 \begin{figure}
@@ -3781,7 +4138,7 @@ So substituting in \ref{width0}:
 \begin{aligned}
 \text{width} = \frac{2}{\norm{\vec{w}}}
 \end{aligned}
-\label{width0}
+\label{width1}
 \end{equation}
 
 \tb{Now we have to maximize the width}:
@@ -4687,11 +5044,275 @@ $\mathbb{1}^T\mathbb{L1}=0$ for any graph: the trivial constant vector correspon
 With $m$ connected components, the nodes can be reordered so that $L$ is block diagonal with a block for each connected component. Then $L$ has $m$ eigenvectors of eigenvalue $0$, and the eigenspace of eigenvalue $0$ is spanned by the indicator vectors of the connected components. In practice one has strong and weak connections, so $0$ eigenvalues are approximated by small eigenvalues.
 
 Spectral clustering is an interesting approach for finding non-convex clusters. 
-\subsubsection{Kernel Principal components}
-...
+\subsubsection{Kernel Principal components  (kernel-PCA or kPCA)}
+\label{KPCA}
+Support Vector Machines Kernel trick maps instances into a very high-dimensional space (called the feature space), enabling non-linear classification and regression. Recall that a linear decision boundary in the high-dimensional feature space corresponds to a complex nonlinear decision boundary in the original space.
+It turns out that the same trick can be applied to PCA, making it possible to perform complex non-linear projections for dimensionality reduction. Application of a kernel means expanding the features-space by non-linear transformation. On this new higher dimensional space we can apply PCA.
+
+Let $\phi(\dot)$ be a non-linear transformation mapping data from the input space $\CMcal{X}$ to some feature space $\CMcal{H}$. Then, the problem is the same of \ref{PCAmaxVar}, the only difference is that the covariance matrix is the one calculated in the feature space, not in the input space. Now $\psi_l$ lie in the span of the mapped data, with the coefficient given by the $l-th$ eigenvector.
+\begin{equation}
+\lambda_\ell\psi_\ell = \frac{1}{N}\sum_{i=1}^n \langle \phi(\x_i), \psi_\ell\rangle \phi(\x_i)
+\end{equation}
+
+As in \ref{PCALinComb} we can express the principal components as a linear combination, in this case not in terms of input vectors but in terms of feature vectors:
+\begin{equation}
+\psi_\ell  = \sum_{i=1}^n \alpha_{i\ell} \phi(\x_i)
+\end{equation}
+and substituting into the previous equation:
+\begin{equation}
+\begin{aligned}
+\lambda_\ell \psi_\ell  = \lambda_\ell \sum_{i=1}^n \alpha_{i\ell} \phi(\x_i) &= 
+\frac{1}{N}\sum_{i=1}^n \langle \phi(\x_i), \sum_{i=1}^n \alpha_{i\ell} \phi(\x_i)
+\rangle \phi(\x_i)\Rightarrow\\
+\lambda_\ell \sum_{i=1}^n \alpha_{i\ell} \phi(\x_i) &= \frac{1}{N}\sum_{i=1}^n \phi(\x_i)\langle \phi(\x_i), \sum_{i=1}^n \alpha_{i\ell} \phi(\x_i)
+\rangle \Rightarrow\\
+\Rightarrow \lambda_\ell \sum_{i=1}^n \alpha_{i\ell} \phi(\x_i) &= 
+\frac{1}{N}\sum_{i=1}^n \phi(\x_i) \phi(\x_i)^T \sum_{j=1}^n \alpha_{j\ell} \phi(\x_j)  \Rightarrow
+\end{aligned}
+\end{equation}
+The key step is now to express this in terms of the kernel function $k(\x_i , \x_j ) =
+\phi(\x_n)^T\phi(\x_m )$, which we do by multiplying both sides by $\phi(\x_p)^T$ to give
+\begin{equation}
+\begin{aligned}
+ \lambda_\ell \sum_{i=1}^n \alpha_{i\ell} \phi(\x_p)^T\phi(\x_i) &= 
+\frac{1}{N}\sum_{i=1}^n \phi(\x_p)^T\phi(\x_i)  \sum_{j=1}^n \alpha_{j\ell} \phi(\x_i)^T\phi(\x_j)\Rightarrow\\
+\Rightarrow  \lambda_\ell \sum_{i=1}^n \alpha_{i\ell} k(\x_p,\x_i) &= 
+\frac{1}{N}\sum_{i=1}^n k(\x_p,\x_i)  \sum_{j=1}^n \alpha_{j\ell} k(\x_i,\x_j)
+\end{aligned}
+\end{equation}
+This can be rewritten in matrix notationas
+\begin{equation}
+\mathbf{K}^2\mathbf{\alpha}_i = \lambda_i N  \mathbf{K} \mathbf{\alpha}_i
+\end{equation}
+where $\mathbf{\alpha}_i$ is a N-dimensional column vector with elements $\alpha_{\ell i}$ and $K$ is the \ti{Gram matrix} with entries $\langle \phi(\x_i), \phi(\x_j)\rangle$.
+
+One can find solutions for $\mathbf{\alpha}_i$ by solving the following eigenvalue problem:
+\begin{equation}
+\mathbf{K\alpha}_\ell = \lambda_\ell N\mathbf{\alpha}_i
+\end{equation}
+So the expansions require only the inner products, without the need to know exactly the mapping function.
+
+In \ref{SVDEigenDec} we have seen how to compute the matrix $Z=UD$.
+If $X$ is not centred:
+\begin{equation}
+\begin{aligned}
+\tilde{X} &= \br{I - M}X\\
+M &= \frac{1}{N}\mathbf{1}\mathbf{1}^T
+\end{aligned}
+\end{equation}
+where $M$ is mean operator. Thus, we compute the eigenvectors of $\br{I-M}K\br{I-M}$:
+\begin{equation}
+\begin{aligned}
+\tilde{K} &= \tilde{X}\tilde{X}^T = (I-M)XX^T(I-M)^T = (I-M)K(I-M) = U\Sigma^2U^T\\
+\tilde{K} &= Q\Lambda Q^{-1}
+\end{aligned}
+\end{equation}
+
+Kernel PCA interprets the kernel matrix $K = {K(xi,xi')}$ as an inner-product matrix of the implicit features $\langle\Phi(x_i ), \Phi(x_i')\rangle$ and finding its eigenvectors. 
+The elements of the $m$-th component $z_m$ ($m$-th column of $Z$) can be written (up to centering) as $z_{im} = \sum^N_{j=1} \alpha_{jm}K(x_i, x_j )$, where $\alpha_{jm} = u_{jm}/d_m$.
 
 \subsubsection{Sparse Principal components}
 ...
+\subsection{The pre-image problem}
+The kernel trick exploits the fact that a great number of data processing techniques do not depend explicitly on the data itself, but rather on a similarity measure between them and one of these measures is the inner product. In the kernel trick, the the inner product is replaced with a reproducing kernel (i.e.,  a positive definite symmetric function). The kernel is a non-linear transformation that maps input data onto a feature space: applying the kernel in the input space is equivalent to applying the inner product in this new space as a similarity measure. The advantage is that the resulting non-linear algorithms show significant performance improvements while keeping the same computational complexity.
+
+The reverse transformation from the feature space back to the input space is called \tb{reverse mapping} and is important in kernel PCA for signal and image processing. Unfortunately, \tb{the reverse mapping generally does not exist} and only most elements in the feature space, including the equivalent of denoised signals, do not have a valid pre-image in the input-space. \tb{The pre-image problem consists of finding an approximate solution} by identifying data in the input space based on their corresponding features that are mapped close enough to desired data in the feature space. The pre-image problem is essentially a dimensionality reduction problem.
+
+Most  well-known statistical linear techniques can be formulated as inner product between pairs of data. Thus, applying any non-linear transformation to the data can only impact the values of the resulting inner products. Therefore one does not need to compute such transformation explicitly but needs only to replace the inner product operator with an appropriate kernel, i.e., a \tb{symmetric hermitian function} \ref{Hermitian} (with symmetric meaning $k(x,y) = k(y,x)$. The only restriction is that the latter defines an inner product in some space. A sufficient condition for this is given by t e\tb{Mercer's theorem} \ref{} which states that any continuous positive definite function on $\CMcal{X}$ can be expressed as an inner product in some space.
+
+Furthermore, Moore-Aronszajn  theorem states that to any positive semidefinite kernel $k$ it corresponds  a unique reproducing kernel Hilbert space (rkHs)  whose inner product $\langle\cdot \rangle$ usually called reproducing kernel is $k$ itself.
+
+A rkHs is a Hilbert space of functions for which point evaluations are bounded, and where the existence and uniqueness of the reproducing kernel is guaranteed by the Riesz representation theorem. In fact, let $\CMcal{H}$ be a Hilbert space of functions defined on some compact $\CMcal{X}$, for which the evaluation $\psi(x)$ of the function $\psi \in H$ is bounded for all $x \in \CMcal{X}$ . By this theorem, there exists a unique function $\psi(x) \in \CMcal{H}$ such as $\psi(x) = \langle\psi,\phi(x)\rangle_\CMcal{H}$. This function has the following property:
+\begin{equation}
+\label{EqProd}
+\CMcal{k}(\x_i, \x_j) = \langle \phi(\x_i, \x_j) \rangle_\CMcal{H}
+\end{equation}
+Distances can be evaluated using the kernel trick:
+\begin{equation}
+\begin{aligned}
+\| \phi(\x_i) - \phi(\x_j) \|^2_\CMcal{H} &= \langle \phi(\x_i)- \phi(\x_j),  \phi(\x_i)- \phi(\x_j)\rangle_\CMcal{H}  =\\
+&=\CMcal{k}(\x_i, \x_i)- 2 \CMcal{k}(\x_i, \x_j)+\CMcal{k}(\x_j, \x_j)
+\end{aligned}
+\end{equation}
+
+Most of the kernels can be divided into two groups:
+\begin{itemize}
+\item projective kernels are functions of inner product (for example the polynomial kernel);
+\item radial kernels or isotropic kernels are functions of distance (for example the Gaussian kernel).
+\end{itemize}
+These kernels map the data onto a higher dimensional space, even infinite in the case of the Gaussian kernel.
+\begin{theorem}{\tb{Representer theorem}}
+For any function $\psi \in CMcal{H}$ minimizing a regularized cost function in the form of
+\begin{equation}
+\sum_{i=1}^n f\br{y_i, \psi(\x_i)} + \eta g\br{\|\psi\|^2_\CMcal{H}}
+\end{equation}
+with $f(\cdot)$ some loss function and $g(\cdot)$ a strictly monotonic increasing function on $CMcal{R}_{+}$ can be written as an expansion in terms of available data:
+\begin{equation}
+\psi = \sum_{i=1}^n \alpha_i \phi(\x_i)
+\end{equation} 
+\end{theorem}
+So even in an infinite rkHs, one only needs to work in the subspace spanned by the $n$ images of the training data.
+
+\subsubsection{Solving the pre-image problem}
+A problem is ill-posed if at least one of the following conditions is violated:
+\begin{itemize}
+\item a solution exist;
+\item it is unique 
+\item it depends continuously on the data.
+\end{itemize}
+Identifying the pre-image problem is typically an ill-posed problem due to the higher dimensionality of the feature space. As so, many elements might not have a pre-image in the input space and if it exists it might not be unique. The goal becomes to look for an approximate solution whose map is as close as possible.
+
+The pre-image problem can be seen as 
+\begin{equation}
+x^* = \argmin{\x \in \CMcal{X}} \left| \sum_{i=1}^n \alpha_i \phi(\x_i) - \phi(\x)\right|^2_{\CMcal{H}}
+\end{equation}
+Using equation \ref{EqProd}:
+\begin{equation}
+\label{MinFunct}
+x^* = \argmin{\x \in \CMcal{X}} \CMcal{k}(\x,\x) -2 \sum_{i=1}^n \alpha_i \CMcal{k}(\x,\x_i) + \br{\sum_{i=1}^n \alpha_i \CMcal{k}(\x_i,\x_i)}^2
+\end{equation}
+where the last term can be discarded because it does not depend on $\x$. This is equivalent to the minimization of the distance.
+
+\subsubsection{Exact pre-image}
+Suppose there exists an exact pre-image $\psi$, i.e., $x^*$ such that $\phi(x^*) = \psi$. Then, the minimization problem is equivalent to finding the pre-image. The pre-image can be computed when the kernel is an invertible function of $\langle \x_i \x_j \rangle$, such as some projective kernels including odd degree polynomial kernel and the sigmoid kernel. Let $h: \CMcal{R}\rightarrow \CMcal{R}$ defines the inverse function such that $h\br{k(\x_i, \x_j)} = \langle\x_i, \x_j \rangle$. Given an orthonormal base in the input space $\{e_1, e_2, \cdots\}$, every $\x \in \CMcal{X}$ can be written as 
+\begin{equation}
+\x = \sum_{j=1}^N\langle e_j , \x\rangle e_j = \sum_{j=1}^N h\br{k(e_j, \x)} e_j
+\end{equation}
+So, the exact pre-image $x^*$ of $\psi = \phi(x^*)$ can be expanded as 
+\begin{equation}
+\x^* =\sum_{j=1}^N h\br{\sum_{i=1}^n\alpha_i k(e_j, \x_i)} e_j
+\end{equation}
+Likewise, when the kernel is an invertible function of the distance, such as radial kernels, a similar expression can be derived $4 \langle \x^*, e_j \rangle = \| \x^* + e_j \|^2 -\| \x^* + e_j \|^2 $.
+
+Unfortunately for a large class of kernels the pre-image does not exist. The following are approximate solutions.
+
+\subsubsection{Gradient descent techniques}
+It is an iterative procedure where the current guess $\x^*_t$ is updated by taking a step in the opposite direction of the gradient of the objective function:
+\begin{equation}
+\x^*_{t+1} = \x^*_t - \eta_t \nabla_\x J(\x_t^*)
+\end{equation}
+where $\eta_t$ is a step size parameter. As an alternative to the gradient descent, one may use more sophisticated techniques such as the Newton's method (\ref{NewtonsMethod}). Unfortunately, the objective function is non-linear and non-convex, so the procedure must be run many times with several different starting values to avoid local minima solutions.
+
+\subsection{Fixed point iteration method}
+For most kernels, the expression in \ref{MinFunct} has a closed-form expression. By setting this expression to $0$, this greatly simplifies the optimization scheme resulting into a fixed-point iterative technique. Taking for example the Gaussian kernel the objective function becomes:
+\begin{equation}
+\Xi(\x) = -2 \sum_{i=1}^n \alpha_i e^{-\frac{\|\x-\x_i\|^2}{2\sigma^2}}
+\end{equation}
+and its gradient
+\begin{equation}
+\nabla_\x\Xi(\x) = -\frac{2}{\sigma^2} \sum_{i=1}^n \alpha_i e^{-\frac{\|\x-\x_i\|^2}{2\sigma^2}}(\x - \x_i)
+\end{equation}
+We get the pre-image setting this gradient to $0$:
+\begin{equation}
+x^*_{t+1} = \frac{\sum_{i=1}^n \alpha_i k(\x^*_t,\x_i)\x_i}{ \sum_{i=1}^n \alpha_i k(\x^*_t,\x_i)}
+\end{equation}
+with $k(\x^*_t,\x_i)= e^{-\frac{\|\x_t^*-\x_i\|^2}{2\sigma^2}}$. Instead for the polynomial kernel with degree $p$:
+\begin{equation}
+x^*_{t+1} =\sum_{i=1}^n   \alpha_i\br{\frac{  \langle\x^*_t,\x_i\rangle+c}{\langle\x^*_t,\x^*_t\rangle+c}}^{p-1}\x_i
+\end{equation}
+
+Such an iterative method still suffers from local minima and tends to be unstable, for example when the denominator goes to $0$. However, regularized solutions exist.
+
+An interesting fact is that the solution lies in the span of available data, taking the form $\x^* = \sum_{i=1}^n \beta_i \x_i$. So the search space is controlled as opposed to the gradient descent which explores the entire space.
+
+\subsubsection{Learning pre-image map}
+Even a learning machine cab be constructed and trained on the elements from the feature space and estimated (target points) on the input space points. We seek a function $\Gamma^*\br{\phi(\x_i)} = \x_i$. The function must be defined on a vector space. Also, one can decompose the function in order to have functions outputting a single scalar output for every dimension in $\CMcal{X}$: 
+\begin{equation}
+\begin{aligned}
+\Gamma^* &= \{\Gamma^*_1, \Gamma^*_2, \cdots, \Gamma^*_{dim{\CMcal{X}}}\}\\
+\Gamma^*_m&: \CMcal{R}^k \Rightarrow \CMcal{R}
+\end{aligned}
+\end{equation}
+Each of these functions is obtained by solving the optimization problem:
+\begin{equation}
+ \Gamma^*_m = \argmin{\Gamma}{\sum_{i=1}^n f\br{\left[\x_i\right], \Gamma(\psi)}+\eta g\br{\||Gamma\|^2}}
+\end{equation}
+where $f$ is the loss function. For example by taking the distance as the loss-function:
+\begin{equation}
+ \Gamma^*_m = \argmin{\Gamma}{\sum_{i=1}^n \|\left[\x_i\right]_m - \Gamma\br{\psi}\|^2+\eta g\br{\||Gamma\|^2}}
+\end{equation}
+This optimization problem can be solve by matrix inversion.
+
+\subsubsection{Multidimensional scaling (MDS)}
+MDS techniques embed data in a low-dimensional space by pairwise distances. In the rkHs the distance is 
+\begin{equation}
+\label{dist}
+\delta_i = \|\psi- \phi(\x_i)\|_\CMcal{H}
+\end{equation}
+ and in the input space it is $\|\x^* - \x_i\|$. Ideally, the distances are preserved: 
+ \begin{equation}
+ \label{distEquality}
+ \|\psi- \phi(\x_i)\|_\CMcal{H}^2 = \|\x^* - \x_i\|^2
+ \end{equation}.
+If $\psi = \phi(\x^*)$, then $\x^* = \x_i$. One way to solve this is to minimize the mean square error between these distances:
+\begin{equation}
+\x^* = \argmin{\x}{\sum_{i=1}^n \left| \|\x-\x_i\|^2 - \|\psi-\phi(\x_i) \|_\CMcal{H}^2 \right|}^2
+\end{equation}
+To solve this optimization problem, a fixed-point iteration method can be used by setting the gradient to $0$:
+\begin{equation}
+\x^* = \frac{\sum_{i=1}^n \br{\|\x^* - \x_i\|^2 = \delta_i^2}\x_i}{\sum_{i=1}^n \br{\|\x^* - \x_i\|^2 = \delta_i^2}}
+\end{equation}
+Another approach to solve this problem is to consider separately the identities \ref{distEquality} recalling the definition \ref{dist} and solving $n$:
+ equations:
+\begin{equation}
+2\langle \x^*, \x_i\rangle=\langle \x^*, \x^*\rangle +\langle \x_i,  \x_i\rangle-\delta_i^2
+\end{equation}
+$\langle \x^*, \x^*\rangle $ can be identified in the case of centred data by taking the average of both sides:
+\begin{equation}
+\langle \x^*, \x^*\rangle  = \frac{1}{n}  \sum_{i=1}^n\br{\delta_i^2- \langle \x_i, \x_i\rangle }
+\end{equation}
+Let $\epsilon$ be the vector having entries equal to $\frac{1}{n}\sum_{i=1}^n\br{\delta_i^2-\langle \x_i, \x_i\rangle }$, then:
+\begin{equation}
+\begin{aligned}
+2\X^T\x^* &= diag{\X^T \X} - \left[\delta_1^2, \delta_2^2, \cdots, \delta_n^2\right]^T+\epsilon\\
+\Rightarrow \x^* &= \frac{1}{2}\br{\X\X^T}^{-1}\X\br{diag{\X^T \X} - \left[\delta_1^2, \delta_2^2, \cdots, \delta_n^2\right]^T+\cancel{\epsilon}}
+\end{aligned}
+\end{equation}
+where the term $\br{\X\X^T}^{-1}\X\epsilon$ goes to $0$ thanks to the assumption of centred data.
+
+To keep this technique tractable in practice, only a certain neighbourhood is considered in the pre-image estimation.
+\subsubsection{Conformal map approach}
+One may also propose a pre-image method to preserve the product measures, which also preserves the angular measures since  $\x_i^T \x_j/\br{\|\x_i\|\|\x_j\|}$ defines the cosine of the angle.
+
+A coordinate system oin the rkHs is constructed with an isometry with respect to the input space. The model is not coupled with any constraint on the coordinate functions as opposed to the orthogonality constraint between the functions in the kernel PCA. 
+
+Each of the $n$-coordinate functions can be rewritten as a linear expansion of the available imagesL $\Phi_\ell = \sum_{i=1}^n \theta_{\ell, i}\phi(\x_i)$, with unknown weights. Rearranging:
+\begin{equation}
+\mathbf{\Phi}_{\x_i} = \left[ \langle \Phi_1, \phi(\x_i)\rangle,  \langle \Phi_w, \phi(\x_i)\rangle \cdots\right]
+\end{equation}
+Preservation of the inner products yields:
+\begin{equation}
+\mathbf{\Phi}_{\x_i}^T\mathbf{\Phi}_{\x_i}= \x_i^T\x_j
+\end{equation}
+This can be minimized by minimizing the fitness error:
+\begin{equation}
+\min_{\Psi_1, \cdots, \Psi_n}{\sum_{i,j=1}^n \|\x_i^T\x_j - \Psi_{\x_i}^T\Psi_{\x_j}\|^2 + \eta \sum_{\ell=1}^n \|\Psi_\ell\|^2_{\CMcal{H}}}
+\end{equation}
+where the second term is the regularization term. Rewritten in matrix form, it becomes:
+\begin{equation}
+\min_{\Theta} \frac{1}{2}\sum_{i,j=1}^n \|\X^T\X - \mathbf{K\Theta^T\Theta K}\|^2_F + \eta tr\br{\mathbf{\Theta^T\Theta K}}
+\end{equation}
+where $\|\cdot\|_F$ is the Frobenius norm, i.e., the root of sum of squared (absolute) values of all its elements: $\|M\|^2_F=tr(M^TM)$. By taking the derivative of this expression with respect to $\Theta^T\Theta$ one obtains
+\begin{equation}
+\mathbf{\Theta^T\Theta = K^{-1}\br{X^TX-\eta K^{-1}}K^{-1}}
+\end{equation}
+
+Now one can determine the pre-image of $\psi = \sum_{i=1}^n\alpha_i \phi(\x_i)$. Given the system of coordinates $\{\Psi_\ell\}$:
+\begin{equation}
+\langle \psi, \Psi_\ell\rangle_\CMcal{H} = \sum_{i,j=1}^n \theta_{\ell,i}\alpha_j k(\x_i, \x_j)
+\end{equation}
+
+By preserving the inner products in both spaces, ideally the model can be extended to $\phi$ resulting into 
+\begin{equation}
+\X^T\x^* = \mathbf{K\Theta^T\Theta K\alpha}
+\end{equation}
+and using the previous expression:
+\begin{equation}
+\x^* = \br{\X\X^T}^{-1}\X\br{\X^T\X -\eta K^{-1}}\alpha,
+\end{equation}
+independently from the kernel type.
+
+
 \subsection{Non-negative matrix factorization}
 It assumes non-negative data, i.e. images. Given $\X \in \CMcal{R}^{N\times p}$, it can be approximated with
 \begin{equation}
@@ -4962,4 +5583,7 @@ X = \sum_{x \in \CMcal{X}} \prod_{c \in \CMcal{C}} \X_C{x_C}
 is the normalizing constant, also known as the partition function
 
 ....
+
+
+\printindex
 \end{document}
