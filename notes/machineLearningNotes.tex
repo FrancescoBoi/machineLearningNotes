@@ -108,7 +108,7 @@ stringstyle=\color{red},
   stepnumber=1,
    tabsize=4,
 }
-\lstset{escapechar=@,style=customc}
+\lstset{escapechar=ç,style=customc}
 
 \title{Machine learning notes}
 \author{Francesco Boi}
@@ -6889,7 +6889,7 @@ This is a disturbing result. While such neural networks compute functions which 
 
 \paragraph{\tb{Recurrent NN}} In the feedforward nets we've been using there is a single input which completely determines the activations of all the neurons through the remaining layers. Suppose the behaviour of hidden neurons might not just be determined by the activations in previous hidden layers, but also by the activations at earlier times. Indeed, a neuron's activation might be determined in part by its own activation at an earlier time.  Or perhaps the activations of hidden and output neurons won't be determined just by the current input to the network, but also by earlier inputs. Neural networks with this kind of time-varying behaviour are known as \tb{recurrent neural networks} or RNNs. Not surprisingly, they're particularly useful in analysing data or processes that change over time. Such data and processes arise naturally in problems such as speech or natural language, for example.
 
-One way RNNs are currently being used is to connect neural networks more closely to traditional ways of thinking about algorithms, ways of thinking based on concepts such as Turing machines and (conventional) programming languages. A 2014 paper\footnote{\href{http://arxiv.org/abs/1410.4615}{}} developed an RNN which could take as input a character-by-character description of a (very, very simple!) Python program, and use that description to predict the output. Informally, the network is learning to "understand" certain Python programs. A second paper, also from 2014, \footnote{\href{http://arxiv.org/abs/1410.5401}{}} used RNNs as a starting point to develop what they called a neural Turing machine (NTM). This is a universal computer whose entire structure can be trained using gradient descent. They trained their NTM to infer algorithms for several simple problems, such as sorting and copying. As it stands, these are extremely simple toy models. Learning to execute the Python program \lstinline@print(398345+425923@ doesn't make a network into a full-fledged Python interpreter! It's not clear how much further it will be possible to push the ideas. Still, the results are intriguing. Historically, neural networks have done well at pattern recognition problems where conventional algorithmic approaches have trouble. Vice versa, conventional algorithmic approaches are good at solving problems that neural nets aren't so good at. It perhaps won't surprise you to learn that many of the ideas used in feedforward networks can also be used in RNNs. In particular, we can train RNNs using straightforward modifications to gradient descent and backpropagation. Many other ideas used in feedforward nets, ranging from regularization techniques to convolutions to the activation and cost functions used, are also useful in recurrent nets. And so many of the techniques we've developed in the book can be adapted for use with RNNs.
+One way RNNs are currently being used is to connect neural networks more closely to traditional ways of thinking about algorithms, ways of thinking based on concepts such as Turing machines and (conventional) programming languages. A 2014 paper\footnote{\href{http://arxiv.org/abs/1410.4615}{}} developed an RNN which could take as input a character-by-character description of a (very, very simple!) Python program, and use that description to predict the output. Informally, the network is learning to "understand" certain Python programs. A second paper, also from 2014, \footnote{\href{http://arxiv.org/abs/1410.5401}{}} used RNNs as a starting point to develop what they called a neural Turing machine (NTM). This is a universal computer whose entire structure can be trained using gradient descent. They trained their NTM to infer algorithms for several simple problems, such as sorting and copying. As it stands, these are extremely simple toy models. Learning to execute the Python program \cd+print(398345+425923)+ doesn't make a network into a full-fledged Python interpreter! It's not clear how much further it will be possible to push the ideas. Still, the results are intriguing. Historically, neural networks have done well at pattern recognition problems where conventional algorithmic approaches have trouble. Vice versa, conventional algorithmic approaches are good at solving problems that neural nets aren't so good at. It perhaps won't surprise you to learn that many of the ideas used in feedforward networks can also be used in RNNs. In particular, we can train RNNs using straightforward modifications to gradient descent and backpropagation. Many other ideas used in feedforward nets, ranging from regularization techniques to convolutions to the activation and cost functions used, are also useful in recurrent nets. And so many of the techniques we've developed in the book can be adapted for use with RNNs.
 
 \paragraph{\tb{Long-short memory units}} The problem actually gets worse in RNNs, since gradients aren't just propagated backward through layers, they're propagated backward through time. If the network runs for a long time that can make the gradient extremely unstable and hard to learn from. Fortunately, it's possible to incorporate an idea known as long short-term memory units (LSTMs) into RNNs. The units were introduced by Hochreiter and Schmidhuber in 1997 \footnote{\href{http://dx.doi.org/10.1162/neco.1997.9.8.1735}{}}with the explicit purpose of helping address the unstable gradient problem. LSTMs make it much easier to get good results when training RNNs, and many recent papers (including many that I linked above) make use of LSTMs or related ideas.
 \paragraph{\tb{Deep belief nets, generative models, and Boltzmann machines}} DBNs were influential for several years, but have since lessened in popularity. Part of the reason is that models such as feedforward and recurrent nets have achieved many spectacular results, such as their breakthroughs on image and speech recognition benchmarks. One reason DBNs are interesting is that they're an example of what's called a generative model. In a feedforward network, we specify the input activations, and they determine the activations of the feature neurons later in the network. A generative model like a DBN can be used in a similar way, but it's also possible to specify the values of some of the feature neurons and then "run the network backward", generating values for the input activations. More concretely, a DBN trained on images of handwritten digits can (potentially, and with some care) also be used to generate images that look like handwritten digits. In other words, the DBN would in some sense be learning to write. A second reason DBNs are interesting is that they can do unsupervised and semi-supervised learning. For instance, when trained with image data, DBNs can learn useful features for understanding other images, even if the training images are unlabelled. And the ability to do unsupervised learning is extremely interesting both for fundamental scientific reasons, and - if it can be made to work well enough - for practical applications.
@@ -7858,7 +7858,7 @@ def my_positive_weights(weights): # return value is just tf.nn.relu(weights)
 
 layer = keras.layers.Dense(30, activation=my_softplus, kernel_initializer=my_glorot_initializer, kernel_regularizer=my_l1_regularizer, kernel_constraint=my_positive_weights)
 \end{lstlisting}
-If a function has some hyperparameters that need to be saved along with the model, then you will want to subclass the appropriate class, such as \cd+keras.regulariz ers.Regularizer+, \cd+keras.constraints.Constraint+, keras.initializers.Initial izer or \cd+keras.layers.Layer+
+If a function has some hyperparameters that need to be saved along with the model, then you will want to subclass the appropriate class, such as \cd+keras.regularizers.Regularizer+, \cd+keras.constraints.Constraint+, \cd+keras.initializers.Initializer+ or \cd+keras.layers.Layer+.
 \begin{lstlisting}
 class MyL1Regularizer(keras.regularizers.Regularizer): 
 	def __init__(self, factor):
@@ -7870,21 +7870,23 @@ class MyL1Regularizer(keras.regularizers.Regularizer):
 	def get_config(self):
 			return {"factor": self.factor}
 \end{lstlisting}
-\subsubsection{Custom metrics}
-Losses and metrics are conceptually not the same thing: losses are used by Gradient Descent to train a model, so they must be differentiable (at least where they are evaluated) and their gradients should not be R0R everywhere. Plus, it's okay if they are not easily interpretable by humans (e.g. cross-entropy). In contrast, metrics are used to evaluate a model, they must be more easily interpretable, and they can be non- differentiable or have 0 gradients everywhere (e.g., accuracy). That said, in most cases, defining a custom metric function is exactly the same as defining a custom loss function.
 
-Suppose the model made 5 positive predictions in the first batch, $4$ of which were correct: that's $80% $precision. Then suppose the model made $3$ positive predictions in the second batch, but they were all incorrect: that's $0%$ precision for the second batch. If you just compute the mean of these two precisions, you get $40%$. But wait a second, this is not the model's precision over these two batches! Indeed, there were a total of 4 true positives ($4 + 0$) out of $8$ positive predictions ($5 + 3$), so the overall precision is $50%$, not $40%$. What we need is an object that can keep track of the number of true positives and the number of false positives, and compute their ratio when requested. This is precisely what the \cd+keras.metrics.Precision+ class does:
-\begin{lstlisting}
->>> precision = keras.metrics.Precision()
->>> precision([0, 1, 1, 1, 0, 1, 0, 1], [1, 1, 0, 1, 0, 1, 0, 1]) <tf.Tensor: id=581729, shape=(), dtype=float32, numpy=0.8>
->>> precision([0, 1, 0, 0, 1, 0, 1, 1], [1, 0, 1, 1, 0, 0, 0, 0]) <tf.Tensor: id=581780, shape=(), dtype=float32, numpy=0.5>
-\end{lstlisting}
+\subsubsection{Custom metrics}
+Losses and metrics are conceptually not the same thing: losses are used by Gradient Descent to train a model, so they must be differentiable (at least where they are evaluated) and their gradients should not be $0$ everywhere. Plus, it's okay if they are not easily interpretable by humans (e.g. cross-entropy). In contrast, metrics are used to evaluate a model, they must be more easily interpretable, and they can be non- differentiable or have 0 gradients everywhere (e.g., accuracy). That said, in most cases, defining a custom metric function is exactly the same as defining a custom loss function.
+
+Suppose the model made 5 positive predictions in the first batch, $4$ of which were correct: that's $80\%$ precision. Then suppose the model made $3$ positive predictions in the second batch, but they were all incorrect: that's $0\%$ precision for the second batch. If you just compute the mean of these two precisions, you get $40\%$. But wait a second, this is not the model's precision over these two batches! Indeed, there were a total of 4 true positives ($4 + 0$) out of $8$ positive predictions ($5 + 3$), so the overall precision is $50\%$, not $40\%$. What we need is an object that can keep track of the number of true positives and the number of false positives, and compute their ratio when requested. This is precisely what the \cd+keras.metrics.Precision+ class does:
+
+%\begin{lstlisting}
+%>>> precision = keras.metrics.Precision()
+%>>> precision([0, 1, 1, 1, 0, 1, 0, 1], [1, 1, 0, 1, 0, 1, 0, 1]) <tf.Tensor: id=581729, shape=(), dtype=float32, numpy=0.8>
+%>>> precision([0, 1, 0, 0, 1, 0, 1, 1], [1, 0, 1, 1, 0, 0, 0, 0]) <tf.Tensor: id=581780, shape=(), dtype=float32, numpy=0.5>
+%\end{lstlisting}
 At any point, we can call the \cd+result()+ method to get the current value of the metric. We can also look at its \cd+variables+ (tracking the number of true and false positives) using the variables attribute, and reset these variables using the \cd+reset_states()+ method. If you need to create such a streaming metric, you can just create a subclass of the \cd+keras.metrics.Metric+ class. 
 
 \begin{lstlisting}
 class HuberMetric(keras.metrics.Metric):
 	def __init__(self, threshold=1.0, **kwargs):
-		super().__init__(**kwargs) # handles base args (e.g., dtype) 
+		super().__init__(**kwargs) \# handles base args (e.g., dtype) 
 		self.threshold = threshold
 		self.huber_fn = create_huber(threshold)
 		self.total = self.add_weight("total", initializer="zeros") 
@@ -7901,10 +7903,11 @@ class HuberMetric(keras.metrics.Metric):
 		base_config = super().get_config()
 		return {**base_config, "threshold": self.threshold}
 \end{lstlisting}
+
 \subsubsection{Custom layers}
 You may occasionally want to build an architecture that contains an exotic layer for which TensorFlow does not provide a default implementation. In this case, you will need to create a custom layer. Or sometimes you may simply want to build a very repetitive architecture, containing identical blocks of layers repeated many times, and it would be convenient to treat each block of layers as a single layer.
 
-First, some layers have no weights, such as \cd+keras.layers.Flatten+ or \c+keras.lay ers.ReLU+. If you want to create a custom layer without any weights, the simplest option is to write a function and wrap it in a keras.layers.Lambda layer. For example, the following layer will apply the exponential function to its inputs:
+First, some layers have no weights, such as \cd+keras.layers.Flatten+ or \cd+keras.layers.ReLU+. If you want to create a custom layer without any weights, the simplest option is to write a function and wrap it in a keras.layers.Lambda layer. For example, the following layer will apply the exponential function to its inputs:
 
 \begin{lstlisting}
 exponential_layer = keras.layers.Lambda(lambda x: tf.exp(x))
@@ -7916,7 +7919,7 @@ class MyDense(keras.layers.Layer):
 		super().__init__(**kwargs)
 		self.units = units
 		self.activation = keras.activations.get(activation)
-	
+		
 	def build(self, batch_input_shape): 
 		self.kernel = self.add_weight(name="kernel", shape=[batch_input_shape[-1], self.units],initializer="glorot_normal")
          self.bias = self.add_weight(name="bias", shape=[self.units], initializer="zeros") 	
@@ -7924,12 +7927,12 @@ class MyDense(keras.layers.Layer):
 
 	def call(self, X):
 		return self.activation(X @ self.kernel + self.bias)
-	
-	def compute_output_shape(self, batch_input_shape):
-		return tf.TensorShape(batch_input_shape.as_list()[:-1] + [self.units])
-		
+
+	def compute_output_shape(self, batch_inputshape):
+		return tf.TensorShape(batch_input_shape.as_list()[:-1] + [self.units])	
+
 	def get_config(self):
 		base_config = super().get_config()
-		return {**base_config, "units": self.units,"activation": keras.activations.serialize(self.activation)}
+		return {**base_config, "units": self.units, "activation": keras.activations.serialize(self.activation)}
 \end{lstlisting}
-\end{document}
+\end{document}	
