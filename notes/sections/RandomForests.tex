@@ -1,0 +1,89 @@
+\section{Random forests}
+Random forests builds a large collection of decorrelated trees and then averages them. It is an alternative to boosting.
+\subsection{Definition}
+The idea is to average many noise but unbiased models to reduce the variance. Trees are ideal candidates for bagging, since they can capture complex interaction structures.
+\begin{algorithm}
+\For{$b\gets1$ \KwTo{$B$}}{
+	Draw a bootstrap sample $\mathbf{Z}^*$ of size $N$ from the training data;\\
+	Grow a random-forest tree $T_b$ to the bootstrapped data, by recursively repeating the following steps for each terminal node of the tree, until the minimum node size $n_{min}$ is reached\;
+	      (i) Select $m$ variables  at random from $p$ variables\;
+	      (ii) Pick the best variable/split-point among $m$\;
+	      (iii) Split the node into two daughter nodes.\\
+}
+Output the ensemble of trees $\{T_b\}_1^B$\;
+\caption{Random Forests}
+\end{algorithm}
+The \textbf{decision rule for regression} is:
+\begin{equation}
+\hat{f}_{rf}^B(x) = \frac{1}{B}\sum_{b=1}^BT_b(x) 
+\end{equation}
+The \textbf{decision rule for classification} is:
+\begin{equation}
+\hat{C}_{rf}^B(x) = \textit{majority vote}\{\hat{C}_b\}_1^B
+\end{equation}
+Trees are famous to be noisy so they benefit from the averaging. Moreover since each tree is identically distributed, the expectation of an average of $B$ such trees is the same as the expectation of anyone of them. So the bias remains the same and the only improvement is on the variance reduction. In boosting trees are not identically distributed.
+Summing such $B$ trees each of variance $\sigma^2$, the final variance is reduced to $\frac{1}{B}\sigma^2$. 
+
+If the variables are simply identically distributed but not necessarily independent with positive pairwise correlation $\rho$, the variance of the average is:
+\begin{equation}
+\rho \sigma^2 + \frac{1-\rho}{B}\sigma^2
+\end{equation}
+As $B$ increases, the second term disappears while the first remains. Correlation limits the benefits of averaging.
+
+The idea of Random forests is to improve variance reduction of bagging by reducing the correlation between trees, without increasing variance too much.
+
+Specifically, when growing a tree on a bootstrapped dataset, before each split, select $m \le p$ of the input variables at random as candidates for splitting. Typical values are $m= \sqrt{p}$, or even $1$.
+
+For classification, the default value for $m$ is $\lfloor{\sqrt{p}}\rfloor$ and the minimum node size is $1$, for regression, the default value for m is $\lfloor{p/3}\rfloor$ and the minimum node size is five.
+
+After $B$ such trees are grown the predictor is 
+\begin{equation}
+\hat{f}_{rf}^B(x) = \frac{1}{B}\sum_{b=1}^BT(x, \Theta_b) 
+\end{equation}
+$\Theta_b$ characterizes the $b-th$ random forest tree in terms of split variables, cutpoints at each node, and terminal-node values.
+Not all estimators can be improved by shaking up the data like this. It seems that highly nonlinear estimators, such as trees, benefit the most.
+
+Random forests do remarkably well, with very little tuning required. A random forest classifier achieves $4.88\%$ misclassification error on the spam test data, which compares well with all other methods, and is not significantly worse than gradient boosting at $4.5\%$. Bagging achieves $5.4\%$ which is significantly worse than either , so it appears on this example the additional randomization helps.
+
+\subsubsection{Overfitting}
+When the number of variables is large, but the fraction of relevant variables small, random forests are likely to perform poorly with small $m$. At each split the chance can be small that the relevant variables will be selected. When the number of relevant variables increases, the performance of random forests is surprisingly robust to an increase in the number of noise variables.  This robustness is largely due to the relative insensitivity of misclassification cost to the bias and variance of the probability estimates in each tree.
+
+Another claim is that random forests "cannot overfit" the data. It is certainly true that increasing $B$ does not cause the random forest sequence to overfit. The distribution of $\Theta$ here is conditional on the training data. However, this limit can overfit the data; the average of fully grown trees can result in too rich a model, and incur unnecessary variance. Using full-grown trees seldom costs much, and results in one less tuning parameter.
+
+\subsubsection{Variance analysis}
+Taking the limit for $B\rightarrow \infty$ of the random forest regression estimator:
+\begin{equation}
+\hat{f}_{rf}(x) = \E_{\Theta|Z} T(x \Theta(Z)
+\end{equation}
+At a single target point:
+\begin{equation}
+\Var \hat{f}_{rf}(x)  =\rho(x) \sigma^2 (x)
+\end{equation}
+$\rho(x)$ is the sampling correlation between any pair of trees used in averaging:
+\begin{equation}
+\rho(x) = corr\left[ T(x,\Theta_1(Z)), T(x,\Theta_2(Z))\right]
+\label{roX}
+\end{equation}
+Where $T(x,\Theta_1(Z))$ and $T(x,\Theta_2(Z))$ are a randomly drawn pair of random forest trees grown to the randomly sampled $Z$. $\sigma^2$ is the sampling variance of any single randomly drawn tree:
+\begin{equation}
+\sigma^2(x) = Var T(x, \Theta(Z))
+\label{s2}
+\end{equation}
+$\rho(x)$ \textbf{is not} the average correlation between fitted trees in a given random-forest ensemble. It is the theoretical correlation between a pair of random-forest trees evaluated at $x$, induced by repeatedly making training sample draws $Z$ from the population, and then drawing a pair of random forest trees. In statistical jargon, this is the correlation induced by the sampling distribution of $Z$ and $\Theta$.
+
+The variability averaged over in the calculations in\autoref{roX} and \autoref{s2} is both conditional on $Z$ for the bootstrap sampling and feature sampling at each split and a result of the sampling variability of $Z$ itself.
+\begin{equation}
+\textit{Total variance} = \Var_Z \hat{f}_{rf}(x) + \textit{within-$\mathbf{Z}$ variance}
+\end{equation}
+The second term increases as $m$ decreases. The first term is in fact the sampling variance of the random forest ensemble, which decreases as $m$ decreases. 
+The variance of the individual trees does not change appreciably over much of the range of $m$, the variance of the ensemble is dramatically lower than this tree variance:
+\begin{equation}
+\Var_{\Theta,Z} T(x, \Theta(Z)) = \Var_Z \E_{\Theta|Z}T(x, \Theta(X)) + E_Z\Var_{\Theta|Z}T(x, \Theta(X))
+\end{equation}
+
+\subsubsection{Bias analysis}
+As in bagging, the bias is the same for any individual sampled tree.
+\begin{equation}
+Bias(x) = \mu(x) - \E_Z\hat{f}_{rf}(x) = \mu(x) - \E_Z E_{\Theta|Z}T(x, \Theta(Z))
+\end{equation}
+This is also typically greater (in absolute terms) than the bias of an unpruned tree grown to $Z$, since the randomization and reduced sample space impose restrictions.

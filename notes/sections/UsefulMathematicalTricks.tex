@@ -1,0 +1,132 @@
+\section{Useful mathematical tricks}
+\subsection{First and second order Taylor approximation for multi variable scalar functions}
+\label{subsec:Taylor}
+It is known from analysis that a single variable  infinitely differentiable function in some open interval around $x=a$, can be expressed around that point, with the Taylor series:
+\begin{equation}
+f(x) = \displaystyle \sum_{k=0}^\infty \frac{\left. f^{(k)}\right|_{x=a} }{k!} (x-a)^k
+\end{equation}
+
+Now we want to generalize the formula for scalar-valued functions of multiple variables\footnote{\url{https://mathinsight.org/taylors_theorem_multivariable_introduction}}:
+\begin{equation}
+f(\x) = f(x_1, x_2, \cdots,x_n)
+\end{equation}
+Given a point $a$, for a multi variable differentiable function $f(x,y)$, its first order approximation is given by
+\begin{equation}
+f(\x) \approx f(a) + Df(\mathbf{a}) + (\x -\mathbf{a})
+\end{equation}
+where $Df(\mathbf{a})$ is the matrix of partial derivatives. The first order approximation the hyper-plane tangent to the curve in $a$, as well as the first-order Taylor polynomial.
+
+For the second quadratic approximation one has to add quadratic terms to the linear approximation, i.e., the analogous of second derivative in a hyper-space. Since $f(x)$ is scalar, the first derivative is $Df(x)$, a $1\times n$ matrix, which we can view as an $n$-dimensional vector-valued function of the $n$-dimensional vector $\x$. For the second derivative of $f(x)$, we can take the matrix of partial derivatives of the function $Df(x)$. We could write it as $DDf(x)$ for the moment. This second derivative matrix is an $n\times n$ matrix called the Hessian matrix of $f$. We'll denote it by $Hf(x)$:
+\begin{equation}
+Hf(\x) =\begin{pmatrix}
+\frac{\partial^2 f}{\partial x_1^2}\ \frac{\partial^2 f}{ \partial x_1 \partial x_2} & \cdots & \frac{\partial^2 f}{\partial x_1 \partial x_n}\\
+\frac{\partial^2 f}{\partial x_2} \partial x_1\ \frac{\partial^2 f}{ \partial x_2^2} & \cdots & \frac{\partial^2 f}{\partial x_2 \partial x_n}\\
+\vdots&\vdots&\vdots&\vdots\\
+\frac{\partial^2 f}{\partial x_n \partial x_1}\ \frac{\partial^2 f}{ \partial x_n \partial x_2} & \cdots & \frac{\partial^2 f}{\partial x_n^2}\\
+\end{pmatrix}
+\end{equation}
+or equivalently $Hf(\x) = DDf(\x)$. When $f$ is a function of multiple variables, the second derivative term in the Taylor series will use the Hessian $Hf(\mathbf{a})$. For one dimension we have $\frac{1}{2}(x-a)f^{''}(a)(x-a)$. The analogue of this expression is: $\frac{1}{2}(\x-\mathbf{a})Hf(\mathbf{a})(\mathbf{a})(\x-\mathbf{a})$
+
+So the second order approximation is:
+\begin{equation}
+f(\x) \approx f(a) + Df(\mathbf{a}) + (\x -\mathbf{a}) + \frac{1}{2}(\x-\mathbf{a})Hf(\mathbf{a})(\x-\mathbf{a})
+\end{equation}
+
+\subsection{Cauchy-Schwarz inequality}
+\label{sec:CauchySchwarz}
+The Cauchy-Schwarz inequality states that for all vectors $u$ and $v$ of an inner product space, it is true that:
+\begin{equation}
+\left| \langle \mathbf{u}, \mathbf{v} \rangle \right|^2 \le \langle \mathbf{u}, \mathbf{u} \rangle\cdot \langle \mathbf{v}, \mathbf{v} \rangle = \| \mathbf{u}\| \cdot \| \mathbf{v}\|
+\end{equation}
+with equality holding only when the two vectors are linear dependent, i.e., they are parallel.
+
+\subsection{Sum of decreasing numbers}
+\label{sec:SumDecreasingNumber}
+Consider a number $n$ and assume one wants to compute its decreasing number:
+\begin{equation}
+S = n + n-1 +\cdots 1
+\end{equation}
+The sum is equal to
+\begin{equation}
+S = \frac{n\cdot (n+1)}{2}
+\end{equation}
+\begin{proof}
+We express the sum in both ways:
+\begin{equation}
+\begin{aligned}
+S = n + &n-1 +\cdots 1\\
+S = 1 + &2 +\cdots n\\
+\end{aligned}
+\end{equation}
+Summing term by term, i.e., the first term with the first, the second with the second and so on:
+\begin{equation}
+2S = (n+1) + (n+1) + \cdots + (n+1) = (n+1) \cdot n \Rightarrow S = \frac{(n+1) \cdot n}{2}
+\end{equation}
+\end{proof}
+
+\subsection{The Heaviside cover-up method}
+\label{coverupMethod}
+The cover-up method can be used to make a partial fractions decomposition of a rational function $\frac{p(x)}{q(x)}$ whenever the denominator can be factored into distinct linear factors. Suppose we want to decompose: $\frac{x-7}{(x-1)(x+2)}$, we know the decomposition will have the form:
+\begin{equation*}
+\frac{x-7}{(x-1)(x+2)} = \frac{A}{x-1} +\frac{B}{x+2}
+\end{equation*}
+To determine $A$ by the cover-up method, on the left-hand side we mentally remove (or cover up with a finger) the factor $x-1$ associated with $A$, and substitute $x=1$ into what's left; this gives $A$:
+\begin{equation*}
+\frac{x-7}{\quad\quad(x+2)}\bigg\rvert_{x=1} = -2 = A
+\end{equation*}
+Similarly for $B$:
+\begin{equation*}
+\frac{x-7}{(x+1)\quad\quad}\bigg\rvert_{x=-2} = 3 = B
+\end{equation*}
+
+The method of using the partial fraction decomposition is successful ONLY for proper rational functions. In what follows, we will assume that we are dealing with such a proper function.
+If the degree of P is larger than or equal to the degree of $q$, apply long division to reduce the problem to that of integrating the sum of a polynomial and a proper rational function \footnote{\url{http://www.math.udel.edu/~angell/partfrac.pdf}}. Given two polynomials $p(x)$ and $q(x)$ and their ratio $\frac{p(x)}{q(x)}$, we divide the method into four cases, depending on the nature of the real factors of $q$.
+\paragraph{\tb{Case $1$: the denominator $q$ can be factored into linear factors all different.}}
+
+\begin{proof}
+In general, if the denominator of the rational function factors into the product of distinct linear factors:
+\begin{equation}
+\frac{p(x)}{(x-a_1) (x-a_2)\cdots (x-a_n)} = \frac{A_1}{x-a_1} + \frac{A_2}{x-a_2} + \cdots+ \frac{A_n}{x-a_n} 
+\end{equation}
+with $a_i \ne a_j$ for $i\ne j$.
+Now to find $A_i$ we multiply both members by $x-a_i$ and take the limit for $x\rightarrow a_i$:
+\begin{equation}
+\begin{aligned}
+\lim_{x\rightarrow a_i}\frac{p(x)}{(x-a_2)\cdots(x-a_n)} &= \\
+&= \lim_{x\rightarrow a_i} \left[A_1 + \cancel{(x-a_1) \br{\frac{A_2}{x-a_2} + \cdots+ \frac{A_n}{x-a_n} }}\right]
+\end{aligned}
+\end{equation}
+Now the right member will consist just of $A_1$ since all the other terms are multiplied by a quantity that goes to $0$. Then we can find $A_1$  by substituting $x=a_1$:
+\begin{equation}
+A_1 = \frac{p(a_1)}{(a_1-a_2)\cdots(a_1-a_n)}
+\end{equation}
+\end{proof}
+
+\paragraph{\tb{Case $2$}: the polynomial $q$ can be factored into linear factors, some of which are repeated}
+The cover-up method can also be used if a linear factor is repeated, but there too it gives just partial results. It applies only to the highest power of the linear factor. For example:
+\begin{equation}
+\begin{aligned}
+\frac{1}{(x-1)^2(x+2)} = \frac{A}{(x-1)^2}  +\frac{B}{(x-1)}  +\frac{C}{(x+2)}
+\end{aligned}
+\end{equation}
+To find up $A$, cover up $(x-1)^2$ and set $x=1$: $A=\frac{1}{3}$.  To find up $C$, cover up $(x+2)$ and set $x=-2$: $C=\frac{1}{9}$. This leaves $B$ which cannot be found by the cover-up method. But since $A$ and $C$ are already known, $B$ can be found by substituting any numerical value (other than $1$ or $-2$) for $x$ in the equation. For example $x=0 \Rightarrow B=\frac{-1}{9}$.
+
+\paragraph{\tb{Case $3$:} the polynomial Q can be factored into linear and quadratic factors, and none of the quadratic factors is repeated}. In this case, each unrepeated quadratic factor gives rise to a term of the form
+\begin{equation}
+\frac{3x^2+x-2}{(x^2+1)(x-1)} = \frac{A_1}{(x-1)}+\frac{A_2}{(x^2+1)}
+\end{equation}
+
+\paragraph{\tb{Case 4}}The polynomial $q$ can be factored into linear and quadratic factors, and some of the quadratic factors are repeated.
+\begin{equation}
+\frac{2x^3 + 3x^2+x-1}{(x^2+2x+1)^2(x+1)} = \frac{A_1}{(x+1)}+\frac{A_2x +A_3}{((x^2+2x+1)}+\frac{A_4x +A_5}{((x^2+2x+1)^2}
+\end{equation}
+
+
+Heaviside's cover-up method also can be used even when the denominator doesn't factor into distinct linear factors. To be sure, it gives only partial results, but these can often be a big help. We illustrate.
+\begin{equation*}
+\frac{5x+6}{(x^2+4)(x-2)} = \frac{Ax+B}{(x^2+4)} +\frac{C}{(x-2)} 
+\end{equation*}
+We first determine $C$ by the cover-up method, getting $C = 2$ . Then $A$ and $B$ can be found by the method of undetermined coefficients; the work is greatly reduced since we need to solve only two simultaneous equations to find $A$ and $B$, not three:
+\begin{equation}
+5x + 6 = (Ax + B)(x - 2) + 2(x^2 + 4)\Rightarrow A=-2, \quad B=1
+\end{equation}

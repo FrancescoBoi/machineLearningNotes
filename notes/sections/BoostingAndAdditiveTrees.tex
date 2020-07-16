@@ -1,0 +1,60 @@
+\section{Boosting and Additive Trees}
+\subsection{Boosting methods}
+ It was originally designed for classification problems but it can profitably be extended to regression as well. The motivation for boosting was a procedure that combines the outputs of many "weak" classifiers to produce a powerful "committee".
+
+A weak classifier is one whose error rate is only slightly better than random guessing. The purpose of boosting is to sequentially apply the weak classification algorithm to repeatedly modified versions of the data, thereby producing a sequence of weak classifiers $G_(x), \quad m=1,\cdots, M$. 
+Consider a two-class problem with the output variable coded as $Y\in\{-1,1\}$. Given a vector of predictors $\X$, a classifier $G(X)$ produces a prediction taking one of the two values $\{-1,1\}$.
+The predictions from all of them are then combined to through a weighted majority of vote to produce the final prediction:
+\begin{equation}
+G(x) = sign\br{\sum_{i=1}^M \alpha_mG_m(x)}
+\end{equation}
+This is the \textbf{AdaBoost} procedure. Here $\alpha_1, \cdots, \alpha_m$ are computed by the boosting algorithm and weight the single contribution. The data modifications at each boosting step consist of applying weights $w_1, \cdots, w_N$ to each of the training observations. Initially all the weights are $1/N$. For successive iterations,  the observation weights are individually modified and the classification algorithm is reapplied to the weighted observations. At step $m$ the observations that were misclassified by the classifier $G_{m-1}(x)$ have their weights increased, whereas the weights are decreased for those that were classified correctly. Thus as iterations proceed, observations that are difficult to classify correctly receive ever-increasing influence. Each successive classifier is thereby forced to concentrate on those training observations that are missed by previous ones in the sequence.
+ 
+ The \textbf{AdaBoost.M1} algorithm, aka \textbf{Discrete Adaboost}, is shown in \autoref{AdaBoost.M1}. If the base classifier instead returns a real-valued prediction (e.g., a probability mapped to the interval $[-1,1]$), AdaBoost can be modified appropriately and becomes \textbf{Real Adaboost}.
+ \begin{algorithm}[!ht]
+    $w_i=1/N, \quad i=1,\cdots,N$
+    
+	\For{($m =1:M$)}{
+			Fit a classifier $G_m(x)$ to training data using $w_i$;\\
+			Compute the training error \begin{equation}
+			err_m = \frac{\sum_{i=1}^N w_i I(y_i\ne G_m(x_i))}{\sum_{i=1}^N w_i};
+			\end{equation}\\
+			Compute $\alpha_m = \log\frac{1-err_m}{err_m}$;\\
+			$w_i\leftarrow w_i e^{\alpha_m I(y_i\ne G_m(x_i))}, \quad i=1,\cdots, N$;\\
+		}
+		return $G(x) = sign\br{\sum_{i=1}^M \alpha_mG_m(x)}$
+\caption{AdaBoost.M1 algorithm.}
+\label{AdaBoost.M1}
+\end{algorithm}
+The power of AdaBoost to dramatically increase the performance of even a very weak classifier.
+
+\subsection{Boosting fits an additive model}
+Boosting is a way of fitting an additive expansion in a set of basis-functions where the basis functions are the individual classifiers. The basis function expansion takes the form:
+\begin{equation}
+f(x) = \sum_{m=1}^M \beta_m b(x, \gamma_m)
+\end{equation}
+Typically these models are fit by minimizing a loss function averaged over the training data, such as the squared error or a likelihood-based loss function:
+
+\begin{equation}
+\min_{\{\beta_m, \gamma_m\}_1^M} \sum_{i=1}^N L\br{y_i, \sum_{m=1}^M \beta_m b(x_i, \gamma_m)}
+\label{additivCostEq}
+\end{equation}
+This is sometimes computationally infeasible and it is approximated by:
+\begin{equation}
+\min_{\{\beta_m, \gamma_m\}_1^M} \sum_{i=1}^N L\br{y_i, \beta b(x_i, \gamma)}
+\end{equation}
+\subsection{Forward Stagewise Additive Modeling}
+Forward stagewise modelling approximates the solution of \autoref{additivCostEq} by sequentially adding new basis functions to the expansion without adjusting the parameters and coefficients of those that have already been added. At each iteration $m$ one solves for the optimal basis function $b(x, \gamma_m)$ and corresponding coefficient $\beta_m$ to add the current expansion $f_{m-1}(x)$. This produces $f_m(x)$ and the process is repeated. For squared error loss one has:
+\begin{equation}
+\begin{aligned}
+L(y_i, f_{m-1}(x_i)+\beta b(x_i, \gamma)) &= (y_i-f_{m-1}(x_i)-f_{m-1}(x_i)-\beta b(x_i, \gamma))^2 =\\
+ &=(r_i-\beta b(x_i, \gamma))^2
+\end{aligned}
+\end{equation}
+The term that best fits the residual is added to the expansion at each step.
+
+Stagewise additive modelling is equivalent to AdaBoost.M1 using the exponential loss-function:
+\begin{equation}
+L(y, f(x))  = exp(-yf(x))
+\end{equation}
+The principal attraction of exponential loss in the context of additive modelling is computational; it leads to the simple modular reweighing AdaBoost algorithm.

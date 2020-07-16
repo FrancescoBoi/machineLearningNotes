@@ -1,0 +1,80 @@
+\section{Procedure for data mining}
+In data mining applications, usually only a small fraction of the large number of predictor variables that have been included in the analysis are actually relevant to prediction. Also, unlike many applications such as pattern recognition, there is seldom reliable domain knowledge to help create especially relevant features and/or filter out the irrelevant ones, the inclusion of which dramatically degrades the performance of many methods.
+In addition, data mining applications generally require interpretable models. It is not enough to simply produce predictions. It is also desirable to have information providing qualitative understanding of the relationship between joint values of the input variables and the resulting predicted response value. Thus, black box methods such as neural networks, which can be quite useful in purely predictive settings such as pattern recognition, are far less useful for data mining.
+
+An "off-the-shelf" method is one that can be directly applied to the data without requiring a great deal of time-consuming data preprocessing or careful tuning of the learning procedure. Decision trees come closest to meeting the requirements for serving as an off-the-shelf procedure for data mining. They are relatively fast to construct and they produce interpretable models (if the trees are small). They naturally incorporate mixtures of numeric and categorical predictor variables and missing values. They are invariant under (strictly monotone) transformations of the individual predictors. As a result, scaling and/or more general transformations are not an issue, and they are immune to the effects of predictor outliers. They perform internal feature selection as an integral part of the procedure. They are thereby resistant, if not completely immune, to the inclusion of many irrelevant predictor variables. These properties of decision trees are largely the reason that they have emerged as the most popular learning method for data mining. Trees have one aspect that prevents them from being the ideal tool for predictive learning, namely inaccuracy. They seldom provide predictive accuracy comparable to the best that can be achieved with the data at hand.
+
+\subsection{Boosting trees}
+The boosted tree model is a sum of tress induced in a forward stagewise manner:
+\begin{equation}
+\begin{aligned}
+f_M(x) &= \sum_{m=1}^M T(x, \Theta_m)\\
+T(x, \Theta_m) &= \sum_{j=1}^J\gamma_j I(x \in R_j)
+\end{aligned}
+\end{equation}
+where $\Theta_m$ is the vector of parameters. Considering a single tree, the parameters are found by minimizing the empirical risk:
+\begin{equation}
+\hat{\Theta} = \argmin{\Theta}{\sum_{j=1}^J\sum_{x_i \in R_j}L(y_i, \gamma_j)}
+\end{equation}
+Due to the combinatorial problem, we usually settle for suboptimal solutions, dividing the problem into two parts:
+\begin{itemize}
+\item \textbf{Finding $\gamma_j$ given $R_j$}: this is typically trivial and often $\hat{\gamma_j} = \bar{y}_j$, the mean of $y_i$ falling in region $R_j$.
+\item \textbf{Finding $R_j$}: this is the difficult part. A typical strategy is to use a greedy top-down recursive partitioning  algorithm to find $R_j$.
+\end{itemize}
+
+The boosted tree is induced in a forward stagewise manner. At each step one must solve:
+\begin{equation}
+\hat{\Theta}_m = \argmin{\Theta_m}{\sum_{i=1}^N L\br{y_i, f_{m-1}(x_i)+T\br{x_i, \Theta_m}}}
+\end{equation}
+for the region set and constants $\Theta_m = \{R_{jm},\gamma_{jm}\}_1^{J_m}$ for the next tree, given the current model $f_{m-1}(x)$. Given $R_{jm}$, finding the optimal constants $\gamma_{jm}$ in each region is typically straightforward:
+\begin{equation}
+\hat{\gamma}_{jm} = \argmin{\gamma_{jm}}{\sum_{x_i \in R_{jm}}} L(y_i, f_{m-1}(x_i)+\gamma_{jm})
+\end{equation}
+Finding the regions is more difficult, and even more difficult than for a single tree.
+
+Defining the loss function as
+\begin{equation}
+L(f) = \sum_{i=1}^N L(y_i, f(x_i))
+\end{equation}
+where $f$ is a sum of trees. So, $\hat{\mathbf{f}} =\argmin{\mathbf{f}}{L(\mathbf{f})}$, $\mathbf{f}=\{f(x_i1), f(x_2), \cdots, f(x_N)\}$. Numerical procedures exist to find $\hat{\mathbf{f}}$ as a sum of component vectors:
+\begin{equation}
+\mathbf{f}_M = \sum_{m=0}^M \mathbf{h}_m, \quad \mathbf{h}_m \in CMcal{R}^N
+\end{equation}
+with $\mathbf{f}_0=\mathbf{h}_0$ is an initial guess.
+
+One optimization is the \textbf{Steepest descent}: $\mathbf{h}_m = -\rho_m \mathbf{g}_m$, $\mathbf{g}$ being the gradient of $L(f)$ evaluated at $\mathbf{f}_{m-1}$.
+
+Another way is the \textbf{Gradient Boosting}. The gradient is trivial to calculate for any differentiable loss function but it is defined only at the training data points $x_i$ whereas the ultimate goal is to generalize it to new data not in the training set.
+
+A possible resolution to this dilemma is to induce a tree $T(x, \Theta_m)$ at the m-th iteration whose predictions $t_m$  are as close as possible to the negative gradient. Using squared error loss to measure closeness:
+\begin{equation}
+\widetilde{\Theta}_m = \argmin{\Theta}{\sum_{i=1}^N \br{-g_{im}-T(x_i, \Theta)}^2}
+\end{equation}
+ \begin{algorithm}[!ht]
+    $f_0\leftarrow \argmin{\gamma}{\sum_{i=1}^N L(y_i, \gamma)}$;\\
+	\For{($m =1:M$)}{
+		\For{($i =1:N$)}{
+			$r_{im} = \left[ \frac{\partial L(y_i,f(x_i))}{\partial f(x_i)}\right]_{f-f_{m-1}}$;\\			
+		}
+		Fit a regression tree to the targets $r_{im}$ giving terminal regions $R_{jm}, \quad j=1,\quad, J_m$;\\
+		\For{($i =1:J_m$)}{
+			$\gamma_{jm} = \argmin{\gamma}{\sum_{x_j \in R_{jm}} L(y_i, f_{m-1}(x_i)+\gamma)}$;\\			
+		}
+		$f_m(x) \leftarrow f_{m-1}+\sum_{j=1}^{J_m} L(y_i, f_{m-1}(x_i)+\gamma)$;\\
+		}
+		return $\hat{f} = f_M(x)$
+\caption{Gradient Tree Boosting algorirthm.}
+\end{algorithm}
+The algorithm for classification is similar. Two basic tuning parameters are the number of iterations $M$ and the sizes of each of the constituent trees $J_m, m=1,2,...,M$.
+
+\subsection{Right-sized Trees for boosting}
+[skipped, at least for now]
+
+\subsection{Regularization}
+Besides the size of the constituent trees, $J$, the other meta-parameter of gradient boosting is the number of boosting iterations $M$. Each iteration usually reduces the training risk $L(f_M )$, so that for $M$ large enough this risk can be made arbitrarily small. However, fitting the training data too well can lead to overfitting, which degrades the risk on future predictions. Thus, there is an optimal number $M*$ minimizing future risk that is application dependent. A convenient way to estimate $M*$ is to monitor prediction risk as a function of M on a validation sample. The value of M that minimizes this risk is taken to be an estimate of $M*$.
+\subsubsection{Shrinkage}
+Controlling the value of $M$ is not the only possible regularization strategy. Shrinkage techniques can be employed as well. The simplest implementation of shrinkage in this case is to scale the contribution of each tree by a factor $0<\nu<1$ when it is added to the current approximation:
+\begin{equation}
+f_m(X) = f_{m-1}(x) + \nu \sum_{i=1}^J \gamma_{jm}I(x \in R_{jm}).
+\end{equation}
+Smaller values of $\nu$ (more shrinkage) result in larger training risk for the same number of iterations $M$. Empirically it has been found (Friedman, 2001) that smaller values of $\nu$ favour better test error, and require correspondingly larger values of $M$. The best strategy appears to be to set $\nu$ to be very small ($\nu < 0.1$) and then choose $M$ by early stopping, however more iterations are needed so the computational cost is higher.

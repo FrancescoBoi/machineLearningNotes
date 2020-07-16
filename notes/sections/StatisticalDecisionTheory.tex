@@ -1,0 +1,153 @@
+\section{Statistical Decision Theory}
+\subsection{Expected prediction error}
+Let $X \in \R^p$ denote a real valued random input vector, and $Y \in \R^p$ a real valued random output variable, with joint distribution $Pr(X,Y)$. We seek a function $f(X)$ for predicting $Y$ given values of the input $X$. This theory requires a loss function $L(Y,f(X))$ for penalizing errors in prediction, and by far the most common and convenient is 
+squared error loss: $L(Y,f(X))=(Y -f(X))^2$.
+
+The estimated prediction error is 
+
+\begin{equation}
+\begin{aligned}
+EPE(f) &= \E\left[ \left( Y- f(X) \right)^2 \right] = \int \left( y- f(x) \right)^2 p(x,y) dx dy \\
+&= \int_x\int_y \left( y- f(x) \right)^2 p(x,y) dx dy \\
+\end{aligned}
+\end{equation}
+
+Recalling $p(x,y) = p( y|x) p(x)$:
+\begin{equation}
+\begin{aligned}
+EPE(f) &= \int_x\int_y \left( y- f(x) \right)^2 p(y|x)  p(x) dx dy \\
+ &= \int_x \int_y \left( \left( y - f(x) \right)^2 p(y|x) dy\right)  p(x) dx   \\
+ &= \int_x \E_{Y|X} \left[ \left( y - f(X) \right)^2 | X=x \right]  p(x) dx   \\
+ &= \E_X \left[ \E_{Y|X} \left[ \left( y - f(X) \right)^2 | X=x \right]    \right]   
+\end{aligned}
+\end{equation}
+So to minimize the prediction error:
+\begin{align}
+f(x) &= \argmin{c} \E_{Y|X} \left[ \left( y - c(x) \right)^2 | X=x \right] 
+& \Rightarrow f(x) = \E \left[ Y | X=x \right] 
+\end{align}
+
+The \textit{Nearest Neighbour} algorithm, assigns labels to points by counting and averaging the labels of the points belonging to a given neighbourhood:
+
+\begin{align}
+\hat{f} (x) &= Ave \left(   y_i|x_i \in N_k(x)   \right)
+\end{align}
+where $N_k(x) $ contains the $k$ points closest to $x$. This presents \textbf{two approximations}
+\begin{itemize}
+\item expectation is approximated by averaging
+\item conditioning at a point is relaxed to conditioning on some region centred at the target point.
+\end{itemize}
+
+With $k$ sufficiently large, the average gets more stable and with large $N$ the points will be more likely close to x. If $k, N \rightarrow \infty$ with $k/N \rightarrow 0$ the average becomes the expectation and we have the best possible estimator.
+
+Unfortunately often we do not have so much data and some other times we might want exploit the supposed structure of data (linear, polynomial etc.).
+
+However there is even a bigger problem when there are too many dimensions (i.e., $p$ is large). Consider a uniformly distributed input in a $p$ dimensional unit hypercube. Consider a hypercube neighbourhood around the target point capturing a fraction $r$ of the total observations distributed among the unit hypercube. The edge of the neighbour hypercube will be $e_p(r) = r^{1/p}$. In 10 dimensions, using a neighbourhood capturing $1\%$ of the data we have $r(0.01) = 0.63$ so we must use 63\% of the total data for one target.
+
+On the contrary the linear regression is a \textbf{model-based approach}, i.e., one assumes that the function $f(x)$ is approximately linear:
+\begin{align}
+f(x) &\approx x^T \beta
+\end{align}
+
+Putting this in the $EPE$ equation:
+
+\begin{equation}
+\begin{aligned}
+f(x) &= \argmin{c} \E_{Y|X} \left[ \left( y - c(x) \right)^2 | X=x \right]  \\
+&= \argmin{\beta} \E_{Y|X} \left[ \left( y - x^T \beta \right)^2 | X=x \right] \\
+\Rightarrow \beta &= \left[ \E\left[ X\cdot X ^T\right]\right]^{-1} \cdot \E\left[ X\cdot Y \right]
+\end{aligned}
+\end{equation}
+
+The minimum of a quadratic function is given by deriving and setting its derivative to $0$.
+
+If instead of a $L_2$ loss function we use $L_1$
+
+\begin{equation}
+\begin{aligned}
+EPE(f) &= \E\left[ \left| Y- f(X) \right| \right] = \int \left| y- f(x) \right| p(x,y) dx dy \\
+&= \int_x\int_y \left| y- f(x) \right|p(x,y) dx dy \\
+\end{aligned}
+\end{equation}
+Recalling $p(x,y) = p( y|x) p(x)$:
+\begin{equation}
+\begin{aligned}
+EPE(f) &= \int_x\int_y \left| y- f(x) \right|p(y|x)  p(x) dx dy \\
+ &= \int_x \int_y \left| \left( y - f(x) \right| p(y|x) dy\right)  p(x) dx   \\
+ &= \int_x \E_{Y|X} \left[ \left| y - f(X) \right| | X=x \right]  p(x) dx   \\
+ &= \E_X \left[ \E_{Y|X} \left[ \left| y - f(X) \right| | X=x \right]    \right]   
+\end{aligned}
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+f(x) &= \argmin{c} \E_{Y|X} \left[ \left| y - c(x) \right| | X=x \right]
+\end{aligned}
+\end{equation}
+and as already seen in \autoref{medianMin}, the minimizer for the sum of distances is the median.
+\subsubsection{Loss function for categorical variables}
+For categorical output variables $\mathbb{G}_k$ we have: 
+
+\begin{equation}
+\begin{aligned}
+EPE = \E\left[ L\left( G, \hat{G}(X)\right)\right] = \E_x \sum_{k=1}^K L\left[ \mathbb{G}_k, \hat{G}(X)\right]Pr\left( \mathbb{G}_k|X\right)
+\end{aligned}
+\end{equation}
+where the expectation is again taken with respect to the joint distribution $Pr(G,X)$. Conditioning again we can write:
+\begin{equation}
+\begin{aligned}
+EPE = \E_x \sum_{k=1}^K L\left[ \mathbb{G}_k, \hat{G}(X)\right]Pr\left( \mathbb{G}_k|X\right)
+\end{aligned}
+\end{equation}
+where the integral over $y$ has been substituted with the summation due to the categorical nature of the variable.
+
+The minimizer is given by:
+
+\begin{equation}
+\begin{aligned}
+\hat{G}(x) = \argmin{g \in \mathbb{G}} \sum_{k=1}^{K} L\left( \mathbb{G}_k, g\right)Pr\left( \mathbb{G}_k | X=x \right)
+\end{aligned}
+\end{equation}
+
+Often the \textit{zero-one loss function} is used for categorical variables and the above simplifies to:
+\begin{equation}
+\begin{aligned}
+\hat{G}(x) = \argmin{g \in \mathbb{G}}  \left[1 - Pr\left( g | X=x \right) \right] =\argmax{g \in \mathbb{G}}  \left[Pr\left( g | X=x \right) \right]
+\end{aligned}
+\end{equation}
+This is known as \textit{Bayes classifier} because \textbf{it classifies to the most probable class, using conditional discrete probability distribution}.
+
+\paragraph{\textbf{Note}: When models or loss functions use additional parameters that penalize complexity (Lasso, Ridge and others) we cannot use the training data to determine these parameters, since we would pick those that gave interpolating fits with zero residuals but it will be unlikely to predict future data.}
+
+\subsection{Bias-Variance trade-off}
+\begin{equation}
+\begin{aligned}
+EPE(f) &= \E \left[ \left( Y- f(X) \right)^2 \right] =\\
+            &= \E \left[ Y^2\right] - 2 \E \left[ Y\right] \E\left[ f(X)\right] + \E\left[ f(X)^2\right]\\
+             &= Y^2 - 2  Y \E\left[ f(X)\right] + \E\left[ f(X)^2\right]
+\end{aligned}
+\end{equation}
+
+Recalling 
+\begin{equation}
+\begin{aligned}
+&BIAS\left(Y,\E\left[f(X)\right]\right) = \left| Y-\E\left[f(X)\right]\right| \\
+&\Rightarrow BIAS\left(Y,f(X)\right)^2 = \left( Y-\E\left[f(X)\right]\right)^2 \\
+&= Y^2 -2 Y \E\left[f(X)\right] + \E\left[f(X)\right]^2 \\
+\end{aligned}
+\end{equation}
+
+$EPE$ can be expressed using also the Variance definition in \autoref{Variance}
+\begin{equation}
+\begin{aligned}
+\label{biasVar}
+EPE(f) &=  Y^2 - 2  Y \E\left[ f(X)\right] + \E\left[ f(X)^2\right] +\E\left[f(X)\right]^2-\E\left[f(X)\right]^2\\
+&= BIAS(Y, f(X)^2 + \Var(Y, f(x))
+\end{aligned}
+\end{equation}
+
+The bias is given by the distance of our predictions from real points. Complex models have more degrees of freedom and are able to fit closer real points hence they to tend to have low bias. However, they present higher variance. On the contrary simple models (i.e., linear) have lower variance but higher bias.
+
+The error due to variance is the amount by which the prediction, over one training set, differs from the expected predicted value, over all the training sets. As with bias, you can repeat the entire model building process multiple times. To paraphrase Manning et al (2008), variance measures how inconsistent are the predictions from one another, over different training sets, not whether they are accurate or not.  A learning algorithm with low bias must be "flexible" so that it can fit the data well. But if the learning algorithm is too flexible, it will fit each training data set differently, and hence have high variance.
+
+For linear models fit by ordinary least squares, the estimation bias is zero. For restricted fits, such as ridge regression, it is positive, and we trade it off with the benefits of a reduced variance.

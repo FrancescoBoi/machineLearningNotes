@@ -1,0 +1,27 @@
+\section{Taxonomy of machine learning algorithms}
+\subsection{Supervised vs Unsupervised}
+The first distinction is between Supervised and Unsupervised learning. Some in-between methods exist too:
+\begin{itemize}
+\item \textbf{supervised learning}: the training data you feed to the algorithm includes the desired solutions, called labels. Typical algorithms are Linear regression, K-Nearest Neighbours, Logistic Regression,  Support Vector Machines, Decision Trees and Random Forests, Neural Networks. Tasks of supervised learning are \textbf{classification} and \textbf{prediction}, i.e., \textbf{regression}.
+\item \textbf{unsupervised learning}: no label is passed as input and typical the algorithm must apply label or group data somehow. Its tasks are 
+\begin{itemize}
+\item \textbf{clustering}: whose goals is to group together similar groups. This is typically done by defining a measure of similarity (or dissimilarity) between points in the hyperspace. Popular algorithms are K-means, Hierarchical clustering Analysis, Expectation Maximization; 
+\item \textbf{Visualization and dimensionality reduction}: for visualization applications, one feeds them a lot of complex and unlabeled data, and they output a 2D or 3D representation of your data that can easily be plotted. The goal of dimensionality reduction instead is to simplify the data without losing too much information by merging correlated features. Popular algorithms are Principal component analysis (PCA), Kernel PCA, Locally-Linear Embedding, t-distributed Stochastic Neighbour Embedding
+\item \textbf{Association Rule Learning}: Apriori, Eclat.
+\end{itemize}
+\item \textbf{semi-supervised learning}: Some algorithms can deal with partially labeled training data, usually a lot of unlabeled data and a little bit of labeled data. Some photo-hosting services, such as Google Photos, are good examples of this. Once you upload all your family photos to the service, it automatically recognizes that the same person.
+\item \textbf{Reinforcement learning}: The learning system, called an agent in this context, can observe the environment, select and perform actions, and get rewards or penalties in return. It must then learn by itself what is the best strategy, called a \textbf{policy}, to get the most reward over time.
+\end{itemize}
+
+\subsection{Batch and online Learning}
+Another criterion used to classify Machine Learning systems is whether or not the system can learn incrementally from a stream of incoming data.
+\begin{itemize}
+\item \textbf{batch-learning}: the system is incapable of learning incrementally: it must be trained using all the available data. this is called \textbf{offline learning}.
+\item \textbf{online learning}: you train the system incrementally by feeding it data instances sequentially, either individually or by small groups called mini-batches. Online learning is great for systems that receive data as a continuous flow (e.g., stock prices) and need to adapt to change rapidly or autonomously. It is also a good option if you have limited computing resources.
+\end{itemize}
+
+\subsection{Instance-based vs Model based}
+\begin{itemize}
+\item \textbf{instance-based learning}: the system learns the examples by heart, for example by using a measure of similarity such as number of similar words in two emails to classify spam emails.
+\item \textbf{Model-based learning}: it builds a model to perform predictions
+\end{itemize}

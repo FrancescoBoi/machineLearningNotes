@@ -1,0 +1,295 @@
+
+\section{Hands on linear regression}
+The data are downloaded in this way 
+\begin{lstlisting}
+wget https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
+\end{lstlisting}
+
+and are the same used in the book \ti{Elements of statistical learning}. They come from a study by Stamey et al. (1989) and examine the correlation between the level of prostate-specific antigen and a number of clinical measures in men who were about to receive a radical prostatectomy. The variables are log cancer volume (\lstinline[columns=fixed]{lcavol}), log prostate weight (\lstinline[columns=fixed]{lweight}), \lstinline[columns=fixed]{age}, log of the amount of benign prostatic hyperplasia (\lstinline[columns=fixed]{lbph}), seminal vesicle invasion (\lstinline[columns=fixed]{svi}), log of capsular penetration (\lstinline[columns=fixed]{lcp}), Gleason score (\lstinline[columns=fixed]{gleason}), and percent of Gleason scores 4 or 5 (\lstinline[columns=fixed]{pgg45}).
+
+\subsection{Analyzing data}
+We can read the data and analyse the correlation:
+
+\begin{lstlisting}
+import numpy as np;
+import pandas as pd;
+import scipy;
+from sklearn.preprocessing import StandardScaler;
+from sklearn import preprocessing as pp;
+from sklearn.pipeline import Pipeline;
+df = pd.read_csv("prostate.data",header=0, delimiter="\t",);
+#drop first column: it is repeating the index
+df.drop([df.columns[0]],inplace=True, axis='columns');
+std_scaler = StandardScaler();
+y = df['lpsa'];
+X = df.drop(['lpsa'],axis=1);
+X_train = X[X['train']=="T"];
+y_train = y[X['train']=="T"];
+X_test = X[X['train']=="F"];
+y_test = y[X['train']=="F"];
+X_train = X_train.drop('train',axis=1)
+X_scaled = pp.scale(X_train.astype('float'));
+# or alternatively:
+X_scaled2 = std_scaler.fit_transform(X_train.astype('float'));
+#put together scaled data and output to see the correlation
+df_scaled = pd.concat([pd.DataFrame(X_scaled), y_train], axis=1, );
+#-1 because df has still 'train' column
+df_scaled.columns = df.columns[:-1];
+\end{lstlisting}
+The last line will show the correlation (since pandas dataframe class has the method $Dataframe.tolatex()$ to print the elements as in the following table, we did: $Dataframe.corr().round(3).tolatex()$):
+
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+{} &  lcavol &  lweight &    age &   lbph &    svi &    lcp &  gleason &  pgg45 &   lpsa \\
+\midrule
+lcavol  &   1.000 &    0.300 &  0.286 &  0.063 &  0.593 &  0.692 &    0.426 &  0.483 &  0.727 \\
+lweight &   0.300 &    1.000 &  0.317 &  0.437 &  0.181 &  0.157 &    0.024 &  0.074 &  0.598 \\
+age     &   0.286 &    0.317 &  1.000 &  0.287 &  0.129 &  0.173 &    0.366 &  0.276 &  0.345 \\
+lbph    &   0.063 &    0.437 &  0.287 &  1.000 & -0.139 & -0.089 &    0.033 & -0.030 &  0.396 \\
+svi     &   0.593 &    0.181 &  0.129 & -0.139 &  1.000 &  0.671 &    0.307 &  0.481 &  0.452 \\
+lcp     &   0.692 &    0.157 &  0.173 & -0.089 &  0.671 &  1.000 &    0.476 &  0.663 &  0.435 \\
+gleason &   0.426 &    0.024 &  0.366 &  0.033 &  0.307 &  0.476 &    1.000 &  0.757 &  0.332 \\
+pgg45   &   0.483 &    0.074 &  0.276 & -0.030 &  0.481 &  0.663 &    0.757 &  1.000 &  0.368 \\
+lpsa    &   0.727 &    0.598 &  0.345 &  0.396 &  0.452 &  0.435 &    0.332 &  0.368 &  1.000 \\
+\bottomrule
+\end{tabular}
+As it can be seen, since data are real-valued, it is symmetric and of course square. It shows many strong correlations. Before calculating it, data have been standardized and centred such that they have zero mean. From the correlation matrix we see that both $lcavol$ and $lcp$ show a strong relationship with the response $lpsa$, and with each other.
+
+\subsection{Fitting the ordinary least square model}
+We can directly calculate the coefficients by ourselves using \autoref{OLSRegression}:
+\begin{lstlisting}
+from numpy.linalg import inv;
+X_b = np.c_[np.ones((len(X_scaled), 1)), X_scaled];
+print(np.mean(X_b, axis=0));
+theta = inv(X_b.T.dot(X_b)).dot(X_b.T).dot(y_train);
+\end{lstlisting}
+The estimated coefficients are:
+
+\begin{tabular}{lr|r|r|r|r|r|r|r|}
+\toprule
+ intercept &  lcavol &  lweight &    age &  lbph &    svi &    lcp &  gleason &  pgg45 \\
+\midrule
+2.452 &  0.711 &  0.290 & -0.141  &  0.210 &  0.307  & -0.287 & -0.021 &  0.275 \\
+\bottomrule
+\end{tabular}
+
+$sklearn$ offers the $LinearRegression$ class to fit a linear model:
+\begin{lstlisting}
+from sklearn.linear_model import LinearRegression;
+lr = LinearRegression();
+lr.fit( X_scaled, y_train);
+print(lr.coef_, lr.intercept_);
+\end{lstlisting}
+yielding the same coefficient estimation.
+
+We can also use the stochastic gradient estimation technique:
+\begin{lstlisting}
+n_iter = 1000;
+np.random.seed(42);
+eta = 0.1
+theta_gd = np.random.randn(X_b.shape[1],1);
+for ii in range(n_iter):
+    gradient =  -2/len(X_b)*X_b.T.dot(np.c_[y_train] - X_b.dot(theta_gd));
+    theta_gd = theta_gd - eta*gradient;
+print(theta_gd);
+\end{lstlisting}
+According to the number of iterations, in this case the coefficients might be slightly different since it is an approximated solution. For $n_iter=1000$ one gets the same coefficients:
+
+\begin{tabular}{rrrrrrrrr}
+\toprule
+ intercept &  lcavol &  lweight &    age &  lbph &    svi &    lcp &  gleason &  pgg45 \\
+\midrule
+     2.452 &   0.711 &     0.29 & -0.141 &  0.21 &  0.307 & -0.287 &   -0.021 &  0.275 \\
+\bottomrule
+\end{tabular}
+
+
+\subsection{Predicting values}
+We can predict the values by matrix mulitplication. For example in the mean square error on the training set is calculated as:
+\begin{lstlisting}
+from sklearn.metrics import mean_squared_error;
+y_pred_man = X_b.dot(theta);
+print(np.sum(np.square(y_train-y_pred_man))/len(y_pred));
+print(mean_squared_error(y_train, y_pred_man));
+\end{lstlisting}
+where the error has been calculated both manually and using the \lstinline+mean_+\lstinline+squared_+\lstinline+error+ \lstinline+sklearn+ function. The value is $0.4392$.
+
+With the sklearn $LinearRegression$ class we can use the method $predict$:
+\begin{lstlisting}[label={lst:CustomLinearRegression}]
+from sklearn.metrics import mean_squared_error;
+y_pred = lr.predict(X_scaled);
+error = mean_squared_error(y_train, y_pred);
+\end{lstlisting}
+
+$sklearn$ does not support statistical inference. To calculate the $Z-scores$ we can create a function or we can extend the $LinearRegression$ class. In the latter case:
+\begin{lstlisting}
+class customLinearRegression(LinearRegression):
+    def __init__(self):
+        super(customLinearRegression, self).__init__();
+    def z_scores(self, y, X, bias=False):
+        p = len(self.coef_);
+        if (bias):
+            y_pred = self.predict(X[:,1:]);
+            X_with_bias = X;
+        else:
+            y_pred = self.predict(X);
+            X_with_bias = np.c_[np.ones((X.shape[0], 1)), X];
+        sigma_hat_sq = np.sum(np.square(y_train-y_pred))/
+        		(len(y_train)-p-1);
+        std_err  = np.sqrt(np.diag(inv(
+        		X_with_bias.T.dot(X_with_bias)))*sigma_hat_sq);
+        z_scores = np.multiply(np.append(self.intercept_, self.coef_),
+        		1/std_err);
+        return std_err, z_scores;
+    def get_intercept_coef(self):
+        return np.append(self.intercept_, self.coef_);
+        
+std_err_lr, z_scores_lr = lr.z_scores(y_train, X_scaled);
+pd.DataFrame({"Coefficient": lr.get_intercept_coef(), 
+			"Std. error" : std_err_lr,
+              r"$Z$ score" : z_scores_lr},
+             index=pd.Index(["intercept"]).append(X_train.columns)
+            ).round(2).head(10)
+\end{lstlisting}
+We get the following values:
+
+\begin{table}
+\centering
+\begin{tabular}{lrrr}
+\toprule
+{} &  Coefficient &  Std. error &  $Z$ score \\
+\midrule
+intercept &         2.45 &        0.09 &      28.18 \\
+lcavol    &         0.71 &        0.13 &       5.37 \\
+lweight   &         0.29 &        0.11 &       2.75 \\
+age       &        -0.14 &        0.10 &      -1.40 \\
+lbph      &         0.21 &        0.10 &       2.06 \\
+svi       &         0.31 &        0.12 &       2.47 \\
+lcp       &        -0.29 &        0.15 &      -1.87 \\
+gleason   &        -0.02 &        0.14 &      -0.15 \\
+pgg45     &         0.28 &        0.16 &       1.74 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The predictor $lcavol$ shows the strongest effect, with $lweight$ and $svi$ also strong. Notice that $lcp$ is not significant, once $lcavol$ is in the model (when used in a model without $lcavol$, $lcp$ is strongly significant).
+
+\subsection{Subset selection}
+First we define to classes. One is supposed work as interface for all subset selection models:
+\begin{lstlisting}
+class best_submodel_abstract:
+    def __init__(self):
+        self._standardInit();
+        self.pipeline = Pipeline([
+                ('Scaler', StandardScaler()), 
+                ('LinearRegression',  CustomLinearRegression())]);  
+    
+    def get_scaler(self):
+        return self.pipeline.named_steps['Scaler'];
+    def get_model(self):
+        return self.pipeline.named_steps['LinearRegression'];
+        
+    def _standardInit(self):
+        self.X_small = None;
+        self.num_features  = None;
+        self.feature_names = None;
+        self.best_subset_idx = None; #wrt X_with_bias_coeffs
+        self.best_error    = None;
+        self.all_errors    = error_sequence();
+        self.skl_model     = None;   
+        
+    def _removeBias(self, X, num_features, isItwithoutBias=True):
+        self.num_features = num_features;
+        if (not isItwithoutBias):
+            print("removing bias");
+            X_small = X[:,1:];
+        else:
+            X_small = X;
+        return X_small;
+    
+    def fit(self, X, y,num_features, isItwithoutBias=True):
+        return
+\end{lstlisting}
+The initialization consists of defining a pipeline made up by a scaler and a linear regressor as defined in 
+\autoref{lst:CustomLinearRegression} so that we can use the $z$-score metric. The initializer also calls a private method \cd+_standardInit()+ that initialize all attributes to \cd+None+. Elements of the pipeline are easily accessed through the methods \cd+get_scaler+ and \cd+get_model+.  The model also has a \cd+_removeBias()+ method so that if input data have the column vector of $1$ for the intercept, it can be removed.
+
+The second class to stores the errors associated to given sets of features and prints them:
+\begin{lstlisting}
+class error_sequence:
+    def __init__(self, errors=tuple(), sequence=tuple()):
+        self.errors = errors;
+        self.names  = sequence;
+    
+    def printErrs(self):
+        for err, el in zip(self.errors, self.names):
+            print(str(el) + ": " + str(err));
+\end{lstlisting}
+Finally the best subset selection model is the following:
+\begin{lstlisting}
+class best_submodel_sk(best_submodel_abstract):
+    def __init__(self):
+        super(best_submodel_sk, self).__init__();
+                self.errors = {"features":list(), "errors":list()};
+       
+    def _update_best_model(self, pipeline, subset, mse, col_names):
+        self.pipeline        = pipeline;
+        self.best_subset     = subset;
+        self.best_subset_idx = subset; #wrt X_with_bias_coeffs
+        self.best_error      = mse;
+        self.model           = self.get_model();
+        self.scaler          = self.get_scaler();
+        if col_names:
+            self.feature_names = col_names;
+        return 
+    
+    def fit(self, X, y, num_features, isItwithoutBias=True):
+        column_names = None;
+        self.num_features = num_features;
+        if isinstance(X, pd.DataFrame):
+            column_names = list(X.columns);
+            X = X.values;
+        X_no_bias   = super()._removeBias(X,num_features, isItwithoutBias);
+        err = np.infty;
+        all_idx = [i for i in range(X_no_bias.shape[1])];
+        errors = {"features":list(), "errors":list()};
+        if num_features==0:
+            X_small = np.ones((X_no_bias.shape[0],1));
+            temp_pipe = clone(self.pipeline); 
+            temp_pipe.fit(X_small, y); #probably separate scaler for transform
+            #print(temp_pipe.named_steps['LinearRegression'].intercept_)
+            y_pred_sk  = temp_pipe.predict(X_small);
+            mse_sk     = mean_squared_error(y_train,y_pred_sk);
+            if column_names:
+                errors["features"].append(('intercept',));
+            else:
+                errors["features"].append(0);
+            errors['errors'].append(mse_sk);
+            self._update_best_model(temp_pipe, None, mse_sk, tuple(('intercept',)));
+            self.all_errors = error_sequence(tuple(errors['errors']),
+                                             tuple(errors["features"]));
+            return;
+        elif num_features>X_no_bias.shape[1]:
+            num_features=X_no_bias.shape[1];
+        for ff in list(itertools.combinations(all_idx, num_features)):
+            X_small = X_no_bias[:,ff]; 
+            temp_pipe = clone(self.pipeline); 
+            temp_pipe.fit(X_small, y); #probably separate scaler for transform
+            y_pred_sk  = temp_pipe.predict(X_small);
+            mse_sk     = mean_squared_error(y_train,y_pred_sk);
+            if column_names:
+                errors["features"].append(X_train.columns[list(ff)].values);
+            else:
+                errors["features"].append(ff);
+            errors['errors'].append(mse_sk);
+            self.all_errors = error_sequence(tuple(errors['errors']),
+                                             tuple(errors["features"]));
+            if mse_sk < err:
+                err = mse_sk;
+                if column_names:
+                    names = ["intercept"] + [column_names[ii] for ii in ff]
+                self._update_best_model(temp_pipe, ff, mse_sk, names);
+\end{lstlisting}
+The initializer calls the parent initializer (the one of the class defined above). The calculation is in the $fit()$ method, which takes input and target data and the number of features to select. If the selected number of features is $0$ we have only the intercept, if it is bigger the features in input data, then it is set to the features in the input matrix. $itertools.combinations(all_idx, num_features)$ returns all possible combinations of sub-groups of the features having size $num_elements$. 
+\paragraph{Note}: to copy the structure of the pipeline of the instance, $clone$ is used, otherwise it is copied by reference and when it is changed at the next iteration, also the variable to which it is assigned are changed.
+
+The pipeline is fit to the data, outputs are predicted and the RSE is calculated. The $all_errors$ is updated and if this is the best error, data are stored as the best parameters in the $_update_best_model$ private method.
