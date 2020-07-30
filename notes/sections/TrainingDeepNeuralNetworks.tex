@@ -105,9 +105,9 @@ layer = keras.layers.Dense(10, activation="selu", kernel_initializer="lecun_norm
 \end{lstlisting}
 
 \subsubsection{Batch normalization}
-Although using He initialization along with ELU (or any variant of ReLU) can signifi‐ cantly reduce the vanishing/exploding gradients problems at the beginning of training, it doesn’t guarantee that they won't come back during training.
+Although using He initialization along with ELU (or any variant of ReLU) can significantly reduce the vanishing/exploding gradients problems at the beginning of training, it doesn't guarantee that they won't come back during training.
 
-A paper \footnote{"Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift", S. Ioffe and C. Szegedy (2015).} proposed a technique called Batch Normalization (BN) to address the vanishing/exploding gradients problems. The technique consists of adding an operation in the model just before or after the activation function of each hidden layer, simply zero-centering and normalizing each input, then scaling and shifting the result using two new parameter vectors per layer: one for scaling, the other for shifting. In other words, this operation lets the model learn the optimal scale and mean of each of the layer's inputs. In many cases, if you add a BN layer as the very first layer of your neural network, you do not need to standardize your training set (e.g., using a \lstinline+StandardScaler+): the BN layer will do it for you (well, approximately, since it only looks at one batch at a time, and it can also rescale and shift each input feature).
+A paper \footnote{"Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift", S. Ioffe and C. Szegedy (2015).} proposed a technique called Batch Normalization (BN) to address the vanishing/exploding gradients problems. The technique consists of adding an operation in the model just before or after the activation function of each hidden layer, simply zero-centering and normalizing each input, then scaling and shifting the result using two new parameter vectors per layer: one for scaling, the other for shifting. In other words, this operation lets the model learn the optimal scale and mean of each of the layer's inputs. Typically the normalisation is done before the activation function. In many cases, if you add a BN layer as the very first layer of your neural network, you do not need to standardize your training set (e.g., using a \lstinline+StandardScaler+): the BN layer will do it for you (well, approximately, since it only looks at one batch at a time, and it can also rescale and shift each input feature).
 
 In order to zero-centre and normalize the inputs, the algorithm needs to estimate each input's mean and standard deviation. It does so by evaluating the mean and standard deviation of each input over the current mini-batch (hence the name "Batch Normalization"). The whole operation is summarized in \autoref{eq:BatchNormalisation}
 
@@ -120,15 +120,25 @@ In order to zero-centre and normalize the inputs, the algorithm needs to estimat
 \end{aligned}
 \label{eq:BatchNormalisation}
 \end{equation}
-where $\mathbf{\mu}_B$ is the vector of input means and $\sigma_B$ is the vector of input standard deviation both evaluated over the whole mini-batch $B$. $m_B$ is the number of instances in the mini-batch, $\hat{\mathbf{x}}^{(i)}$ is the vector of zero-centred and normalized inputs for instance $i$, $\gamma$ is the output scale parameter vector layer (it contains one scale parameter vector for the layer), $\otimes$ represents element-wise multiplication (each element is multiplied by its corresponding output scale parameter), $\beta$ is the output shift parameter vector for the layer. Each input is offset by its corresponding shift parameter, $\epsilon$ is a small positive quantity to avoid division by $0$ and it is called \tb{smoothing term}, $\mathbf{z}^{(i)}$ is the output of the BN operation, a rescaled and shifted version of the inputs.
+where $\mathbf{\mu}_B$ is the vector of input means and $\sigma_B$ is the vector of input standard deviation both evaluated over the whole mini-batch $B$. $m_B$ is the number of instances in the mini-batch, $\hat{\mathbf{x}}^{(i)}$ is the vector of zero-centred and normalized inputs for instance $i$.
 
-One may need to make predictions for individual instances rather than for batches of instances: in this case, we will have no way to compute each input's mean and standard deviation. Moreover, even if we do have a batch of instances, it may be too small, or the instances may not be independent and identically distributed (IID), so computing statistics over the batch instances would be unreliable (during training, the batches should not be too small, if possible more than 30 instances, and all instances should be IID.  One solution could be to wait until the end of training, then run the whole training set through the neural network, and compute the mean and standard deviation of each input of the BN layer. These "final" input means and standard deviations can then be used instead of the batch input means and standard deviations when making predictions. However, it is often preferred to estimate these final statistics during training using a moving average of the layer's input means and standard deviations.  However, it is often preferred to estimate these final statistics during training using a moving average of the layer's input means and standard deviations. To sum up, four parameter vectors are learned in each batch-normalized layer: $\gamma$ (the output scale vector) and $\beta$ (the output offset vector) are learned through regular backpropagation, and $\mu$ (the final input mean vector), and $\sigma$ (the final input standard deviation vector) are estimated using an exponential moving average. Note that $\mu$ and $\sigma$ are estimated during training, but they are not used at all during training, only after training.
+It is not always desirable to have hidden units with $0$ mean and variace $1$. For example consider the values are the input to a sigmoid function: it might be better to have a higher values in order to exploit the non-linearities of the function. So we introduce the learning parameters $\gamma$ and $\beta$ to get a different distribution. $\gamma$ is the output scale parameter vector layer (it contains one scale parameter vector for the layer), $\otimes$ represents element-wise multiplication (each element is multiplied by its corresponding output scale parameter), $\beta$ is the output shift parameter vector for the layer. Each input is offset by its corresponding shift parameter, $\epsilon$ is a small positive quantity to avoid division by $0$ and it is called \tb{smoothing term}, $\mathbf{z}^{(i)}$ is the output of the BN operation, a rescaled and shifted version of the inputs.
 
-The vanishing gradients problem was strongly reduced, to the point that they could use saturating activation functions such as the tanh and even the logistic activation function. The networks were also much less sensitive to the weight initialization. They were able to use much larger learning rates, significantly speeding up the learning process.
+Note that the learning parameter $b$ gets cancelled out by BN normilise the batch to have $0$ mean and standard deviation $1$ and then rescale by $\beta$ and $\gamma$. So the parameter $b$ can be completely ignore or set permanently to $0$.
+
+\tb{Batch normalisation can be used together with other optimisation algorithm such as Momentum, RMSProp, Adam, etc.}.
+
+\paragraph{\tb{Why does Batch normalisation work?}} Consider a NN for cat detection task trained only on black cats. When applied to images with coloured cats, the classifier might not be doing well due to the different distribution of data that the NN has never seen. The idea of the data distribution change goes behind the name of \tb{Covariate Shift}. In this case the algorithm needs retraining. From the perspective of a hidden layer, its input activation values changes due to the changes in the learning parameter of the earlier layers and so suffering of the problem of covariance shift. BN reduce the amount of the shift by forcing to have the same mean and variance $\beta$ and $\gamma$. \tb{It limits the amount to which updating the parameters in the earlier layers can affect the distribution of values seen by the deeper hidden layers}. It causes the input values of the later layers to be more stable allowing each layer to learn a little more independently from the others.
+
+One may need to make predictions for individual instances rather than for batches of instances: in this case, we will have no way to compute each input's mean and standard deviation. Moreover, even if we do have a batch of instances, it may be too small, or the instances may not be independent and identically distributed (IID), so computing statistics over the batch instances would be unreliable (during training, the batches should not be too small, if possible more than $30$ instances, and all instances should be IID). One solution could be to wait until the end of training, then run the whole training set through the neural network, and compute the mean and standard deviation of each input of the BN layer. These "final" input means and standard deviations can then be used instead of the batch input means and standard deviations when making predictions. However, it is often preferred to estimate these final statistics during training using a exponentially weighted average of the layer's input means and standard deviations. To sum up, four parameter vectors are learned in each batch-normalized layer: $\gamma$ (the output scale vector) and $\beta$ (the output offset vector) are learned through regular backpropagation, and $\mu$ (the final input mean vector), and $\sigma$ (the final input standard deviation vector) are estimated using an exponential moving average. Note that $\mu$ and $\sigma$ are estimated during training, but they are not used at all during training, only after training.
+
+The vanishing gradients problem was strongly reduced, to the point that they could use saturating activation functions such as the $\tanh$ and even the logistic activation function. The networks were also much less sensitive to the weight initialization. They were able to use much larger learning rates, significantly speeding up the learning process.
  
-You may find that training is rather slow, because each epoch takes much more time when you use batch normalization. However, this is usually counterbalanced by the fact that convergence is much faster with BN, so it will take fewer epochs to reach the same performance. All in all, wall time will usually be smaller (this is the time measured by the clock on your wall). 
+You may find that training is rather slow, because each epoch takes much more time when you use batch normalization. However, this is usually counterbalanced by the fact that convergence is much faster with BN, so it will take fewer epochs significantlyto reach the same performance. All in all, wall time will usually be smaller (this is the time measured by the clock on your wall). 
  
 \paragraph{\tb{Drawbacks}} Batch Normalization does, however, add some complexity to the model (although it can remove the need for normalizing the input data, as we discussed earlier). Moreover, there is a runtime penalty: the neural network makes slower predictions due to the extra computations required at each layer. So if you need predictions to be lightning-fast, you may want to check how well plain ELU $+$ He initialization perform before playing with Batch Normalization. 
+
+\paragraph{\tb{BN as regularisation}} Computing mean and variance for each mini batch means introducing some noise that result in a slight regularisation effect.
 
 \subsubsection{Implementing BN in keras}
 Just add a BatchNormalization layer before or after each hidden layer's activation function, and optionally add a BN layer as well as the first layer in your model. For example, this model applies BN after every hidden layer and as the first layer in the model (after flattening the input images):
@@ -237,24 +247,75 @@ Another huge speed boost comes from using a faster optimizer than the regular Gr
 \item Adam and Nadam optimisation
 \end{itemize}
 
+\subsubsection{Exponentially weighted averages}
+\label{subsubsec:ExpWeightedAvg}
+To understand optimisation algorithms to the full, one must get the idea behind them. Some optimisations are based on the exponentially weighted averages.
+
+Given a series $\theta_i, i=1,\cdots, n$, the exponential weighted average consists of setting an initial vaue $v_0$, typically initialised to $0$, and to compute the other elements of the output series as:
+\begin{equation}
+\begin{aligned}
+v_0 &= 0\\
+v_i &= \beta v_{i-1}+(1-\beta) \theta_i 
+\end{aligned}
+\end{equation}
+This can be re-written as:
+\begin{equation}
+v_i = (1-\beta) \theta_i +  (1-\beta) \beta \theta_{i-1} + (1-\beta) \beta^2 \theta_{i-2} + (1-\beta) \beta^3 \theta_{i-3} + \cdots  
+\end{equation}
+which is exponentially decaying. All the coefficients add up to very close to one up to a detail called bias correction.
+
+This filtering smooths the samples by taking into account all the previous values of the sries with decreasing emphasis. Particularly, $v_i$ is said to be the average over the previous $\approx \frac{1}{1-\beta}$ number of samples. So, increasing $\beta$ results in higher smoothing, however due to the larger averaging window, the delay is bigger and the resuling curve will be right-shifted \autoref{img:expAvg}	. In fact, setting for example $\beta=0.9$, $0.9^{10}\approx 0.35 \approx \frac{1}{e}$. Naming $1-\beta=\epsilon=0.1$, $(1-\epsilon)^\epsilon=\frac{1}{e}$. It takes $10$ samples for the initial value to decay of $\frac{1}{e}$, about a third. On the contrast, if $\beta=0.98$, $0.98^{50}\approx \frac{1}{e}$. This is of course a rule of thumb of how to think about it, not a formal mathematical statement.	
+
+\begin{figure}
+\includegraphics[scale=0.38]{img/expAvg}
+\caption{Exampe of exponentially averaging with $\beta=0.9$ in red and $\beta=0.98$ in green.}
+\label{img:expAg}
+\end{figure}
+
+\subsubsection{Bias correction of exponentially weighted aerages}
+If we initialise $v_0=0$ then $v_1= (1-\beta) \theta_1$, so the first point can be out of scale, particularly too small, compared to the values of $\theta$, so the first estimates can be wrong. Instead of taking $v_i$, the solution is to take $\frac{v_i}{1-\beta^i}$, so we are dividing by a quantity smaller than $1$.
+
 \subsubsection{Momentum optimisation}
-\label{subsec:momentum}
-Gradient Descent simply updates the weights by directly subtracting the gradient of the cost function  with regards to the weights multiplied by the learning rate: it does not care about what the earlier gradients were. If the local gradient is tiny, it goes very slowly. Momentum optimization cares a great deal about what previous gradients were: at each iteration, it subtracts the local gradient from the momentum vector m (multiplied by the learning rate ), and it updates the weights by simply adding this momentum vector \footnote{\href{https://homl.info/54}{"Some methods of speeding up the convergence of iteration methods", B. Polyak (1964).}}, in the same way a rolling ball on a gentle slope will start out slowly but will pick up a momentum until it reaches a terminal velocity due to some friction or air resistance. To prevent the momentum from growing too large, the algorithm introduces a new hyperparameter $\beta$, simply called the momentum, which must be set between $0$ (high friction) and $1$ (no friction). A typical momentum value is $0.9$.
+\label{subsubsec:momentum}
+Gradient Descent simply updates the weights by directly subtracting the gradient of the cost function  with regards to the weights multiplied by the learning rate: it does not care about what the earlier gradients were. If the local gradient is tiny, it goes very slowly. Momentum optimization consists of using exponentially weighted averages in order to take into account previous gradients. \autoref{img:gradientSteps} shows for an elliptic cost funtion the oscillations of the gradient algorithm that slow down the algorithm and that prevents from using a larger learning rate which would cause overshooting and possibly diverging. In other words, on the vertical axis one wants the learning to be slower to avoid the oscillations and faster learning on the horizontal axis.
+
+The exponentially weighted average sums the previous components of the gradient: the vertical components have opposite directions so they are getting subtracted and the final vertical component is strongly reduced to a quantity close to $0$. On the horizontal axis, the derivatives are all pointing to the same direction so the average on the horizontal direction will still be pretty big. So once one has computed the derivatives, instead of using them directly, use the exponentially weighted average to update the weights. This allows the algorithm to take a more straightforward path. In practice, \tb{bias correction is seldom used} but it does not hurt.
+
+The upgrade equations become:
+\begin{equation}
+\begin{aligned}
+v &\leftarrow \beta v - (1-\beta) \nabla_\theta J(\theta)\\
+\theta &\leftarrow \theta - \eta \theta
+\end{aligned}
+\end{equation}
+More commonly the equations are written omitting $(1-\beta)$:
 \begin{equation}
 \begin{aligned}
 m &\leftarrow \beta m - \eta \nabla_\theta J(\theta)\\
 \theta &\leftarrow \theta + m
 \end{aligned}
 \end{equation}
-You can easily verify that if the gradient remains constant, the terminal velocity (i.e., the maximum size of the weight updates) is equal to that gradient multiplied by the learning rate $\eta$ multiplied by $\frac{1}{1-\beta}$ (ignoring the sign). For example, if $\beta = 0.9$, then the terminal velocity is equal to $10$ times the gradient times the learning rate, so Momentum optimization ends up going $10$ times faster than Gradient Descent! This allows Momentum optimization to escape from plateaus much faster than Gradient Descent.
+This is pretty much identical to the first pair of equation, the only difference is that you need to scale learning rate by $1-\beta$ factor, and possibly retune the learning rate.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.45]{img/momentum}
+\caption{Example of gradient steps.}
+\label{img:gradientSteps}
+\end{figure}
+
+Often the analogy of a ball rolling down a surface is used
+\footnote{\href{https://homl.info/54}{"Some methods of speeding up the convergence of iteration methods", B. Polyak (1964).}}: a rolling ball on a gentle slope will start out slowly but will pick up a momentum until it reaches a terminal velocity due to some friction or air resistance. The friction is represented by $\beta$ (smaller than $1$) which prevents the mometum from becoming too large: $0$ (high friction) and $1$ (no friction). A typical $\beta$ value is $0.9$.
+
+One can easily verify that if the gradient remains constant, the terminal velocity (i.e., the maximum size of the weight updates) is equal to that gradient multiplied by the learning rate $\eta$ multiplied by $\frac{1}{1-\beta}$ (ignoring the sign). For example, if $\beta = 0.9$, then the terminal velocity is equal to $10$ times the gradient times the learning rate, so Momentum optimization ends up going $10$ times faster than Gradient Descent! This allows Momentum optimization to escape from plateaus much faster than Gradient Descent.
 
 In deep neural networks that don't use Batch Normalization, the upper layers will often end up having inputs with very different scales, so using Momentum optimization helps a lot. It can also help roll past local optima. Due to the momentum, the optimizer may overshoot a bit, then come back, overshoot again, and oscillate like this many times before stabilizing at the minimum. This is one of the reasons why it is good to have a bit of friction in the system: it gets rid of these oscillations and thus speeds up convergence. 
 
-Implementing Momentum optimization in Keras is a no-brainer: just use the SGD optimizer and set its \lstinline+momentum+ hyperparameter:
+Implementing Momentum optimization in Keras is a no-brainer: just use the SGD optimizer and set its \lstinline+momentum+ hyperparameter which represent the $\beta$ parameter in the previous equations:
 \begin{lstlisting}
 optimizer = keras.optimizers.SGD(lr=0.001, momentum=0.9)
 \end{lstlisting}
-The one drawback of Momentum optimization is that it adds yet another hyperpara‐ meter to tune. However, the momentum value of 0.9 usually works well in practice and almost always goes faster than regular Gradient Descent.
+The one drawback of Momentum optimization is that it adds yet another hyperpara‐ meter to tune. However, the momentum value of $0.9$ usually works well in practice and almost always goes faster than regular Gradient Descent and can also be applied with the same improvement to mini-batch gradient descent.
 
 \subsubsection{Nesterov accelerated gradient}\footnote{\href{https://homl.info/55}{"A Method for Unconstrained Convex Minimization Problem with the Rate of Convergence $O(1/k^2)$", Yurii Nesterov (1983).}}
 
@@ -296,7 +357,7 @@ AdaGrad often performs well for simple quadratic problems, but unfortunately it 
 
 \subsubsection{RMSProp}
 \label{subsec:RMSprop}
-The RMSProp algorithm\footnote{This algorithm was created by Geoffrey Hinton and Tijmen Tieleman in 2012, and presented by Geoffrey Hinton in his Coursera class on neural networks (\href{slides}{https://homl.info/57}; \href{video}{https://homl.info/58}). Amusingly, since the authors did not write a paper to describe it, researchers often cite "slide 29 in lecture 6" in their papers.} fixes Adagrad non-convergence by accumulating only the gradients from the most recent iterations (as opposed to all the gradients since the beginning of training). It does so by using exponential decay in the first step:
+The RMSProp (Root Mean Square prop) algorithm\footnote{This algorithm was created by Geoffrey Hinton and Tijmen Tieleman in 2012, and presented by Geoffrey Hinton in his Coursera class on neural networks (\href{slides}{https://homl.info/57}; \href{video}{https://homl.info/58}). Amusingly, since the authors did not write a paper to describe it, researchers often cite "slide 29 in lecture 6" in their papers.} fixes Adagrad non-convergence by accumulating only the gradients from the most recent iterations (as opposed to all the gradients since the beginning of training). It does so by using exponential decay in the first step as done in the momentum algorithm (\autoref{subsubsec:momentum}), but instead of averaging over the derivatives, it aerage over the (element-wise) squared derivatives and the gradient in the update equation is divided by the square root of the average:
 \begin{equation}
 \begin{aligned}
 s &\leftarrow \beta s + (1-\beta) \nabla_\theta J(\theta) \otimes \nabla_\theta J(\theta)\\
@@ -311,25 +372,26 @@ Keras has an \cd+RMSProp+ optimizer:
 optimizer = keras.optimizers.RMSprop(lr=0.001, rho=0.9)
 \end{aligned}
 \end{equation}
-Except on very simple problems, this optimizer almost always performs much better than AdaGrad. In fact, it was the preferred optimization algorithm of many researchers until Adam optimization came around.
+The goal of this algorithm is to dump the oscillations as in the momentum algorithm. In fact $s$ is the average of the derivatives: it will have high absolute values in the directions of oscillations (since an oscillation means a rapid change) and small values in the "stable" directions. Since the root sqaure is used as denominator in the update equation, it dumps the terms with high oscillations (high valus of $s$) and increase the terms with oscillations close to $0$. Except on very simple problems, this optimizer almost always performs much better than AdaGrad. In fact, it was the preferred optimization algorithm of many researchers until Adam optimization came around.
+
 
 \subsubsection{Adam and Nadam Optimisation}
 \label{subsec:ADAM}
-\tb{Adam}\footnote{\href{https://homl.info/59}{"Adam: A Method for Stochastic Optimization", D. Kingma, J. Ba (2015).}}, which stands for \tb{adaptive moment estimation}, combines the ideas of Momentum optimization and RMSProp: just like Momentum optimization it keeps track of an exponentially decaying average of past gradients, and just like RMSProp it keeps track of an exponentially decaying average of past squared gradients 
+\tb{Adam}\footnote{\href{https://homl.info/59}{"Adam: A Method for Stochastic Optimization", D. Kingma, J. Ba (2015).}}, which stands for \tb{Adaptive Moment estimation}, combines the ideas of Momentum optimization and RMSProp: just like Momentum optimization it keeps track of an exponentially decaying average of past gradients, and just like RMSProp it keeps track of an exponentially decaying average of past squared gradients. Adam does use bias correction.
 
 \begin{equation}
 \begin{aligned}
-m &\leftarrow \beta_1 m - \br{1-\beta_1} \nabla_\theta J(\theta)\\
+m_0 &\leftarrow 0\\
+s_0 &\leftarrow 0\\
+m &\leftarrow \beta_1 m + \br{1-\beta_1} \nabla_\theta J(\theta)\\
 s &\leftarrow \beta_2 s + (1-\beta_2) \nabla_\theta J(\theta) \otimes \nabla_\theta J(\theta)\\
 \hat{m} &\leftarrow\frac{m}{1-\beta_1^t}\\
 \hat{s} &\leftarrow\frac{s}{1-\beta_2^t}\\
-\theta &\leftarrow \theta + \eta \hat{m} \oslash \sqrt{s+\epsilon}
+\theta &\leftarrow \theta - \eta \hat{m} \oslash (\sqrt{\hat{s}}+\epsilon)
 \end{aligned}
 \label{eq:Adam}
 \end{equation}
-where $t$ is the iteration number starting at $1$. Step 1 computes an exponentially decaying average rather than an exponentially decaying sum, but these are actually equivalent except for a constant factor (the decaying average is just $1 - \beta_1$ times the decaying sum). Steps 3 and 4 are somewhat of a technical detail: since m and s are initialized at 0, they will be biased toward 0 at the beginning of training, so these two steps will help boost m and s at the beginning of training.
-
-$\beta_1$ is typically $0.9$ and $\beta_2$ $0.999$.
+where $t$ is the iteration number starting at $1$. $\beta_1$ is typically $0.9$ and $\beta_2$ $0.999$. $\epsilon$ does not really matter but the author of the paper recommended $10^{-8}$.
 
 \begin{lstlisting}
 optimizer = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999)
@@ -338,11 +400,11 @@ Since Adam is an adaptive learning rate algorithm (like AdaGrad and RMSProp), it
 
 Two variants of Adam exist:
 \begin{itemize}
-\item \tb{Adamax}, introduced in the same paper of Adam, in step 2 of \autoref{eq:Adam}, Adam accumulates the squares of the gradients in $s$ (with a greater weight for more recent weights). In step 5, if we ignore $\epsilon$ and steps 3 and 4 (which are technical details anyway), Adam just scales down the parameter updates by the square root of s. In short, Adam scales down the parameter updates by the $L2$ norm of the time-decayed gradients (recall that the $L2$ norm is the square root of the sum of squares). Adamax just replaces the $L_2$ norm with the $L_\infty$ norm (a fancy way of saying the max). Specifically, step 2 is reaplaced with
+\item \tb{Adamax}, introduced in the same paper of Adam, \autoref{eq:Adam}, Adam accumulates the squares of the gradients in $s$ (with a greater weight for more recent weights). If we ignore $\epsilon$ and the bias corrections, Adam just scales down the parameter updates by the square root of $s$. In short, Adam scales down the parameter updates by the $L2$ norm of the time-decayed gradients (recall that the $L2$ norm is the square root of the sum of squares). Adamax just replaces the $L_2$ norm with the $L_\infty$ norm (a fancy way of saying the maximum). Specifically, the RMSProp step is replaced by:
 \begin{equation}
 s \leftarrow max\br{\beta_2 s, \nabla_\theta J(\theta)},
 \end{equation}
-it drops step 4 and in step 5 it scaled the gradient updates by a factor of $s$, which is just the max of the time-decayed gradients. This can make Adamax more stable than Adam, but this really depends on the dataset, and in general Adam actually performs better.
+and scales the gradient updates by a factor of $s$, which is just the max of the time-decayed gradients. This can make Adamax more stable than Adam, but this really depends on the dataset, and in general Adam actually performs better.
 \item \tb{Nadam optimisation}\footnote{\href{https://homl.info/nadam}{"Incorporating Nesterov Momentum into Adam", Timothy Dozat (2015).}} is simply Adam optimization plus the Nesterov trick, so it will often converge slightly faster than Adam. 
 \end{itemize}
 
@@ -473,6 +535,29 @@ To implement max-norm regularization in Keras, just set every hidden layer's \cd
 keras.layers.Dense(100, activation="elu", kernel_initializer="he_normal", kernel_constraint=keras.constraints.max_norm(1.))
 \end{lstlisting}
 After each training iteration, the model's \cd+fit()+ method will call the object returned by \cd+max_norm()+, passing it the layer's weights and getting clipped weights in return, which then replace the layer's weights. The \cd+max_norm()+ function has an axis argument that defaults to $0$. A Dense layer usually has weights of shape [number of inputs, number of neurons], so using \cd+axis=0+ means that the max norm constraint will apply independently to each neuron's weight vector. If you want to use max-norm with convolutional layers (see Chapter 14), make sure to set the \cd+max_norm()+ constraint's axis argument appropriately (usually \cd+axis=[0, 1, 2]+).
+
+\subsection{Tuning process and choosing the proper scales}
+In the earlier days of NN, hyperparameters tuning was done using a grid of equally space points. This method is ineffective, a better approch is to use random values because it is difficult to know in advance which hyperparameters are going to be the most important for your problem and some of them are much more important than others. Considering for example the learning rate parameter and the $\epsilon$ parameter to avoid divisions by $0$, the former matters a lot while the second is not important at all. With a grid approach of $25$ points for example, one tries just $5$ values of the learning rate and $5$ of $\epsilon$. Using random sampling, one will likely try out $25$ different values of the learning rate. 
+
+Generally coarse-to-fine scheme is used, focusing and resampling in a smaller square around the the hyper-parameter space that gave the best results.
+
+It is also important to pick the appropriate scale on which to explore the hyper-parameter. Suppose one has to choose the unmber of hidden units and a good range is between $50$ and $100$ or similarly for the number of layers it is known the range is between $2$ and $4$. In these cases sampling uniformly at random is a reasonable thing to do. 
+
+Now consider the learning parameter $\eta$ and suppose a reasonable range is between $0.0001$ and $1$. Sampling uniformly at random will result of having the $90\%$ of the points between $0.1$ and $1$. This does not seem right: uniformly sampling at random on a log-scale looks more appropriate. Suppose one has to sample between $10^a$ and $10^b$. In Python:
+\begin{lstlisting}
+r = (b-a)*np.random.rand()+a
+eta = 10^r
+\end{lstlisting}
+
+Another tricky case is for the hyperparameter $\beta$. Suppose it should be between $0.9$ and $0.999$ of the exponentially weighted average. $0.9$ means averaging over the past $10$ values, while $0.999$ averaging over the past $1000$ values. It does not make sense to sample linearly. A better way is to think about exploring the range $1-\beta$, i.e., between $0.1$ and $0.001$. So using the previous method, one samples randomly between $-3$ and $-1$ and then set:
+\begin{equation}
+\begin{aligned}
+1-\beta &= 10^r\\
+\beta &= 1 - 10^r
+\end{aligned}
+\end{equation}
+The fact is that when $\beta$ is close to $1$ small changes have a huge impact.
+
 \subsection{Summary and practical guidelines}
 The configuration in \autoref{fig:config} will work fine in most cases.
 \begin{figure}

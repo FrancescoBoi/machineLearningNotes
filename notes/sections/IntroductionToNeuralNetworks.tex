@@ -37,7 +37,7 @@ Perceptrons can also be thought of as a simple linear binary classifier. If the 
 The view of perceptrons as a computing device although interesting it does not add anything more to the already existing NAND gates. However, it turns out that we can devise learning algorithms which can automatically tune the weights and biases of a network of artificial neurons. This tuning happens in response to external stimuli, without direct intervention by a programmer. These learning algorithms enable us to use artificial neurons in a way which is radically different to conventional logic gates.
 
 \subsection{Clarification about local optima in high dimensional space}
-In a Neural Network, most of the points with gradient equal to $0$ are not local optima but saddle points \ref{img:saddle}. Saying that a function has zero gradient means that in each direction it can either be a convex or concave function. If the function is a very high dimensional space, then for it to be a local optima, all the directions need to be convex. The chance of that happening is very very small and one is much more likely to et some directions where the curve forms a saddle point. To explain this, suppose a function has 2000 dimensions and in one point the gradient is $0$. Assuming that in a single dimension it can be convex or concave with the same probability of $0.5$, then the probability of the point being a local optimum is $2^{-2000}$. Althogh informal, this reasoning can give some intuitions why local optima in high dimensional space are much rarer tha expected.
+In a Neural Network, most of the points with gradient equal to $0$ are not local optima but saddle points \autoref{img:saddle}. Saying that a function has zero gradient means that in each direction it can either be a convex or concave function. If the function is a very high dimensional space, then for it to be a local optima, all the directions need to be convex. The chance of that happening is very very small and one is much more likely to et some directions where the curve forms a saddle point. To explain this, suppose a function has 2000 dimensions and in one point the gradient is $0$. Assuming that in a single dimension it can be convex or concave with the same probability of $0.5$, then the probability of the point being a local optimum is $2^{-2000}$. Althogh informal, this reasoning can give some intuitions why local optima in high dimensional space are much rarer tha expected.
 
 \begin{figure}
 \centering
@@ -47,7 +47,7 @@ In a Neural Network, most of the points with gradient equal to $0$ are not local
 \end{figure}
 
 
-Rather than local optima, plateaus are responsible for slowing the training. Plateaus are regions where the derivatives are close to $0$ for a long time \ref{img:plateau}. Algorithms like Momentum (\autoref{subsec:momentum}), RMSProp (\autoref{subsec:RMSprop}) or ADAM (\autoref{subsec:ADAM} can really help learning algorithm in these cases.
+Rather than local optima, plateaus are responsible for slowing the training. Plateaus are regions where the derivatives are close to $0$ for a long time \autoref{img:plateau}. Algorithms like Momentum (\autoref{subsec:momentum}), RMSProp (\autoref{subsec:RMSprop}) or ADAM (\autoref{subsec:ADAM} can really help learning algorithm in these cases.
 
 \begin{figure}
 \centering
