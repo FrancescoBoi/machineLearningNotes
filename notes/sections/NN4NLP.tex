@@ -1,0 +1,314 @@
+\section{Natural Language Processing in Tensorflow}
+\subsection{Tokenisation}
+The idea is to assign each word a unique value. In this way different sentences become comparable.
+
+\textit{\tikz\node[na](word1){I}; \tikz\node[na](word4){love}; \tikz\node[na](word7){my}; \tikz\node[na](word10){cat};.}
+
+\tikz\node[na](word2){1}; \tikz\node[na](word5){2};     \tikz\node[na](word8){3}; \tikz\node[na](word11){4}; \tikz\node[na](word13){5};.
+
+\textit{\tikz\node[na](word3){I}; \tikz\node[na](word6){love}; \tikz\node[na](word9){my}; \tikz\node[na](word12){dog};.}
+\begin{tikzpicture}[overlay]
+  \path[->,red,thick](word1) edge [out=-90, in=90] (word2);
+  \path[->,red,thick](word3) edge [out=90, in=-90] (word2);  
+  \path[->,red,thick](word4) edge [out=-140, in=90] (word5);
+  \path[->,red,thick](word6) edge [out=120, in=-90] (word5);
+\path[->,red,thick](word7) edge [out=-150, in=90] (word8);
+\path[->,red,thick](word9) edge [out=90, in=-90] (word8);
+\path[->,red,thick](word10) edge [out=-120, in=90] (word11);
+\path[->,red,thick](word12) edge [out=90, in=-90] (word13);
+\end{tikzpicture}
+
+In this example it is clear the two sentences have a strong correlation.
+
+In Tensorflow this is easily done:
+\begin{lstlisting}
+from tensorflow.keras.preprocessing.text import Tokenizer
+
+sentences = ['i love my dog', 'I love my cat!'];
+tokenizer = Tokenizer(num_words=100);
+tokenizer.fit_on_texts(sentences);
+word_dict = tokenizer.word_index;
+print(word_dict);
+>>> {'i': 1, 'love': 2, 'my': 3, 'dog': 4, 'cat': 5}
+\end{lstlisting}
+\cd+num_words+ tells the number of distinct words to be tracked. In large texts there are too many words to be tracked, so this parameter limits the number of words to keep based on words frequency; if it not specified, all words are taken. Although sometimes reducing the value of this parameter does not affect accuracy too much, it greatly improves training time. \cd+tokenizer.word_index+ is a dictionary containing the mapping between the words and the numbers.
+
+To be precise, \cd+num_words+ does not affect \cd+word_index+: all the words found in the corpus are mapped and will appear in the \cd+word_index+, so the method \cd+fit_on_text+ does not change the returned value. What changes is the conversion from text to sequence, i.e. the value returned by the method \cd+texts_to_sequence+. The returned sequences will have maximum length equal to \cd+num_words-1+, including the special token \cd+oov_token+ (see later).
+
+Note that the tokenizer is case insensitive and that the punctuation has bee removed. This process of building up a dictionary of words, allows to make a corpus. The next step is to turn sentences into lists of values. To train a NN these lists must have the same length. Tensorflow offers APIs to handle this issue:
+\begin{lstlisting}
+from tensorflow.keras.preprocessing.text import Tokenizer
+sentences = ['i love my dog', 'I love my cat!', 'Do you think my dog is amazing?'];
+tokenizer = Tokenizer(num_words=100);
+tokenizer.fit_on_texts(sentences);
+sequences = tokenizer.texts_to_sequences(sentences)
+print(sequences)
+>>>[[2, 3, 1, 4], [2, 3, 1, 5], [6, 7, 8, 1, 4, 9, 10]]
+\end{lstlisting}
+\cd+texts_to_sequences+ call can encode any set of sentences based on the corpus passed with \cd+fit_on_text+.
+
+\begin{lstlisting}
+test_data = ['i really love my dog', 'My dog loves my manatee'];
+test_sequences = tokenizer.texts_to_sequences(test_data)
+print(tokenizer.word_index)
+print(test_sequences)
+>>> {'my': 1, 'i': 2, 'love': 3, 'dog': 4, 'cat': 5, 'do': 6, 'you': 7, 'think': 8, 'is': 9, 'amazing': 10}
+>>> [[2, 3, 1, 4], [1, 4, 1]]
+\end{lstlisting}
+When there are unseen words, the unseen words are lost since they are not in the \cd+word_index+. From this example, it is clear that a broad vocabulary is needed. Furthermore, consider the last test sequence \cd+[1, 4, 1]+ which is equivalent to \textit{my dog my}. In this case it is better to add a special token to unseen words. This is done by specifying the property \cd+oov_token="<oov>"+ of the tokenizer.
+
+\begin{lstlisting}
+from tensorflow.keras.preprocessing.text import Tokenizer
+
+sentences = ['i love my dog', 'I love my cat!'];
+tokenizer = Tokenizer(num_words=100, oov_token="<oov>");
+tokenizer.fit_on_texts(sentences);
+word_dict = tokenizer.word_index;
+test_data = ['i really love my dog', 'My dog loves my manatee'];
+test_sequences = tokenizer.texts_to_sequences(test_data)
+print(tokenizer.word_index)
+print(test_sequences)
+>>> {'<oov>': 1, 'i': 2, 'love': 3, 'my': 4, 'dog': 5, 'cat': 6}
+>>> [[2, 1, 3, 4, 5], [4, 5, 1, 4, 1]]
+\end{lstlisting}
+Any value can be assigned to \cd+oov_token+ but it should be something unique that can not be confused with a real word.  In this way, each unseen word, is mapped to the value assigned to \cd+oov_token+.
+
+\subsection{Padding}
+With padding all sequences have the same length:
+\begin{lstlisting}
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+sentences = ['i really love my dog', 'My dog loves my manatee', "Do you think my dog is amazing?" ];
+tokenizer = Tokenizer(num_words=100, oov_token="<oov>");
+tokenizer.fit_on_texts(sentences);
+word_dict = tokenizer.word_index;
+
+sequences = tokenizer.texts_to_sequences(sentences)
+padded = pad_sequences(sequences)
+
+print(tokenizer.word_index)
+print(sequences)
+print(padded)
+{'<oov>': 1, 'my': 2, 'dog': 3, 'i': 4, 'really': 5, 'love': 6, 'loves': 7, 'manatee': 8, 'do': 9, 'you': 10, 'think': 11, 'is': 12, 'amazing': 13}
+>>> [[4, 5, 6, 2, 3], [2, 3, 7, 2, 8], [9, 10, 11, 2, 3, 12, 13]]
+>>> [[ 0  0  4  5  6  2  3]
+ [ 0  0  2  3  7  2  8]
+ [ 9 10 11  2  3 12 13]]
+ \end{lstlisting}
+The sequences are automatically pre-padded to have length equal to the longest sequence: to post-pad \cd+padding='post'+. This can be changed by setting the parameter \cd+maxlen+. In this case, if a sequence is longer than the specified value, it is truncated removing the first elements. To override this by truncating the last elements: \cd+truncating=post+.
+
+
+
+\subsection{Embeddings}
+Just as from images it is possible to extract features, from a corpus of words it is possible to extract sentiment.
+This process is called embeddings with the idea that words and associated words are clustered as vectors in a multidimensional space.
+
+Tensorflow offers some datasets of different types: audio, images, text and others. Among the text ones, let us consider \ti{imdb\_reviews}. This is an independent module and it must be installed separately with \cd+pip3 isntall tensorflow_datasets+
+\begin{lstlisting}
+import tensorflow as tf
+import numpy as np
+import tensorflow_datasets as tfds
+imdb, info = tfds.load('imdb_reviews', with_info=True, as_supervised=True)
+train_data = imdb['train'] #25000 samples
+test_data = imdb['test'] #25000 samples
+
+training_sentences = []
+training_labels = []
+testing_sentences = []
+testing_labels = []
+for s,l in train_data:
+    #s, l are of types EagerTensor: the value must be extracted
+    training_sentences.append(str(s.numpy())) #
+    training_labels.append(l.numpy())
+
+for s, l in test_data:
+    testing_sentences.append(str(s.numpy()))
+    testing_labels.append(l.numpy())
+
+training_labels_final = np.array(training_labels)
+testing_labels_final = np.array(testing_labels)
+
+#TOKENIZATION
+vocab_size = 10000
+embedding_dim = 16
+max_length= 120
+trunc_type='post'
+oov_token="<OOV>"
+
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_token)
+tokenizer.fit_on_texts(training_sentences)
+wi = tokenizer.word_index
+train_seqs = tokenizer.texts_to_sequences(training_sentences)
+padded = pad_sequences(train_seqs, truncating=trunc_type, maxlen=max_length)
+
+testing_seqs = tokenizer.texts_to_sequences(testing_sentences)
+testing_padded = pad_sequences(testing_seqs, maxlen=max_length)
+
+model = tf.keras.Sequential([
+	tf.keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length),
+	tf.keras.layers.Flatten(),
+	tf.keras.layers.Dense(6, activation='relu'),
+	tf.keras.layers.Dense(1, activation='sigmoid')])
+model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
+num_epochs = 10
+model.fit(padded, training_labels_final, epochs=num_epochs, validation_data=(testing_padded, testing_labels_final))
+\end{lstlisting}
+
+The last lines define a NN model. It has a new type of layer named \ti{Embedding} used for NLP applications. Sometimes instead of \cd+Dense+ hidden layer, a \cd+GlobalAveragePooling1D+ layer is used, which averages across the vector to flatten it out. The embedding layer has shape equal to the number of words (\cd+vocab_size+) times the embedding size (\cd+embedded_dim+).
+
+Embeddings assigns to words that are found together similar multidimensional vectors. Over time, words tend to  cluster together. The meaning of words comes from labelling. If two words \ti{dull} and \ti{boring} show a lot together in negative reviews, they have similar sentiments and they are close to each other in the sentence. Thus their vectors will be similar. As the neural network trains, it can then learn these vectors associating them with the labels to come up with what's called an embedding i.e., the vectors for each word with their associated sentiment.
+
+If one wants to plot the vectors, the embedding vectors of words are given by the weights of the embedding layer:
+\begin{lstlisting}
+e = model.layers[0] #embedding layer
+w = e.get_weights()[0]
+
+#create a reversed word dictionary
+reverse_word_index = dict([value, key] for (key, value) in word_index.items()])
+out_v = io.open('vecs.tsv', 'w', encoding='utf-8')
+out_m = io.open('meta.tsv', 'w', encoding='utf-8')
+for word_num in range(1, vocab_size):
+  word = reverse_word_index[word_num]
+  embeddings = weights[word_num] #weight: 10000x16
+  out_m.write(word + "\n")
+  out_v.write('\t'.join([str(x) for x in embeddings]) + "\n")
+out_v.close()
+out_m.close()
+\end{lstlisting}
+These lines create two files to be loaded on \url{projector.tensorflow.org}. If on Colab notebook, the files can be downloaded with the following code:
+\begin{lstlisting}
+try:
+  from google.colab import files
+except ImportError:
+  pass
+else:
+  files.download('vecs.tsv')
+  files.download('meta.tsv')
+\end{listlisting}
+
+In text applications such as this, one might find that although the accuracy increases over training, the validation accuracy increases too. This means that although the number of correct predictions increases, the confidence of each prediction dropped down. To mitigate this problem, one can reduce the size of the vocabulary and the length of the sequence in order to reduce the effects of padding.
+
+\subsection{Recurrent NN}
+Sometimes it is difficult to get the sense by looking at each word separately and it is even worse when words are tokenized in sub-words. Recurrent Neural Networks solve this issue.
+
+\paragraph{Long Short-Term Memory Neural Network}
+In some context the word that let us understand the next word is very close to the word we are interested in:
+
+\ti{Today has a beautiful blue  ...[\tb{<sky>}} 
+
+The word \ti{blue} gives a strong hint about what the next word can be. In other sentences, the word that help us predict a missing word can be very far away:
+ 
+ \ti{I lived in Ireland, so at school they made me learn how to speak  ...[\tb{<Gaelic>}} 
+
+\it{Ireland} is the key-word and it appears much earlier in the sentence. We might loose the context. LSTM (long-short-term memory) are a particular type of RNN: in addition to the content being passed, it has an additional pipeline of context called \tb{cell state} that can pass through the network to impact it. This helps keep context from earlier tokens that are relevant in later ones. Cell state can be directional so that later tokens can impact earlier ones.
+
+\begin{lstlisting}
+tf.keras.Sequential([
+	tf.keras.layers.Embedding(tokenizer.vocab_size, 64),
+	tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)), # number of outputs
+	tf.keras.layers.Dense(64, activation='relu'),
+	tf.keras.layers.Dense(1, activation='sigmoid')
+)]
+\end{lstlisting}
+With two consecutive LSTM layers, in the preceding one the parameter \cd+return_sequences+ must be set to \cd+True+ to ensure that the desired output match the desired inputs of the next one.
+
+\paragraph{Convolution NN NLP}
+Convolution 1D layers can be used as well:
+\begin{lstlisting}
+tf.keras.Sequential([
+	tf.keras.layers.Embedding(tokenizer.vocab_size, embedding_dim, input_length=max_len),
+	tf.keras.layers.Conv1D(128,5, activation='relu'),
+	tf.keras.layers.GlobalMaxPooling1D(),
+	tf.keras.layers.Dense(24, activation='relu'),
+	tf.keras.layers.Dense(1, activation='sigmoid')
+)]
+\end{lstlisting}
+In this way words will be grouped into the size of the filter (5 in this case) and convolutions will be learnt to map the word classification to the desired output.
+
+\paragraph{GRU layer}
+\begin{lstlisting}
+tf.keras.Sequential([
+	tf.keras.layers.Embedding(tokenizer.vocab_size, embedding_dim, input_length=max_len),
+	tf.keras.layers.Bidirectional(tf.keras.layers.GRU(32)),
+	tf.keras.layers.Dense(6, activation='relu'),
+	tf.keras.layers.Dense(1, activation='sigmoid')
+)]
+\end{lstlisting}
+
+\subsection{Text synthesis}
+Sequence models can be trained on a body of text and then generate new texts that look like written by the same authors. Text generation can be seen as a prediction problem. Using a body of text, one can extract a vocabulary from that and then create datasets with phrases as $x$ and the next word after the phrase as $y$.
+
+\begin{lstlisting}
+import tensorflow as tf
+
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Bidirectional
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam
+import numpy as np 
+
+tokenizer = Tokenizer()
+#download file from https://storage.googleapis.com/laurencemoroney-blog.appspot.com/irish-lyrics-eof.txt
+data= open('irish-lyrics-eof.txt', 'r').read()
+
+corpus = data.lower().split("\n")
+
+tokenizer.fit_on_texts(corpus)
+total_words = len(tokenizer.word_index) + 1
+input_sequences = []
+for line in corpus:
+	#the function takes a list as input and returns a list
+	token_list = tokenizer.texts_to_sequences([line])[0] 
+	for i in range(1, len(token_list)):
+		n_gram_sequence = token_list[:i+1]
+		input_sequences.append(n_gram_sequence)
+
+# pad sequences 
+max_sequence_len = max([len(x) for x in input_sequences])
+input_sequences = np.array(pad_sequences(input_sequences, 
+								maxlen=max_sequence_len,
+								padding='pre'))
+								
+# create predictors and label
+xs, labels = input_sequences[:, :-1], input_sequences[:, -1]
+ys = tf.keras.utils.to_categorical(labels, num_classes=total_words)
+ 
+model = Sequential()
+model.add(Embedding(total_words, 64, input_length=max_sequence_len-1))
+model.add(Bidirectional(LSTM(20)))
+model.add(Dense(total_words, activation='softmax'))
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+history = model.fit(xs, ys, epochs=500, verbose=1)
+\end{lstlisting}
+The \cd+total_words+ is increased by $1$ to consider words out of the vocabulary. Next the dataset is created. Each sentence is converted to a sequence with \cd+texts_to_sequences+. The function takes as input a list (that is why in the code above the input is \cd+[line]+ and returns a list of sequences. For each line we have just one sequence, that is extracted by indexing with $0$. Next, by iterating on this sequence we create n-grams sequences by considering first the two words in the sequence, then the first three and so on. Once all sequences have been appended, they are pre-padded using the maximum length in the sequence. In this way it is easier to separate the data from the labels. In fact, after pre-padding, the last value of each sequence will be the label whereas all the other values (that precedes it) will be the input values. Since this is a classification problem, labels are one-hot-encoded.
+
+Suppose now that given a sentence (a seed text), one wants predict the next $100$ words using the trained model:
+\begin{lstlisting}
+seed_text = "Laurence went to dublin"
+next_words = 100
+  
+for _ in range(next_words):
+	token_list = tokenizer.texts_to_sequences([seed_text])[0]
+	token_list = pad_sequences([token_list], maxlen=max_sequence_len-1, padding='pre')
+	predicted = model.predict_classes(token_list, verbose=0)
+	output_word = ""
+	for word, index in tokenizer.word_index.items():
+		if index == predicted:
+			output_word = word
+			break
+	seed_text += " " + output_word
+
+print(seed_text)
+\end{lstlisting}
+\cd+max_sequence_len-1+ has been used because one element has been used for the label.
+
+A single word is predicted per iteration by the model. After mapping the predicted value to the real word, the seed text is appended with the newly predicted word. When there is not enough data, the first predicted words are fine but later the quality decreases a lot.
+
+The \cd+Bidirectional+ layer eliminates some of the repeated words, but repetitions still exist.
+
+When having a very large body of text with many words, the training improves. Unfortunately, having a large body requires tons of memory. For example, with the complete works of Shakespeare, one will likely hit memory errors, as assigning the one-hot encodings of the labels to matrices that have over $31477$ elements, which is the number of unique words in the collection, and as there being over $15$ million sequences generated using the previous algorithm, the labels alone would require the storage of many terabytes of RAM. With character based prediction, this problem is mitigated, since the number of unique characters in a corpus is fare less than the number of unique words. Instead of predicting words, one might want to predict single characters \footnote{\url{https://www.tensorflow.org/tutorials/text/text_generation?hl=en}}. 

@@ -20,7 +20,7 @@
 \usepackage{listings}
 \usepackage{subcaption}
 \usepackage{xparse}
-
+\usepackage{tikz} %arrows within text
 \makeindex
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}[section] 
@@ -79,6 +79,10 @@
  
  
 \begin{document}
+%arrows for text style
+\tikzstyle{every picture}+=[remember picture]
+\tikzstyle{na} = [shape=rectangle,inner sep=0pt,text depth=0pt]
+
 % Python style for highlighting
 \lstdefinestyle{customc}{
 belowcaptionskip=1\baselineskip,
@@ -266,4 +270,12 @@ stringstyle=\color{red},
 \newpage
 \input{sections/CustomModelsAndTrainingWithTensorFlow}
 
+\newpage
+\input{sections/ConvNN}
+
+\newpage
+\input{sections/NN4NLP}
+
+\newpage
+\input{sections/TimeSeriesPrediction}
 \end{document}	

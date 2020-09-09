@@ -275,15 +275,15 @@ and so the equation becomes:
 We want to express the $\derlj$ in terms of $\derlkn$. Allow us to apply the chain rule:
 
 \begin{equation}
-\derlj = \frac{\partial C}{\partial z_j^\ell} = \frac{1}{K}\sum_k^K \frac{\partial C}{\partial z_k^{l+1}} \frac{\partial z_k^{l+1}}{\partial z_j^\ell}  = \frac{1}{K}\sum_k^K \delta_k^{l+1} \frac{\partial z_k^{l+1}}{\partial z_j^\ell} 
+\derlj = \frac{\partial C}{\partial z_j^\ell} = \frac{1}{K}\sum_k^K \frac{\partial C}{\partial z_k^{\ell+1}} \frac{\partial z_k^{\ell+1}}{\partial z_j^\ell}  = \frac{1}{K}\sum_k^K \delta_k^{\ell+1} \frac{\partial z_k^{\ell+1}}{\partial z_j^\ell} 
 \label{eq:err2nexterrEq}
 \end{equation}
 
 To evaluate the last term consider its expression:
 \begin{equation}
 \begin{aligned}
-z_k^{l+1} &= \sum_j w_{kj}^{l+1}a_j^\ell + b_k^{l+1} = \sum_j w_{kj}^{l+1}\sigma\br{z_j^\ell} + b_k^{l+1}\\
-\Rightarrow \frac{z_k^{l+1}}{z_j^{L}} &= w_{kj}^{l+1} \sigma'\left( z_j^\ell\right)
+z_k^{\ell+1} &= \sum_j w_{kj}^{\ell+1}a_j^\ell + b_k^{\ell+1} = \sum_j w_{kj}^{\ell+1}\sigma\br{z_j^\ell} + b_k^{\ell+1}\\
+\Rightarrow \frac{\partial z_k^{\ell+1}}{\partial  z_j^{\ell}} &= w_{kj}^{\ell+1} \sigma'\left( z_j^\ell\right)
 \end{aligned}
 \end{equation}
 and substituting in \autoref{eq:err2nexterrEq}
@@ -917,153 +917,3 @@ Much the same behaviour presented above occurs also in more complex networks.
 
 A paper studied \footnote{\href{http://www.cs.toronto.edu/~hinton/absps/momentum.pdf}{On the importance of initialization and momentum in deep learning by Ilya Sutskever, James Martens, George Dahl and Geoffrey Hinton (2013)}} the impact on deep learning of both the random weight initialization and the momentum schedule in momentum-based stochastic gradient descent. In both cases, making good choices made a substantial difference in the ability to train deep networks.
 
-\subsection{Deep NN}
-
-\subsubsection{Introduction to convolutional NN}
-Until now, only networks in which adjacent network layers are fully connected to one another have been considered. That is, every neuron in the network is connected to every neuron in adjacent layers. But upon reflection, it's strange to use networks with fully-connected layers to classify images. The reason is that such a network architecture does not take into account the spatial structure of the images. For instance, it treats input pixels which are far apart and close together on exactly the same footing. Such concepts of spatial structure must instead be inferred from the training data. But what if, instead of starting with a network architecture which is tabula rasa, we used an architecture which tries to take advantage of the spatial structure? These architectures are \tb{convolutional NN}\footnote{\href{http://yann.lecun.com/exdb/publis/pdf/lecun-98.pdf}{ "Gradient-based learning applied to document recognition", by Yann LeCun, Léon Bottou, Yoshua Bengio, and Patrick Haffner (1998)}}. These networks use a special architecture which is particularly well-adapted to classify images. Using this architecture makes convolutional networks fast to train. This, in turn, helps us train deep, many-layer networks, which are very good at classifying images. Today, deep convolutional networks or some close variant are used in most neural networks for image recognition.
-Convolutional neural networks use three basic ideas: 
-
-\begin{itemize}
-\item local receptive fields;
-\item shared weights;
-\item pooling.
-\end{itemize}
-
-\paragraph{\tb{local receptive fields}} In the fully-connected layers shown earlier, the inputs were depicted as a vertical line of neurons. In a convolutional net, it'll help to think instead of the inputs as a $28\times 28$ square of neurons, whose values correspond to the $28\times 28$ pixel intensities we're using as inputs. As per usual, we'll connect the input pixels to a layer of hidden neurons. But we won't connect every input pixel to every hidden neuron. Instead, we only make connections in small, localized regions of the input image. To be more precise, each neuron in the first hidden layer will be connected to a small region of the input neurons, say, for example, a $5\times5$ region, corresponding to $25$ input pixels. So, for a particular hidden neuron, we might have connections that look like \autoref{fig:CNN1}
-\begin{figure}
-\centering
-\includegraphics[scale=0.5]{img/CNN1}
-\caption{$5\times 5$ input pixels for a single neuron in the first hidden layer of a CNN.}
-\label{fig:CNN1}
-\end{figure}
-That region in the input image is called the local receptive field for the hidden neuron. It's a little window on the input pixels. One can think of that particular hidden neuron as learning to analyse its particular local receptive field. We then slide the local receptive field across the entire input image.
-
-\begin{figure}
-\centering
-\includegraphics[scale=0.5]{img/CNN2}
-\caption{$5\times 5$ input pixels for a single neuron in the first hidden layer of a CNN.}
-\label{fig:CNN2}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics[scale=0.45]{img/CNN3}
-\caption{$5\times 5$ input pixels for a single neuron in the first hidden layer of a CNN.}
-\label{fig:CNN3}
-\end{figure}
-
-\begin{figure}
-\begin{subfigure}[t]{0.8\textwidth}
-\centering
-\includegraphics[width=0.9\linewidth]{img/CNN2}
-\caption{Input pixels for the first hidden neuron.}
-\label{CNN2}
-\end{subfigure}
-\hfill
-\begin{subfigure}[t]{0.8\textwidth}
-\centering
-\includegraphics[width=0.9\linewidth]{img/CNN3}
-\caption{Input pixels for the second hidden neuron.}
-\label{CNN3}
-\end{subfigure}
-\caption{Sliding window for the CNN.}
-\end{figure}
-The resulting layer will have $24\times 24$ hidden neurons. Sometimes a different stride length is used. For instance, we might move the local receptive field $2$ pixels to the right (or down), in which case we'd say a stride length of $2$ is used. 
-
-\paragraph{\tb{Shared weights}} We're going to use the same weights and bias for each of the $24\times24$ hidden neurons. In other words, for the $j,k$-th hidden neuron:
-\begin{equation}
-\sigma \br{b+\sum_{j=0}^4\sum_{\ell=0}^4 w_{\ell, m} a_{j+\ell}, k+m}
-\label{eq1:CNN}
-\end{equation}
-where $a$ is the input activation function. This means that all the neurons in the first hidden layer detect exactly the same feature, just at different locations. To put it in slightly more abstract terms, convolutional networks are well adapted to the translation invariance of images: move a picture of a cat (say) a little ways, and it's still an image of a cat. For this reason, the map from the input layer to the hidden layer is sometimes called \tb{a feature map}. The weights defining the feature map are called the \tb{shared weights}, and the bias defining the feature map in this way are called the \tb{shared bias}. The shared weights and bias are often said to define a kernel or filter. In the literature, people sometimes use these terms in slightly different ways.
-
-The network structure I've described so far can detect just a single kind of localized feature, i.e, either a vertical line or an horizontal line, but not both. To do image recognition we'll need more than one feature map. And so a complete convolutional layer consists of several different feature maps, as in \autoref{fig:CNN4} having$3$ feature maps. Such a network can detect $3$ kinds of features, with each feature being detectable across the entire image.
-\begin{figure}
-\centering
-\includegraphics[scale=0.5]{img/CNN4}
-\caption{CNN with a multi-feature first hidden layer.}
-\label{fig:CNN4}
-\end{figure}
-The features learnt look something like in \autoref{fig:CNN5}. 
-\begin{figure}
-\centering
-\includegraphics[scale=0.5]{img/CNN5}
-\caption{$5\times 5$ pixel images representing the features learnt by the first hidden layer of a CNN.}
-\label{fig:CNN5}
-\end{figure}
-hiter blocks mean a smaller (typically, more negative) weight, so the feature map responds less to corresponding input pixels. Darker blocks mean a larger weight, so the feature map responds more to the corresponding input pixels. Very roughly speaking, the images above show the type of features the convolutional layer responds to. It's clear there is spatial structure here beyond what we'd expect at random. However, beyond that, it's difficult to see what these feature detectors are learning. Now there's now a lot of work on better understanding the features learnt by convolutional networks \footnote{\href{http://arxiv.org/abs/1311.2901}{Visualizing and Understanding Convolutional Networks by Matthew Zeiler and Rob Fergus (2013)}}
-
-A big advantage of sharing weights and biases is that it greatly reduces the number of parameters involved in a convolutional network. In the previous case, $26$ parameters for each feature maps are needed, while in the fully connected input layer case, with with square images of $28$ pixels one would have $28\times 28+1 = 785$ parameters for a single neuron; if there were $30$ neurons that would mean $23550$ parameters in total.
-Of course, we can't really do a direct comparison between the number of parameters, since the two models are different in essential ways. But, intuitively, it seems likely that the use of translation invariance by the convolutional layer will reduce the number of parameters it needs to get the same performance as the fully-connected model. That, in turn, will result in faster training for the convolutional model, and, ultimately, will help us build deep networks using convolutional layers. Incidentally, the name convolutional comes from the fact that the operation in \autoref{eq1:CNN} is sometimes known as a convolution. 
-
-\paragraph{\tb{Pooling layers}} In addition to the convolutional layers just described, convolutional neural networks also contain \tb{pooling layers}. Pooling layers are usually used immediately after convolutional layers. What the pooling layers do is simplify the information in the output from the convolutional layer. A pooling layer takes each feature map output from the convolutional layer and prepares a condensed feature map. For instance, each unit in the pooling layer may summarize a region of (say) $2\times 2$ neurons in the previous layer. As a concrete example, one common procedure for pooling is known as max-pooling. In max-pooling, a pooling unit simply outputs the maximum activation in the $2\times 2$ input region, as illustrated in \autoref{fig:CNN6}.
-
-\begin{figure}
-\centering
-\includegraphics[scale=0.5]{img/CNN6}
-\caption{Pooling layer.}
-\label{fig:CNN6}
-\end{figure}
-From a $24\times 24$ neurons in a convolutional layer, one gets $12\times 12$ neurons. As mentioned above, the convolutional layer usually involves more than a single feature map. We apply max-pooling to each feature map separately. So if there were three feature maps he combined convolutional and max-pooling layers would look like \autoref{fig:CNN7}.
-
-\begin{figure}
-\centering
-\includegraphics[scale=0.5]{img/CNN7}
-\caption{Pooling layers applied to features maps.}
-\label{fig:CNN7}
-\end{figure}
-We can think of max-pooling as a way for the network to ask whether a given feature is found anywhere in a region of the image. It then throws away the exact positional information. The intuition is that once a feature has been found, its exact location isn't as important as its rough location relative to other features. A big benefit is that there are many fewer pooled features, and so this helps reduce the number of parameters needed in later layers. Max-pooling isn't the only technique used for pooling. Another common approach is known as \tb{L2 pooling}. Here, instead of taking the maximum activation of a region of neurons, we take the square root of the sum of the squares of the activations in the same region. While the details are different, the intuition is similar to max-pooling: L2 pooling is a way of condensing information from the convolutional layer. In practice, both techniques have been widely used. And sometimes people use other types of pooling operation. If you're really trying to optimize performance, you may use validation data to compare several different approaches to pooling, and choose the approach which works best. But we're not going to worry about that kind of detailed optimization. 
-
-The final layer of connections in the network is a fully-connected layer. That is, this layer connects every neuron from the max-pooled layer to every one of the $10$ output neurons.
-
-One can still use SGD for training. However, we do need to make a few modifications to the backpropagation procedure. The reason is that our earlier derivation of backpropagation was for networks with fully-connected layers. Fortunately, it's straightforward to modify the derivation for convolutional and max-pooling layers. Since there is no gradient with respect to non maximum values, because changing them slightly does not affect the output, thus, the gradient from the next layer is passed back to only that neuron which achieved the max.  All other neurons get zero gradient.
-
-In real examples, one has a layer of fully connected sigmoid neurons (for example 100) and 10 softmax output neurons. To improve the architecture one can insert a second convolutional-pooling layer. The insertion is done between the existing convolutional-pooling layer and the fully-connected hidden layer. One can think of the second convolutional-pooling layer as having as input $12\times12$ "images", whose "pixels" represent the presence (or absence) of particular localized features in the original input image. So this layer can be thought of as having as input a version of the original input image. That version is abstracted and condensed, but still has a lot of spatial structure, and so it makes sense to use a second convolutional-pooling layer. However its input is not a single image but all the images of the feature map ($20$ in the previously example).  Each neuron in this layer is allowed to learn from all $20\times5\times 5$ input neurons in its local receptive field. More informally: the feature detectors in the second convolutional-pooling layer have access to all the features from the previous layer, but only within their particular local receptive field.
-
-Using $\tanh$ activation function, the accuracy is similar but the training is a little faster. However, networks based on rectified linear units consistently outperforms networks based on sigmoid activation functions. There appears to be a real gain in moving to rectified linear units for this problem. Also some $l2$ regularisation helps. we have a poor understanding of what makes the rectified linear activation function better than the sigmoid or tanh functions.
-
-Another way we may hope to improve our results is by algorithmically expanding the training data. A simple way of expanding the training data is to displace each training image by a single pixel, either up one pixel, down one pixel, left one pixel, or right one pixel. Using the drop-out technique on the fully connected layer, it is possible to achieve $99.6\%$ accuracy. In principle we could apply a similar procedure to the convolutional layers. But, in fact, there's no need: the convolutional layers have considerable inbuilt resistance to overfitting. The reason is that the shared weights mean that convolutional filters are forced to learn from across the entire image. This makes them less likely to pick up on local idiosyncracies in the training data. And so there is less need to apply other regularizers, such as dropout.
-
-\paragraph{\tb{Ensemble of networks}} An easy way to improve performance still further is to create several neural networks, and then get them to vote to determine the best classification. Suppose, for example, that we trained $5$ different neural networks using the prescription above, with each achieving accuracies near to $99.6$. percent. Even though the networks would all have similar accuracies, they might well make different errors, due to the different random initializations. It's plausible that taking a vote amongst our $5$ networks might yield a classification better than any individual network. With this one ends up with $99.67$.
-
-To reduce the problems of slow training  in DNN one can
-\begin{itemize}
-\item use convolutional layers: it greatly reduces the number of parameters in those layers, making the learning problem much easier; 
-\item use more powerful regularization techniques (notably dropout and convolutional layers) to reduce overfitting, which is otherwise more of a problem in more complex networks;
-\item use rectified linear units instead of sigmoid neurons, to speed up training - empirically, often by a factor of $3-5$; 
-\item use GPUs and being willing to train for a long period of time. 
-\end{itemize}
-combined with general statements:
-\begin{itemize}
-\item large enough datasets
-\item using good weight initialisation
-\item algorithmically expanding the training data.
-\end{itemize}
-
-As of 2015 state-of-the-art deep networks sometimes have dozens of hidden layers. Notwithstanding,  the number of layers is not of primary fundamental interest. Rather, the use of deeper networks is a tool to use to help achieve other goals - like better classification accuracies.
-
-\subsubsection{Recent progress in image recognition}
-Modern work involves much more challenging image recognition problems.
-
-
-A paper \footnote{\href{http://arxiv.org/abs/1312.6199}{Intriguing properties of neural networks, by Christian Szegedy, Wojciech Zaremba, Ilya Sutskever, Joan Bruna, Dumitru Erhan, Ian Goodfellow, and Rob Fergus (2013)}} showed that deep networks may suffer from what are effectively blind spots. Consider the lines of images below. In \autoref{fig:CNN8},on the left is an ImageNet image classified correctly by a state-of-the-art network. On the right is a slightly perturbed image (the perturbation is in the middle) which is classified incorrectly by the network. The authors found that there are such "adversarial" images for every sample image, not just a few special ones. 
-
-\begin{figure}
-\centering
-\includegraphics[scale=0.5]{img/CNN8}
-\caption{Adversarial images for a NN.}
-\label{fig:CNN8}
-\end{figure}
-
-This is a disturbing result. While such neural networks compute functions which are, in principle, continuous, results like this suggest that in practice they're likely to compute functions which are very nearly discontinuous. Worse, they'll be discontinuous in ways that violate our intuition about what is reasonable behavior. That's concerning. Furthermore, it's not yet well understood what's causing the discontinuity.  However, the set of adversarial negatives is of extremely low probability, and thus is never (or rarely) observed in the test set, yet it is dense (much like the rational numbers), and so it is found near virtually every test case. Nonetheless, they have stimulated much followup work. For example, one recent paper \footnote{\href{http://arxiv.org/abs/1412.1897}{Deep Neural Networks are Easily Fooled: High Confidence Predictions for Unrecognizable Images, by Anh Nguyen, Jason Yosinski, and Jeff Clune (2014).}} shows that given a trained network it's possible to generate images which look to a human like white noise, but which the network classifies as being in a known category with a very high degree of confidence. This is another demonstration that we have a long way to go in understanding neural networks and their use in image recognition.
-
-%\paragraph{\tb{LRMD paper}\footnote{\href{http://research.google.com/pubs/pub38115.html}{Building high-level features using large scale unsupervised learning, by Quoc Le, Marc'Aurelio Ranzato, Rajat Monga, Matthieu Devin, Kai Chen, Greg Corrado, Jeff Dean, and Andrew Ng (2012)}}}  LRMD used a neural network to classify images from ImageNet\footnote{\href{http://www.image-net.org/}{ImageNet}}, a very challenging image recognition problem. The 2011 ImageNet data that they used included 16 million full color images, in 20 thousand categories. The images were crawled from the open net, and classified by workers from Amazon's Mechanical Turk service. LRMD's network obtained a respectable $15.8$ percent accuracy for correctly classifying ImageNet images. That may not sound impressive, but it was a huge improvement over the previous best result of $9.3$ percent accuracy. That jump suggested that neural networks might offer a powerful approach to very challenging image recognition tasks, such as ImageNet.
-
-\subsubsection{Other approaches to DNN}
-
-\paragraph{\tb{Recurrent NN}} In the feedforward nets we've been using there is a single input which completely determines the activations of all the neurons through the remaining layers. Suppose the behaviour of hidden neurons might not just be determined by the activations in previous hidden layers, but also by the activations at earlier times. Indeed, a neuron's activation might be determined in part by its own activation at an earlier time.  Or perhaps the activations of hidden and output neurons won't be determined just by the current input to the network, but also by earlier inputs. Neural networks with this kind of time-varying behaviour are known as \tb{recurrent neural networks} or RNNs. Not surprisingly, they're particularly useful in analysing data or processes that change over time. Such data and processes arise naturally in problems such as speech or natural language, for example.
-
-One way RNNs are currently being used is to connect neural networks more closely to traditional ways of thinking about algorithms, ways of thinking based on concepts such as Turing machines and (conventional) programming languages. A 2014 paper\footnote{\href{http://arxiv.org/abs/1410.4615}{}} developed an RNN which could take as input a character-by-character description of a (very, very simple!) Python program, and use that description to predict the output. Informally, the network is learning to "understand" certain Python programs. A second paper, also from 2014, \footnote{\href{http://arxiv.org/abs/1410.5401}{}} used RNNs as a starting point to develop what they called a neural Turing machine (NTM). This is a universal computer whose entire structure can be trained using gradient descent. They trained their NTM to infer algorithms for several simple problems, such as sorting and copying. As it stands, these are extremely simple toy models. Learning to execute the Python program \cd+print(398345+425923)+ doesn't make a network into a full-fledged Python interpreter! It's not clear how much further it will be possible to push the ideas. Still, the results are intriguing. Historically, neural networks have done well at pattern recognition problems where conventional algorithmic approaches have trouble. Vice versa, conventional algorithmic approaches are good at solving problems that neural nets aren't so good at. It perhaps won't surprise you to learn that many of the ideas used in feedforward networks can also be used in RNNs. In particular, we can train RNNs using straightforward modifications to gradient descent and backpropagation. Many other ideas used in feedforward nets, ranging from regularization techniques to convolutions to the activation and cost functions used, are also useful in recurrent nets. And so many of the techniques we've developed in the book can be adapted for use with RNNs.
-
-\paragraph{\tb{Long-short memory units}} The problem actually gets worse in RNNs, since gradients aren't just propagated backward through layers, they're propagated backward through time. If the network runs for a long time that can make the gradient extremely unstable and hard to learn from. Fortunately, it's possible to incorporate an idea known as long short-term memory units (LSTMs) into RNNs. The units were introduced by Hochreiter and Schmidhuber in 1997 \footnote{\href{http://dx.doi.org/10.1162/neco.1997.9.8.1735}{}}with the explicit purpose of helping address the unstable gradient problem. LSTMs make it much easier to get good results when training RNNs, and many recent papers (including many that I linked above) make use of LSTMs or related ideas.
-\paragraph{\tb{Deep belief nets, generative models, and Boltzmann machines}} DBNs were influential for several years, but have since lessened in popularity. Part of the reason is that models such as feedforward and recurrent nets have achieved many spectacular results, such as their breakthroughs on image and speech recognition benchmarks. One reason DBNs are interesting is that they're an example of what's called a generative model. In a feedforward network, we specify the input activations, and they determine the activations of the feature neurons later in the network. A generative model like a DBN can be used in a similar way, but it's also possible to specify the values of some of the feature neurons and then "run the network backward", generating values for the input activations. More concretely, a DBN trained on images of handwritten digits can (potentially, and with some care) also be used to generate images that look like handwritten digits. In other words, the DBN would in some sense be learning to write. A second reason DBNs are interesting is that they can do unsupervised and semi-supervised learning. For instance, when trained with image data, DBNs can learn useful features for understanding other images, even if the training images are unlabelled. And the ability to do unsupervised learning is extremely interesting both for fundamental scientific reasons, and - if it can be made to work well enough - for practical applications.

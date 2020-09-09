@@ -237,6 +237,9 @@ If you do not have much labeled training data, one last option is to train a fir
 
 For example, if you want to build a system to recognize faces, you may only have a few pictures of each individual - clearly not enough to train a good classifier. Gatheing hundreds of pictures of each person would not be practical. However, you could gather a lot of pictures of random people on the web and train a first neural network to detect whether or not two different pictures feature the same person. Such a network would learn good feature detectors for faces, so reusing its lower layers would allow you to train a good face classifier using little training data.
 
+\subsubsection{Speed up training with transfer learning}
+Since the early layers are fixed, one can think that the input layer is now the output of the last frozen layer: in fact, its output, given an image, does not change because all parameters of the previous layers have been fixed and are known. To speed up the training of the new layers, one can pre-compute the output of the frozen layer and save it to disk. This input is then used to train the new layers as if it were a shallow network. Since the inputs are always the same and the weights and biases of early layers are constant, this operation saves time because many repeated operations are avoided.
+
 \subsection{Faster optimisation}
 Another huge speed boost comes from using a faster optimizer than the regular Gradient Descent optimizer. Other optimizers are:
 \begin{itemize}
@@ -267,7 +270,8 @@ which is exponentially decaying. All the coefficients add up to very close to on
 This filtering smooths the samples by taking into account all the previous values of the sries with decreasing emphasis. Particularly, $v_i$ is said to be the average over the previous $\approx \frac{1}{1-\beta}$ number of samples. So, increasing $\beta$ results in higher smoothing, however due to the larger averaging window, the delay is bigger and the resuling curve will be right-shifted \autoref{img:expAvg}	. In fact, setting for example $\beta=0.9$, $0.9^{10}\approx 0.35 \approx \frac{1}{e}$. Naming $1-\beta=\epsilon=0.1$, $(1-\epsilon)^\epsilon=\frac{1}{e}$. It takes $10$ samples for the initial value to decay of $\frac{1}{e}$, about a third. On the contrast, if $\beta=0.98$, $0.98^{50}\approx \frac{1}{e}$. This is of course a rule of thumb of how to think about it, not a formal mathematical statement.	
 
 \begin{figure}
-\includegraphics[scale=0.38]{img/expAvg}
+\centering
+\includegraphics[scale=0.3]{img/expAvg}
 \caption{Exampe of exponentially averaging with $\beta=0.9$ in red and $\beta=0.98$ in green.}
 \label{img:expAg}
 \end{figure}
